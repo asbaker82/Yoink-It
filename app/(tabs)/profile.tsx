@@ -159,7 +159,9 @@ export default function ProfileScreen() {
           <Pressable
             key={stat.label}
             style={({ pressed }) => [styles.statCard, pressed && styles.statCardPressed]}
-            onPress={() => router.push({ pathname: '/items-list', params: { filter: stat.filter } })}
+            onPress={() => stat.filter === 'claimed'
+              ? router.push({ pathname: '/(tabs)/my-items', params: { view: 'friends' } })
+              : router.push({ pathname: '/items-list', params: { filter: stat.filter } })}
           >
             <FontAwesome name={stat.icon} size={20} color={stat.color} />
             <Text style={styles.statValue}>{stat.value}</Text>

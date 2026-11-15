@@ -60,7 +60,7 @@ app/
   (tabs)/
     _layout.tsx            Tab bar + headerRight profile icon on Browse and My Items
     index.tsx              Browse — fuzzy search, listing type + status filters, swipe-to-dismiss, search alerts
-    my-items.tsx           My Items — Listing / Claimed / Waitlisted / Lending tabs + FAB
+    my-items.tsx           My Items — My Listings / From Friends views (see "My Items" below) + FAB
     profile.tsx            Profile — reached via header icon, not tab bar
   item/
     [id].tsx               Item detail — claim, waitlist, pickup, dispose, edit, SMS, lightbox, borrow request
@@ -170,16 +170,20 @@ Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in 
 Both toast components use core RN `Animated` (not Reanimated) with `useNativeDriver: true`.
 
 ### Action banners — `app/(tabs)/index.tsx`
-Up to four stacked banners appear above the feed, one per pending donor/donee action. Each banner navigates to the relevant screen:
+Stacked banners appear above the feed, one per pending action. Tapping one opens an in-place action sheet (`activeSheet`) listing those items with their action buttons; the "add friends" banner instead navigates via its `dest` field.
 
-| Condition | Color | Destination |
+| Key | Condition | Color |
 |---|---|---|
-| Donee has item in `pending_pickup` state | Orange | `/items-list?filter=claimed` |
-| Donor has borrow item with a `pending` borrow request | Sky blue | `/(tabs)/my-items?tab=lending` |
-| Donor has give item in `pending_pickup` (needs confirmation) | Sage | `/(tabs)/my-items?tab=listing` |
-| Donor has borrow item in `pending_return` (needs confirmation) | Sky blue | `/(tabs)/my-items?tab=lending` |
+| `add-friends` | User has zero friends → `/add-friends` | Tangerine |
+| `pickup` | I've claimed a give item and the pickup window is open | Tangerine |
+| `borrow-requests` | My borrow item has a `pending` request | Sky blue |
+| `confirm-pickup` | My give item is `pending_pickup` | Sage |
+| `confirm-return` | My borrow item is `pending_return` | Sky blue |
 
-The `?tab=` param is read by `my-items.tsx` via `useLocalSearchParams` and used as the initial tab state so the user lands on the right sub-tab.
+### My Items — `app/(tabs)/my-items.tsx`
+Two views via a segmented control, each with an orange count of items needing action. Deep link with `?view=listings|friends` (honored even when the tab is already mounted).
+- **My Listings** — chips All / Free / Lending / Skills; sections **Needs your action** (`needsMyAction`: give `pending_pickup`, borrow with a pending request or `pending_return`), **Active**, **Completed**. Cards use `renderDonorCard` (confirm pickup, approve/decline, confirm return, dispose, remove).
+- **From Friends** — sections **Ready to pick up**, **Waiting on donor**, **Borrowing**, **Returning**, **Requested**, **Waitlisted**, each with a status line and inline actions (Mark Picked Up, Release, Mark Returned, Cancel Request, Leave Waitlist) confirmed through one shared `ConfirmSheet`.
 
 ### Browse screen filters — `app/(tabs)/index.tsx`
 Two-level filter system:

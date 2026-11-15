@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  FlatList,
   SectionList,
   StyleSheet,
   Pressable,
@@ -14,13 +13,12 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
 import { Item, DISPOSAL_METHOD_LABELS } from '@/store/types';
 import ItemCard from '@/components/ItemCard';
+import ConfirmSheet from '@/components/ConfirmSheet';
 import { formatCalendarDate } from '@/utils/dates';
 
 const TANGERINE  = '#F26B3A';
 const TANG_DEEP  = '#D8531F';
 const CREAM_2    = '#F4ECDD';
-const BUTTER     = '#F4C95D';
-const ROSE       = '#E89A8D';
 const CREAM      = '#FBF6EE';
 const INK        = '#1F1A17';
 const MUTE       = '#847A70';
@@ -28,14 +26,31 @@ const STEEL_BLUE = '#9DB7C9';
 const SKY        = '#7BA7BC';
 const SAGE       = '#7FA88A';
 
-const TAB_ACTIVE: Record<string, { bg: string; text: string }> = {
-  listing:    { bg: TANGERINE, text: CREAM },
-  claimed:    { bg: BUTTER,    text: INK   },
-  waitlisted: { bg: ROSE,      text: CREAM },
+type ViewKey = 'listings' | 'friends';
+type ListingFilter = 'all' | 'free' | 'lending' | 'skills';
+type FriendSectionKey = 'pickup' | 'waiting' | 'borrowing' | 'returning' | 'requested' | 'waitlisted';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  onConfirm: () => void;
 };
 
-type Tab = 'listing' | 'claimed' | 'waitlisted';
-type ListingFilter = 'all' | 'free' | 'available_borrow' | 'borrowed' | 'skills';
+const LISTING_FILTERS: { key: ListingFilter; label: string; color: string }[] = [
+  { key: 'all',     label: 'All',     color: INK },
+  { key: 'free',    label: 'Free',    color: TANGERINE },
+  { key: 'lending', label: 'Lending', color: SKY },
+  { key: 'skills',  label: 'Skills',  color: SAGE },
+];
+
+const isDone = (i: Item) => i.status === 'picked_up' || i.status === 'disposed';
+
+// Something on my own listing is waiting on me.
+const needsMyAction = (i: Item) =>
+  (i.listingType === 'give' && i.status === 'pending_pickup') ||
+  (i.listingType === 'borrow' && (i.status === 'pending_return' || i.borrowRequests.some(r => r.status === 'pending')));
 
 function formatTimeLeft(deadline: Date, now: Date): string {
   const ms = deadline.getTime() - now.getTime();
@@ -56,44 +71,53 @@ export default function MyItemsScreen() {
     items, getMyItems, deleteItem, markDisposed, confirmPickup, releaseClaim,
     getUserById, currentUser,
     approveBorrowRequest, rejectBorrowRequest, confirmBorrowReturn,
+    markPickedUp, markBorrowReturned, cancelBorrowRequest, leaveWaitlist,
   } = useApp();
   const router = useRouter();
-  const { tab: tabParam } = useLocalSearchParams<{ tab?: Tab }>();
-  const [tab, setTab] = useState<Tab>(tabParam ?? 'listing');
+  const { view: viewParam } = useLocalSearchParams<{ view?: ViewKey }>();
+  const [view, setView] = useState<ViewKey>(viewParam === 'friends' ? 'friends' : 'listings');
+  // Tab screens stay mounted, so honor ?view= on later navigations too.
+  useEffect(() => {
+    if (viewParam === 'friends' || viewParam === 'listings') setView(viewParam);
+  }, [viewParam]);
   const [listingFilter, setListingFilter] = useState<ListingFilter>('all');
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
 
+  // ── My Listings ──────────────────────────────────────────
   const myListings = getMyItems();
+  const filteredListings =
+    listingFilter === 'free'    ? myListings.filter(i => i.listingType === 'give') :
+    listingFilter === 'lending' ? myListings.filter(i => i.listingType === 'borrow') :
+    listingFilter === 'skills'  ? myListings.filter(i => i.listingType === 'skill') :
+                                  myListings;
 
-  const filteredListings = listingFilter === 'all'             ? myListings
-    : listingFilter === 'free'                                 ? myListings.filter(i => i.listingType === 'give')
-    : listingFilter === 'available_borrow'                     ? myListings.filter(i => i.listingType === 'borrow' && i.status === 'available')
-    : listingFilter === 'borrowed'                             ? myListings.filter(i => i.listingType === 'borrow' && i.status !== 'available')
-    :                                                            myListings.filter(i => i.listingType === 'skill');
+  const listingSections = [
+    { key: 'action',    title: 'Needs your action', data: filteredListings.filter(needsMyAction) },
+    { key: 'active',    title: 'Active',            data: filteredListings.filter(i => !isDone(i) && !needsMyAction(i)) },
+    { key: 'completed', title: 'Completed',         data: filteredListings.filter(isDone) },
+  ].filter(s => s.data.length > 0);
+  const listingsActionCount = myListings.filter(needsMyAction).length;
 
-  const activeListings    = filteredListings.filter(i => i.status !== 'picked_up' && i.status !== 'disposed');
-  const completedListings = filteredListings.filter(i => i.status === 'picked_up' || i.status === 'disposed');
-
-  const claimedItems    = items.filter(i => i.claimedBy === currentUser.id && i.donorId !== currentUser.id && (i.status === 'claimed' || i.status === 'pending_pickup'));
-  const waitlistedItems = items.filter(i => i.waitlist.includes(currentUser.id) && i.donorId !== currentUser.id);
-
-  const TABS: { key: Tab; label: string; count: number }[] = [
-    { key: 'listing',    label: 'Listing',    count: myListings.length },
-    { key: 'claimed',    label: 'Claimed',    count: claimedItems.length },
-    { key: 'waitlisted', label: 'Waitlisted', count: waitlistedItems.length },
+  // ── From Friends ─────────────────────────────────────────
+  const me = currentUser.id;
+  const fromOthers = items.filter(i => i.donorId !== me);
+  const friendSections: { key: FriendSectionKey; title: string; data: Item[] }[] = [
+    { key: 'pickup',     title: 'Ready to pick up', data: fromOthers.filter(i => i.listingType === 'give' && i.claimedBy === me && i.status === 'claimed') },
+    { key: 'waiting',    title: 'Waiting on donor', data: fromOthers.filter(i => i.listingType === 'give' && i.claimedBy === me && i.status === 'pending_pickup') },
+    { key: 'borrowing',  title: 'Borrowing',        data: fromOthers.filter(i => i.listingType === 'borrow' && i.borrowedBy === me && i.status === 'borrowed') },
+    { key: 'returning',  title: 'Returning',        data: fromOthers.filter(i => i.listingType === 'borrow' && i.borrowedBy === me && i.status === 'pending_return') },
+    { key: 'requested',  title: 'Requested',        data: fromOthers.filter(i => i.listingType === 'borrow' && i.borrowRequests.some(r => r.requesterId === me && r.status === 'pending')) },
+    { key: 'waitlisted', title: 'Waitlisted',       data: fromOthers.filter(i => i.listingType === 'give' && i.waitlist.includes(me)) },
   ];
-
-  const LISTING_FILTERS: { key: ListingFilter; label: string }[] = [
-    { key: 'all',             label: 'All' },
-    { key: 'free',            label: 'Free' },
-    { key: 'available_borrow', label: 'Available to Borrow' },
-    { key: 'borrowed',        label: 'Borrowed' },
-    { key: 'skills',          label: 'Skills' },
-  ];
+  const visibleFriendSections = friendSections.filter(s => s.data.length > 0);
+  const friendsActionCount = friendSections
+    .filter(s => s.key === 'pickup' || s.key === 'borrowing')
+    .reduce((n, s) => n + s.data.length, 0);
 
   const handleDelete = (item: Item) => {
     if (Platform.OS === 'web') {
@@ -246,55 +270,186 @@ export default function MyItemsScreen() {
     );
   };
 
-  const listingSections = [
-    { title: 'Active', count: activeListings.length, data: activeListings },
-    { title: 'Completed', count: completedListings.length, data: completedListings },
-  ].filter(s => s.data.length > 0);
+  const renderFriendCard = (item: Item, section: FriendSectionKey) => {
+    const donorFirst = getUserById(item.donorId)?.name.split(' ')[0] ?? 'the owner';
+    let icon: React.ComponentProps<typeof FontAwesome>['name'] = 'clock-o';
+    let status = '';
+    let urgent = false;
+    const actions: { label: string; icon: React.ComponentProps<typeof FontAwesome>['name']; primary?: boolean; confirm: PendingConfirm }[] = [];
+
+    switch (section) {
+      case 'pickup': {
+        const deadline = item.claimDeadline ? new Date(item.claimDeadline) : null;
+        urgent = !!deadline && deadline <= now;
+        status = !deadline ? 'Claimed — arrange pickup'
+          : urgent ? 'Pickup window expired'
+          : `${formatTimeLeft(deadline, now)} to pick up`;
+        actions.push({
+          label: 'Mark Picked Up', icon: 'check', primary: true,
+          confirm: {
+            title: 'Mark as Picked Up',
+            message: `Confirm you've picked up "${item.title}"? ${donorFirst} will be asked to confirm the handoff.`,
+            confirmLabel: 'Yes, Picked Up',
+            onConfirm: () => markPickedUp(item.id),
+          },
+        });
+        actions.push({
+          label: 'Release', icon: 'undo',
+          confirm: {
+            title: 'Release Claim',
+            message: `Give up your claim on "${item.title}"? The next person on the waitlist will get it.`,
+            confirmLabel: 'Release',
+            destructive: true,
+            onConfirm: () => releaseClaim(item.id),
+          },
+        });
+        break;
+      }
+      case 'waiting':
+        status = `Waiting for ${donorFirst} to confirm pickup`;
+        break;
+      case 'borrowing': {
+        icon = 'calendar';
+        const due = item.borrowedUntil ? new Date(item.borrowedUntil + 'T23:59:59') : null;
+        urgent = !!due && due < now;
+        status = !item.borrowedUntil ? 'Borrowing'
+          : urgent ? `Return overdue — was due ${formatCalendarDate(item.borrowedUntil)}`
+          : `Return by ${formatCalendarDate(item.borrowedUntil)}`;
+        actions.push({
+          label: 'Mark Returned', icon: 'check', primary: true,
+          confirm: {
+            title: 'Mark as Returned',
+            message: `Let ${donorFirst} know you've returned "${item.title}"? They'll confirm they got it back.`,
+            confirmLabel: 'Yes, Returned',
+            onConfirm: () => markBorrowReturned(item.id),
+          },
+        });
+        break;
+      }
+      case 'returning':
+        icon = 'calendar';
+        status = `Waiting for ${donorFirst} to confirm the return`;
+        break;
+      case 'requested': {
+        icon = 'paper-plane';
+        const req = item.borrowRequests.find(r => r.requesterId === me && r.status === 'pending');
+        status = req
+          ? `Requested ${formatCalendarDate(req.startDate)} – ${formatCalendarDate(req.endDate)}`
+          : 'Request pending';
+        if (req) {
+          actions.push({
+            label: 'Cancel Request', icon: 'times',
+            confirm: {
+              title: 'Cancel Request',
+              message: `Withdraw your request to borrow "${item.title}"?`,
+              confirmLabel: 'Cancel Request',
+              destructive: true,
+              onConfirm: () => cancelBorrowRequest(item.id, req.id),
+            },
+          });
+        }
+        break;
+      }
+      case 'waitlisted':
+        icon = 'list';
+        status = `You're #${item.waitlist.indexOf(me) + 1} on the waitlist`;
+        actions.push({
+          label: 'Leave Waitlist', icon: 'sign-out',
+          confirm: {
+            title: 'Leave Waitlist',
+            message: `Leave the waitlist for "${item.title}"? You'll lose your spot.`,
+            confirmLabel: 'Leave',
+            destructive: true,
+            onConfirm: () => leaveWaitlist(item.id),
+          },
+        });
+        break;
+    }
+
+    return (
+      <View>
+        <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
+        <View style={styles.actionRow}>
+          <View style={styles.statusLine}>
+            <FontAwesome name={icon} size={12} color={urgent ? TANG_DEEP : MUTE} style={{ marginRight: 6 }} />
+            <Text style={[styles.statusText, urgent && { color: TANG_DEEP }]}>{status}</Text>
+          </View>
+          {actions.length > 0 && <View style={{ flex: 1 }} />}
+          {actions.map(a => (
+            <Pressable
+              key={a.label}
+              style={[styles.actionBtn, a.primary && styles.actionBtnConfirm]}
+              onPress={() => setPendingConfirm(a.confirm)}
+            >
+              <FontAwesome name={a.icon} size={12} color={a.primary ? TANGERINE : MUTE} />
+              <Text style={[styles.actionBtnText, a.primary && { color: TANGERINE }]}>{a.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  const renderSectionHeader = (title: string, count: number, highlight: boolean) => (
+    <View style={styles.sectionHeader}>
+      <Text style={[styles.sectionTitle, highlight && { color: TANGERINE }]}>{title}</Text>
+      <View style={[styles.sectionCount, highlight && { backgroundColor: TANGERINE }]}>
+        <Text style={[styles.sectionCountText, highlight && { color: CREAM }]}>{count}</Text>
+      </View>
+    </View>
+  );
+
+  const VIEWS: { key: ViewKey; label: string; actionCount: number }[] = [
+    { key: 'listings', label: 'My Listings',  actionCount: listingsActionCount },
+    { key: 'friends',  label: 'From Friends', actionCount: friendsActionCount },
+  ];
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.filterRow}>
-          {TABS.map(t => {
-            const active = TAB_ACTIVE[t.key];
+        <View style={styles.segment}>
+          {VIEWS.map(v => {
+            const active = view === v.key;
             return (
               <Pressable
-                key={t.key}
-                style={[styles.filterBtn, tab === t.key && { backgroundColor: active.bg }]}
-                onPress={() => setTab(t.key)}
+                key={v.key}
+                style={[styles.segmentBtn, active && styles.segmentBtnActive]}
+                onPress={() => setView(v.key)}
               >
-                <Text style={[styles.filterBtnText, tab === t.key && { color: active.text }]}>
-                  {t.label}{t.count > 0 ? ` (${t.count})` : ''}
-                </Text>
+                <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{v.label}</Text>
+                {v.actionCount > 0 && (
+                  <View style={styles.segmentBadge}>
+                    <Text style={styles.segmentBadgeText}>{v.actionCount}</Text>
+                  </View>
+                )}
               </Pressable>
             );
           })}
         </View>
 
-        {tab === 'listing' && (
-          <View style={[styles.filterRow, { marginTop: 8, flexWrap: 'wrap' }]}>
-            {LISTING_FILTERS.map(f => (
-              <Pressable
-                key={f.key}
-                style={[styles.filterBtn, listingFilter === f.key && {
-                  backgroundColor: f.key === 'free' ? TANGERINE : f.key === 'available_borrow' ? SKY : f.key === 'borrowed' ? BUTTER : f.key === 'skills' ? SAGE : INK,
-                }]}
-                onPress={() => setListingFilter(f.key)}
-              >
-                <Text style={[styles.filterBtnText, listingFilter === f.key && {
-                  color: f.key === 'borrowed' ? INK : CREAM,
-                }]}>{f.label}</Text>
-              </Pressable>
-            ))}
+        {view === 'listings' && (
+          <View style={[styles.filterRow, { marginTop: 10 }]}>
+            {LISTING_FILTERS.map(f => {
+              const active = listingFilter === f.key;
+              return (
+                <Pressable
+                  key={f.key}
+                  style={[styles.filterBtn, active && { backgroundColor: f.color }]}
+                  onPress={() => setListingFilter(f.key)}
+                >
+                  <Text style={[styles.filterBtnText, active && { color: CREAM }]}>{f.label}</Text>
+                </Pressable>
+              );
+            })}
           </View>
         )}
       </View>
 
-      {tab === 'listing' && (
+      {view === 'listings' && (
         listingSections.length === 0 ? (
           <EmptyState
             icon="gift"
-            title="No listings yet"
+            title={listingFilter === 'all' ? 'No listings yet' : 'Nothing here'}
             subtitle="Share something with your friends"
             ctaLabel="List something →"
             onCta={() => router.push('/item/new')}
@@ -304,14 +459,7 @@ export default function MyItemsScreen() {
             sections={listingSections}
             keyExtractor={item => item.id}
             stickySectionHeadersEnabled={false}
-            renderSectionHeader={({ section }) => (
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                <View style={styles.sectionCount}>
-                  <Text style={styles.sectionCountText}>{section.count}</Text>
-                </View>
-              </View>
-            )}
+            renderSectionHeader={({ section }) => renderSectionHeader(section.title, section.data.length, section.key === 'action')}
             renderItem={renderDonorCard}
             contentContainerStyle={{ paddingBottom: 100, paddingTop: 4 }}
             showsVerticalScrollIndicator={false}
@@ -319,84 +467,45 @@ export default function MyItemsScreen() {
         )
       )}
 
-      {tab === 'claimed' && (
-        claimedItems.length === 0 ? (
+      {view === 'friends' && (
+        visibleFriendSections.length === 0 ? (
           <EmptyState
             icon="hand-o-right"
-            title="No claimed items"
-            subtitle="Items you claim from friends will appear here"
+            title="Nothing from friends yet"
+            subtitle="Items you claim, borrow, request, or join a waitlist for will show up here"
             ctaLabel="Browse items →"
             onCta={() => router.push('/')}
           />
         ) : (
-          <FlatList
-            data={claimedItems}
+          <SectionList
+            sections={visibleFriendSections}
             keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <View>
-                <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
-                {item.status === 'claimed' && item.claimDeadline && (() => {
-                  const label = formatTimeLeft(new Date(item.claimDeadline), now);
-                  const expired = new Date(item.claimDeadline) <= now;
-                  return (
-                    <View style={styles.positionRow}>
-                      <FontAwesome name="clock-o" size={12} color={expired ? TANG_DEEP : BUTTER} style={{ marginRight: 6 }} />
-                      <Text style={[styles.positionText, { color: expired ? TANG_DEEP : INK }]}>
-                        {expired ? 'Pickup window expired' : `${label} to pick up`}
-                      </Text>
-                    </View>
-                  );
-                })()}
-                {item.status === 'pending_pickup' && (
-                  <View style={styles.positionRow}>
-                    <FontAwesome name="clock-o" size={12} color={MUTE} style={{ marginRight: 6 }} />
-                    <Text style={[styles.positionText, { color: MUTE }]}>Waiting for donor to confirm pickup</Text>
-                  </View>
-                )}
-              </View>
-            )}
-            contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }}
+            stickySectionHeadersEnabled={false}
+            renderSectionHeader={({ section }) =>
+              renderSectionHeader(section.title, section.data.length, section.key === 'pickup' || section.key === 'borrowing')}
+            renderItem={({ item, section }) => renderFriendCard(item, section.key)}
+            contentContainerStyle={{ paddingBottom: 40, paddingTop: 4 }}
             showsVerticalScrollIndicator={false}
           />
         )
       )}
 
-      {tab === 'waitlisted' && (
-        waitlistedItems.length === 0 ? (
-          <EmptyState
-            icon="list"
-            title="Not on any waitlists"
-            subtitle="Items you've joined the waitlist for will appear here"
-            ctaLabel="Browse items →"
-            onCta={() => router.push('/')}
-          />
-        ) : (
-          <FlatList
-            data={waitlistedItems}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => {
-              const pos = item.waitlist.indexOf(currentUser.id) + 1;
-              return (
-                <View>
-                  <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
-                  <View style={styles.positionRow}>
-                    <FontAwesome name="list" size={12} color="#8A3A3A" style={{ marginRight: 6 }} />
-                    <Text style={styles.positionText}>You are #{pos} on the waitlist</Text>
-                  </View>
-                </View>
-              );
-            }}
-            contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }}
-            showsVerticalScrollIndicator={false}
-          />
-        )
-      )}
-
-      {tab === 'listing' && (
+      {view === 'listings' && (
         <Pressable style={styles.fab} onPress={() => router.push('/item/new')}>
           <FontAwesome name="plus" size={22} color="#fff" />
         </Pressable>
       )}
+
+      <ConfirmSheet
+        visible={!!pendingConfirm}
+        title={pendingConfirm?.title ?? ''}
+        message={pendingConfirm?.message ?? ''}
+        confirmLabel={pendingConfirm?.confirmLabel ?? 'Confirm'}
+        cancelLabel="Never mind"
+        destructive={pendingConfirm?.destructive}
+        onConfirm={() => { pendingConfirm?.onConfirm(); setPendingConfirm(null); }}
+        onCancel={() => setPendingConfirm(null)}
+      />
     </View>
   );
 }
@@ -425,6 +534,37 @@ function EmptyState({ icon, title, subtitle, ctaLabel, onCta }: {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FBF6EE' },
   header: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: CREAM_2,
+    borderRadius: 12,
+    padding: 3,
+    gap: 3,
+  },
+  segmentBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: 9,
+  },
+  segmentBtnActive: { backgroundColor: INK },
+  segmentText: { fontSize: 14, fontWeight: '700', color: MUTE },
+  segmentTextActive: { color: CREAM },
+  segmentBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 5,
+    backgroundColor: TANGERINE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentBadgeText: { fontSize: 11, fontWeight: '800', color: CREAM },
+  statusLine: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
+  statusText: { fontSize: 12, color: MUTE, fontWeight: '600', flexShrink: 1 },
   filterRow: { flexDirection: 'row', gap: 8 },
   filterBtn: {
     paddingHorizontal: 14,
@@ -493,13 +633,6 @@ const styles = StyleSheet.create({
   actionBtnDanger:  { backgroundColor: CREAM_2 },
   actionBtnConfirm: { backgroundColor: CREAM_2 },
   actionBtnText: { fontSize: 12, color: MUTE, fontWeight: '600' },
-  positionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 12,
-  },
-  positionText: { fontSize: 12, color: '#8A3A3A', fontWeight: '600' },
   empty: {
     flex: 1,
     alignItems: 'center',
