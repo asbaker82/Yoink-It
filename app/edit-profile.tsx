@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAuth } from '@/store/AuthContext';
 import { useApp } from '@/store/AppContext';
-import AddressInput from '@/components/AddressInput';
+import ZipInput, { isValidZip, extractZip } from '@/components/ZipInput';
 import ImageCropModal from '@/components/ImageCropModal';
 import { ItemVisibility } from '@/store/types';
 
@@ -68,7 +68,8 @@ export default function EditProfileScreen() {
 
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email ?? '');
-  const [defaultAddress, setDefaultAddress] = useState(user.defaultAddress ?? '');
+  const [zip, setZip] = useState(extractZip(user.defaultAddress));
+  const [zipError, setZipError] = useState('');
   const [profilePhoto, setProfilePhoto] = useState(user.profilePhoto ?? '');
   const [itemVisibility, setItemVisibility] = useState<ItemVisibility>(user.itemVisibility ?? 'added');
   const [nameError, setNameError] = useState('');
@@ -104,11 +105,17 @@ export default function EditProfileScreen() {
       return;
     }
     setNameError('');
+    if (zip && !isValidZip(zip)) {
+      setZipError('Enter a 5-digit ZIP code, or leave it blank.');
+      return;
+    }
+    setZipError('');
     setSaving(true);
     await updateAuthUser({
       name: trimmedName,
       email: email.trim(),
-      defaultAddress: defaultAddress.trim() || undefined,
+      // '' clears it (mapped to null in AuthContext)
+      defaultAddress: zip,
       profilePhoto: profilePhoto || undefined,
       itemVisibility,
     });
@@ -188,25 +195,14 @@ export default function EditProfileScreen() {
         <Text style={styles.readonlyHint}>Phone number cannot be changed here.</Text>
       </View>
 
-      {/* Default address */}
-      <View style={[styles.card, { zIndex: 10 }]}>
-        <Text style={styles.sectionTitle}>Default Pickup Address</Text>
+      {/* ZIP code */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>ZIP Code</Text>
         <Text style={styles.sectionSubtitle}>
-          This address will pre-fill the pickup location when you create a new listing.
+          Pre-fills the pickup ZIP on new listings. Yoink It never stores your street address. Share the exact spot by text when you arrange a pickup.
         </Text>
-        <View style={{ zIndex: 10 }}>
-          <AddressInput
-            value={defaultAddress}
-            onChangeText={setDefaultAddress}
-            placeholder="Start typing your address…"
-          />
-        </View>
-        {defaultAddress ? (
-          <Pressable onPress={() => setDefaultAddress('')} style={styles.clearAddressBtn}>
-            <FontAwesome name="times-circle" size={13} color={MUTE} style={{ marginRight: 5 }} />
-            <Text style={styles.clearAddressText}>Clear address</Text>
-          </Pressable>
-        ) : null}
+        <ZipInput value={zip} onChangeText={z => { setZip(z); setZipError(''); }} error={!!zipError} />
+        {zipError ? <Text style={styles.zipError}>{zipError}</Text> : null}
       </View>
 
       {/* Listing visibility */}
@@ -414,13 +410,7 @@ const styles = StyleSheet.create({
   visibilityLabel: { fontSize: 14, fontWeight: '600', color: INK_2 },
   visibilityLabelSelected: { color: TANGERINE },
   visibilityDesc: { fontSize: 12, color: MUTE, marginTop: 3, lineHeight: 17 },
-  clearAddressBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    alignSelf: 'flex-start',
-  },
-  clearAddressText: { fontSize: 13, color: MUTE },
+  zipError: { fontSize: 13, color: '#D8531F', marginTop: 6 },
 
   saveBtn: {
     flexDirection: 'row',

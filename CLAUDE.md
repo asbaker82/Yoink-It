@@ -59,17 +59,17 @@ app/
     contacts.tsx           Friend discovery from device contacts
   (tabs)/
     _layout.tsx            Tab bar + headerRight profile icon on Browse and My Items
-    index.tsx              Browse — fuzzy search, listing type + status filters, distance filter, swipe-to-dismiss, search alerts
+    index.tsx              Browse — fuzzy search, listing type + status filters, swipe-to-dismiss, search alerts
     my-items.tsx           My Items — Listing / Claimed / Waitlisted / Lending tabs + FAB
     profile.tsx            Profile — reached via header icon, not tab bar
   item/
-    [id].tsx               Item detail — claim, waitlist, pickup, dispose, edit, SMS, lightbox, distance, borrow request
+    [id].tsx               Item detail — claim, waitlist, pickup, dispose, edit, SMS, lightbox, borrow request
     new.tsx                New listing form (modal)
     edit/[id].tsx          Edit listing form (modal)
   items-list.tsx           Sectioned listing view — ?filter=listed|active|claimed
   friend/[id].tsx          A friend's open listings (Free / Borrow / Skills), reached by tapping a friend in Profile. Uses getFriendItems() so visibility rules apply.
   add-friends.tsx          Friend discovery — contacts section + others section
-  edit-profile.tsx         Edit name, email, photo, default address, item visibility
+  edit-profile.tsx         Edit name, email, photo, ZIP code, item visibility
 ```
 
 Path alias `@/` maps to the repo root.
@@ -130,11 +130,11 @@ Three helpers for calendar fields that store dates as `YYYY-MM-DD` strings:
 - `playWaitlistSound()` — softer two-note ascending boop, same dual-path approach.
 - Both fail silently so animations still run if audio is blocked.
 
-### Distance — `utils/geocode.ts`
-- `geocodeAddress(address)` calls Nominatim (OpenStreetMap, no API key). Module-level `Map` cache prevents duplicate calls. Rate-limit: 1100 ms delay between requests.
-- `haversineMiles(a, b)` computes driving-distance proxy in miles.
-- Browse screen geocodes user's `defaultAddress` + each visible item's `pickupLocation`, then filters by `maxMiles` chip selection. Distance filter chips (≤5, 10, 25, 50 mi, Any) are always visible; if the user has no `defaultAddress` set, a prompt to set one is shown instead of distances.
-- Item detail screen computes and displays distance in the Pickup Details card.
+### Location privacy — ZIP codes only
+- The app **never stores street addresses**. `Item.pickupLocation` and `User.defaultAddress` keep their names but hold a 5-digit ZIP (`pickupLocation` is `''` for skills). Exact pickup spots are arranged by text.
+- DB check constraints `items_pickup_zip_check` and `profiles_zip_check` reject anything that isn't a ZIP.
+- `components/ZipInput.tsx` is the only location input (digits only, max 5). It exports `isValidZip` and `extractZip` (pulls a trailing ZIP out of legacy address strings).
+- Item detail shows a non-tappable "Pickup area · ZIP …" card — no maps/directions link. No third-party geocoding.
 
 ### Photo grids
 Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in `item/[id].tsx` use `flexDirection: 'row', flexWrap: 'wrap', gap: 10` — **not** a horizontal `ScrollView`. The delete (×) button on each photo thumbnail is `position: 'absolute', top: 4, right: 4` so it stays inside the photo bounds, not floating outside.
@@ -153,9 +153,10 @@ Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in 
 | `HeaderLogo` | Speed-wordmark logo used as `headerTitle` on all screens. Accepts `size` prop (default 22). Uses `BricolageGrotesque_800ExtraBold` font. |
 | `CustomTabBar` | Custom bottom tab bar (Browse + My Items). Also owns the hidden-items trash icon and restore sheet. Reads dismissed state from `useApp()`. |
 | `ProfileHeaderButton` | Avatar/initials button (40×40) in header right → profile screen |
-| `ItemCard` | Card used in Browse, My Items, and items-list. Accepts optional `distance` prop. Borrow items show a single left badge: "Borrow" (sky-blue) when available, "Borrowed" (yellow/dark text) when out. |
+| `ItemCard` | Card used in Browse, My Items, items-list, and friend pages. Shows the pickup ZIP. Borrow items show a single left badge: "Borrow" (sky-blue) when available, "Borrowed" (yellow/dark text) when out. |
 | `SwipeableCard` | Wraps `ItemCard` in Browse. `PanResponder`-based swipe-left-to-dismiss. Shows an `eye-slash` hint icon as the card slides. Calls `onDismiss` after animation completes. |
-| `AddressInput` | Nominatim autocomplete. Wrapping `View` needs `zIndex: 10` to float above siblings. |
+| `ZipInput` | 5-digit ZIP field used for item pickup and profile. Exports `isValidZip` / `extractZip`. |
+| `FriendAccessInput` | Everyone / Only these / All except picker for listing visibility. |
 | `DatePickerInput` | Custom calendar for single date selection. Displays and accepts **MM-DD-YYYY** format. On web: absolute dropdown (no `dropUp`); with `dropUp` prop: Modal overlay (bypasses overflow clipping). Fixed width 276 px — never stretch. Past dates disabled. |
 | `DateRangePicker` | Calendar for selecting a start+end date range (used in borrow request form). Always uses Modal overlay. First tap sets start, second tap (later date) sets end and closes. Highlights the range between selected dates. |
 | `ImageLightbox` | Full-screen photo modal with keyboard nav on web. Sibling of `ScrollView`, never nested. |

@@ -14,7 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
 import { DisposalMethod, DISPOSAL_METHOD_LABELS, BlockedPeriod } from '@/store/types';
-import AddressInput from '@/components/AddressInput';
+import ZipInput, { isValidZip, extractZip } from '@/components/ZipInput';
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
 import FriendAccessInput, { FriendAccess, friendAccessError } from '@/components/FriendAccessInput';
@@ -92,7 +92,7 @@ export default function EditItemScreen() {
     excluded: item.excludedFriends,
   });
   const isSkill = item.listingType === 'skill';
-  const [pickupLocation, setPickupLocation] = useState(item.pickupLocation);
+  const [pickupLocation, setPickupLocation] = useState(extractZip(item.pickupLocation));
   const [pickupWindow, setPickupWindow] = useState(item.pickupWindow);
   const [disposalDate, setDisposalDate] = useState(initialDisposalDate);
   const [disposalMethod, setDisposalMethod] = useState<DisposalMethod>(() => {
@@ -140,8 +140,8 @@ export default function EditItemScreen() {
 
     if (!title.trim())
       next.title = 'Please enter a title for this item.';
-    if (!isSkill && !pickupLocation.trim())
-      next.pickupLocation = 'Please enter a pickup location.';
+    if (!isSkill && !isValidZip(pickupLocation))
+      next.pickupLocation = 'Enter the 5-digit ZIP code where the item is.';
     if (!isSkill && !pickupWindow.trim())
       next.pickupWindow = 'Please describe when the item can be picked up.';
 
@@ -180,7 +180,7 @@ export default function EditItemScreen() {
       description: description.trim(),
       photos,
       restrictions: restrictions.trim() || undefined,
-      pickupLocation: pickupLocation.trim(),
+      pickupLocation: isSkill ? '' : pickupLocation,
       pickupWindow: pickupWindow.trim(),
       // [] clears a list (mapped to null in AppContext)
       allowedBorrowers: access.allowed ?? [],
@@ -273,14 +273,14 @@ export default function EditItemScreen() {
         />
       </View>
 
-      {/* Item Location */}
+      {/* Pickup ZIP */}
       {!isSkill && (
-        <View style={[styles.section, { zIndex: 10 }]} {...trackOffset('pickupLocation')}>
-          <Text style={styles.label}>Item Location <Text style={styles.required}>*</Text></Text>
-          <AddressInput
+        <View style={styles.section} {...trackOffset('pickupLocation')}>
+          <Text style={styles.label}>Pickup ZIP Code <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.hint}>Only the ZIP is shown. Share the exact address by text when you arrange pickup.</Text>
+          <ZipInput
             value={pickupLocation}
-            onChangeText={t => { setPickupLocation(t); clearError('pickupLocation'); }}
-            placeholder="e.g. 123 Main St, Springfield"
+            onChangeText={z => { setPickupLocation(z); clearError('pickupLocation'); }}
             error={!!errors.pickupLocation}
           />
           <FieldError message={errors.pickupLocation} />

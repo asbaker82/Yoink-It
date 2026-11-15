@@ -93,7 +93,7 @@ export default function ItemCard({ item, onPress }: Props) {
           ) : (
             <View style={styles.footerItem}>
               <FontAwesome name="map-marker" size={12} color={SKY} style={{ marginRight: 4 }} />
-              <Text style={styles.footerText} numberOfLines={1}>{item.pickupLocation}</Text>
+              <Text style={styles.footerText} numberOfLines={1}>{item.pickupLocation ? `ZIP ${item.pickupLocation}` : ''}</Text>
             </View>
           )}
           <View style={styles.footerRight}>

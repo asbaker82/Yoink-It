@@ -139,7 +139,7 @@ export default function ProfileScreen() {
         {currentUser.defaultAddress ? (
           <View style={styles.addressRow}>
             <FontAwesome name="map-marker" size={12} color={MUTE} style={{ marginRight: 5 }} />
-            <Text style={styles.addressText} numberOfLines={1}>{currentUser.defaultAddress}</Text>
+            <Text style={styles.addressText} numberOfLines={1}>ZIP {currentUser.defaultAddress}</Text>
           </View>
         ) : null}
         <View style={styles.profileActions}>

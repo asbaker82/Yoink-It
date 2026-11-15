@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (updates.name           !== undefined) fieldMap.name            = updates.name;
     if (updates.email          !== undefined) fieldMap.email           = updates.email;
-    if (updates.defaultAddress !== undefined) fieldMap.default_address = updates.defaultAddress ?? null;
+    if (updates.defaultAddress !== undefined) fieldMap.default_address = updates.defaultAddress || null;
     if (updates.itemVisibility !== undefined) fieldMap.item_visibility = updates.itemVisibility;
     if (updates.profilePhoto   !== undefined) fieldMap.profile_photo   = updates.profilePhoto ?? null;
     if (updates.friends        !== undefined) fieldMap.friends         = updates.friends;

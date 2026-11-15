@@ -64,14 +64,6 @@ function openSms(phone: string, body: string) {
   Linking.openURL(url);
 }
 
-function openDirections(address: string) {
-  const encoded = encodeURIComponent(address);
-  const url = Platform.OS === 'ios'
-    ? `maps://maps.apple.com/?daddr=${encoded}`
-    : `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
-  Linking.openURL(url);
-}
-
 function formatTimeLeft(deadline: Date, now: Date): string {
   const ms = deadline.getTime() - now.getTime();
   if (ms <= 0) return '';
@@ -354,8 +346,10 @@ export default function ItemDetailScreen() {
 
           {/* Category row */}
           <Text style={styles.categoryLabel}>
-            {item.restrictions ? 'RESTRICTED  ·  ' : ''}
-            {item.pickupLocation.split(',')[0].toUpperCase()}
+            {[
+              item.restrictions ? 'RESTRICTED' : '',
+              item.pickupLocation ? `NEAR ${item.pickupLocation}` : '',
+            ].filter(Boolean).join('  ·  ')}
           </Text>
 
           {/* Title */}
@@ -458,7 +452,7 @@ export default function ItemDetailScreen() {
           {isGive && item.status !== 'picked_up' && (
             <View style={styles.detailsGrid}>
               {[
-                { k: 'Location',    v: item.pickupLocation },
+                { k: 'ZIP Code',    v: item.pickupLocation },
                 { k: 'Window',      v: item.pickupWindow },
                 { k: 'Pick Up Within', v: pickUpWithinValue },
                 { k: 'Disposal',    v: disposalDate ? `${disposalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${daysLeft! <= 0 ? 'expired' : daysLeft === 1 ? 'last day' : `${daysLeft}d left`}${isUrgent ? ' ⚠️' : ''}` : '' },
@@ -477,7 +471,7 @@ export default function ItemDetailScreen() {
           {isBorrow && (
             <View style={styles.detailsGrid}>
               {[
-                ...(!isBorrowedByMe ? [{ k: 'Location', v: item.pickupLocation }, { k: 'Availability', v: item.pickupWindow }] : []),
+                ...(!isBorrowedByMe ? [{ k: 'ZIP Code', v: item.pickupLocation }, { k: 'Availability', v: item.pickupWindow }] : []),
                 item.borrowedUntil && !isBorrowedByMe ? { k: 'Borrowed until', v: formatCalendarDate(item.borrowedUntil, { month: 'long', day: 'numeric', year: 'numeric' }) } : null,
                 item.borrowedUntil && isBorrowedByMe ? { k: 'Return Date', v: formatCalendarDate(item.borrowedUntil, { month: 'long', day: 'numeric', year: 'numeric' }) } : null,
                 item.borrowedUntil && isBorrowedByMe ? (() => {
@@ -494,18 +488,21 @@ export default function ItemDetailScreen() {
             </View>
           )}
 
-          {/* Pickup / directions card */}
-          {!isSkill && (isBorrow || item.status !== 'picked_up') && (
-            <Pressable style={styles.mapCard} onPress={() => openDirections(item.pickupLocation)}>
+          {/* Pickup area — ZIP only; the exact spot is arranged by text */}
+          {!isSkill && !!item.pickupLocation && (isBorrow || item.status !== 'picked_up') && (
+            <View style={styles.mapCard}>
               <View style={styles.mapPin}>
                 <FontAwesome name="map-marker" size={20} color={SAGE} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.mapCardTitle}>{isBorrowedByMe ? 'Return Location' : 'Item Location'} · {item.pickupLocation}</Text>
-                <Text style={styles.mapCardSub}>Tap for directions</Text>
+                <Text style={styles.mapCardTitle}>{isBorrowedByMe ? 'Return area' : 'Pickup area'} · ZIP {item.pickupLocation}</Text>
+                <Text style={styles.mapCardSub}>
+                  {isMyItem
+                    ? 'Share the exact address by text when you arrange pickup.'
+                    : `Text ${donor?.name.split(' ')[0] ?? 'them'} to arrange the exact spot.`}
+                </Text>
               </View>
-              <FontAwesome name="location-arrow" size={14} color={MUTE} />
-            </Pressable>
+            </View>
           )}
 
           {/* Disposal destination — Give Away only */}

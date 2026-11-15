@@ -160,3 +160,26 @@ alter table public.items add column if not exists excluded_friends uuid[];
 alter table public.items drop constraint if exists items_listing_type_check;
 alter table public.items add constraint items_listing_type_check
   check (listing_type in ('give','borrow','skill'));
+
+-- ────────────────────────────────────────────────────────────
+-- Privacy: store ZIP codes only, never street addresses.
+-- items.pickup_location and profiles.default_address keep their
+-- column names but hold a 5-digit ZIP (pickup_location is '' for
+-- skills). Existing rows are reduced to their trailing ZIP; rows
+-- without one are cleared.
+-- ────────────────────────────────────────────────────────────
+update public.items
+set pickup_location = coalesce(substring(pickup_location from '(\d{5})(?:-\d{4})?\s*$'), '')
+where pickup_location !~ '^(\d{5})?$';
+
+update public.profiles
+set default_address = substring(default_address from '(\d{5})(?:-\d{4})?\s*$')
+where default_address is not null and default_address !~ '^\d{5}$';
+
+alter table public.items drop constraint if exists items_pickup_zip_check;
+alter table public.items add constraint items_pickup_zip_check
+  check (pickup_location ~ '^(\d{5})?$');
+
+alter table public.profiles drop constraint if exists profiles_zip_check;
+alter table public.profiles add constraint profiles_zip_check
+  check (default_address is null or default_address ~ '^\d{5}$');
