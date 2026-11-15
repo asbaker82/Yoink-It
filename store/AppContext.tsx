@@ -89,11 +89,13 @@ if (updates.restrictions        !== undefined) f.restrictions        = updates.r
   return f as Parameters<typeof updateItemFields>[1];
 }
 
-// Existing borrowers/requesters keep access if later removed, so they can still return the item.
+// Existing claimants/waitlisters/borrowers/requesters keep access if later removed, so they can finish the handoff.
 function canSeeRestricted(item: Item, userId: string): boolean {
   if (!item.allowedBorrowers?.length) return true;
   return item.donorId === userId ||
     item.allowedBorrowers.includes(userId) ||
+    item.claimedBy === userId ||
+    item.waitlist.includes(userId) ||
     item.borrowedBy === userId ||
     item.borrowRequests.some(r => r.requesterId === userId && (r.status === 'pending' || r.status === 'approved'));
 }
@@ -609,14 +611,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         claimItem: async (id) => {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === id);
-          if (!item) return;
+          if (!item || !canSeeRestricted(item, currentUser.id)) return;
           const claimDeadline = new Date(Date.now() + item.claimPickupHours * 3600000).toISOString();
           await claimItemMutation.mutateAsync({ itemId: id, claimDeadline });
         },
         joinWaitlist: async (id) => {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === id);
-          if (!item || item.waitlist.includes(currentUser.id)) return;
+          if (!item || item.waitlist.includes(currentUser.id) || !canSeeRestricted(item, currentUser.id)) return;
           await joinWaitlistMutation.mutateAsync({ itemId: id, newWaitlist: [...item.waitlist, currentUser.id] });
         },
         leaveWaitlist: async (id) => {

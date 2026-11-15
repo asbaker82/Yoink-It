@@ -22,7 +22,7 @@ export default function ItemCard({ item, onPress }: Props) {
     (item.status === 'claimed' || item.status === 'pending_pickup');
   const youBorrowed = isBorrow && item.borrowedBy === currentUser.id &&
     (item.status === 'borrowed' || item.status === 'pending_return');
-  const showTrustedLock = !isGive && item.donorId === currentUser.id && !!item.allowedBorrowers?.length;
+  const showTrustedLock = item.donorId === currentUser.id && !!item.allowedBorrowers?.length;
 
   const disposalDate = isGive ? new Date(item.disposalDate) : null;
   const msLeft = disposalDate ? disposalDate.getTime() - Date.now() : null;
@@ -31,6 +31,10 @@ export default function ItemCard({ item, onPress }: Props) {
   const isUrgent = daysLeft !== null && daysLeft <= 3;
 
   const statusStyle = STATUS_STYLES[item.status] ?? STATUS_STYLES.available;
+  const badgeTextColor = isSkill ? CREAM
+    : isBorrow
+    ? (item.status === 'borrowed' || item.status === 'pending_return' ? INK : CREAM)
+    : statusStyle.text;
 
   return (
     <Pressable style={({ pressed }) => [styles.card, pressed && styles.cardPressed]} onPress={onPress}>
@@ -49,19 +53,9 @@ export default function ItemCard({ item, onPress }: Props) {
             : statusStyle.bg,
         }]}>
           {showTrustedLock && (
-            <FontAwesome
-              name="lock"
-              size={10}
-              color={item.status === 'borrowed' || item.status === 'pending_return' ? INK : CREAM}
-              style={{ marginRight: 4 }}
-            />
+            <FontAwesome name="lock" size={10} color={badgeTextColor} style={{ marginRight: 4 }} />
           )}
-          <Text style={[styles.statusText, {
-            color: isSkill ? CREAM
-              : isBorrow
-              ? (item.status === 'borrowed' || item.status === 'pending_return' ? INK : CREAM)
-              : statusStyle.text,
-          }]}>
+          <Text style={[styles.statusText, { color: badgeTextColor }]}>
             {isSkill ? 'Skill'
               : youClaimed ? 'You Claimed'
               : youBorrowed ? 'You Borrowed'

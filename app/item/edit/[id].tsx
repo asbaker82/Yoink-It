@@ -158,7 +158,7 @@ export default function EditItemScreen() {
       }
     }
 
-    if (item.listingType !== 'give' && allowedBorrowers && allowedBorrowers.length === 0)
+    if (allowedBorrowers && allowedBorrowers.length === 0)
       next.allowedBorrowers = 'Pick at least one friend, or choose All friends.';
 
     if (Object.keys(next).length > 0) {
@@ -179,14 +179,14 @@ export default function EditItemScreen() {
       restrictions: restrictions.trim() || undefined,
       pickupLocation: pickupLocation.trim(),
       pickupWindow: pickupWindow.trim(),
+      // [] clears the restriction (mapped to null in AppContext)
+      allowedBorrowers: allowedBorrowers ?? [],
       ...(item.listingType === 'give' ? {
         disposalDate: new Date(disposalDate).toISOString(),
         disposalMethod,
         claimPickupHours: days * 24,
       } : {
         blockedPeriods,
-        // [] clears the restriction (mapped to null in AppContext)
-        allowedBorrowers: allowedBorrowers ?? [],
       }),
     });
     router.back();
@@ -363,18 +363,18 @@ export default function EditItemScreen() {
         </View>
       )}
 
-      {/* Borrow/Skill: Who can see this */}
-      {item.listingType !== 'give' && (
-        <View style={styles.section} {...trackOffset('allowedBorrowers')}>
-          <Text style={styles.label}>{isSkill ? 'Who can ask for help?' : 'Who can borrow this?'}</Text>
-          <AllowedBorrowersInput
-            value={allowedBorrowers}
-            onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}
-            friends={friends}
-            error={errors.allowedBorrowers}
-          />
-        </View>
-      )}
+      {/* Who can see this */}
+      <View style={styles.section} {...trackOffset('allowedBorrowers')}>
+        <Text style={styles.label}>
+          {isSkill ? 'Who can ask for help?' : item.listingType === 'borrow' ? 'Who can borrow this?' : 'Who can claim this?'}
+        </Text>
+        <AllowedBorrowersInput
+          value={allowedBorrowers}
+          onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}
+          friends={friends}
+          error={errors.allowedBorrowers}
+        />
+      </View>
 
       {/* Borrow: Blocked Periods */}
       {item.listingType === 'borrow' && (

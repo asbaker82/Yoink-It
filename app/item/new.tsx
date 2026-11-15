@@ -137,7 +137,7 @@ export default function NewItemScreen() {
       }
     }
 
-    if (listingType !== 'give' && allowedBorrowers && allowedBorrowers.length === 0)
+    if (allowedBorrowers && allowedBorrowers.length === 0)
       next.allowedBorrowers = 'Pick at least one friend, or choose All friends.';
 
     if (Object.keys(next).length > 0) {
@@ -164,7 +164,7 @@ export default function NewItemScreen() {
       claimPickupHours: listingType === 'give' ? days * 24 : 0,
       listingType,
       blockedPeriods,
-      allowedBorrowers: listingType !== 'give' ? allowedBorrowers : undefined,
+      allowedBorrowers,
     });
     router.back();
   };
@@ -371,18 +371,18 @@ export default function NewItemScreen() {
         </View>
       )}
 
-      {/* Borrow/Skill: Who can see this */}
-      {listingType !== 'give' && (
-        <View style={styles.section} {...trackOffset('allowedBorrowers')}>
-          <Text style={styles.label}>{isSkill ? 'Who can ask for help?' : 'Who can borrow this?'}</Text>
-          <AllowedBorrowersInput
-            value={allowedBorrowers}
-            onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}
-            friends={friends}
-            error={errors.allowedBorrowers}
-          />
-        </View>
-      )}
+      {/* Who can see this */}
+      <View style={styles.section} {...trackOffset('allowedBorrowers')}>
+        <Text style={styles.label}>
+          {isSkill ? 'Who can ask for help?' : listingType === 'borrow' ? 'Who can borrow this?' : 'Who can claim this?'}
+        </Text>
+        <AllowedBorrowersInput
+          value={allowedBorrowers}
+          onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}
+          friends={friends}
+          error={errors.allowedBorrowers}
+        />
+      </View>
 
       {/* Borrow: Blocked Periods */}
       {listingType === 'borrow' && (

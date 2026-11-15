@@ -521,8 +521,8 @@ export default function ItemDetailScreen() {
             </View>
           )}
 
-          {/* Trusted borrowers — lender/helper view */}
-          {!isGive && isMyItem && !!item.allowedBorrowers?.length && (() => {
+          {/* Trusted friends — owner view */}
+          {isMyItem && !!item.allowedBorrowers?.length && (() => {
             const names = (item.allowedBorrowers ?? []).map(uid => getUserById(uid)?.name.split(' ')[0] ?? 'Unknown');
             const shown = names.slice(0, 3).join(', ');
             const extra = names.length > 3 ? ` +${names.length - 3} more` : '';
