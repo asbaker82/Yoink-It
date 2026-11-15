@@ -121,6 +121,7 @@ export default function ItemDetailScreen() {
     addBlockedPeriod,
     removeBlockedPeriod,
     updateItem,
+    canSeeRestricted,
   } = useApp();
 
   const [photoIndex, setPhotoIndex]           = useState(0);
@@ -146,9 +147,8 @@ export default function ItemDetailScreen() {
     return () => { clearInterval(id); };
   }, []);
 
-  const item = items.find(i => i.id === id);
-
-
+  const found = items.find(i => i.id === id);
+  const item = found && canSeeRestricted(found, currentUser.id) ? found : undefined;
 
   if (!item) {
     if (!itemsLoaded) {
@@ -502,6 +502,21 @@ export default function ItemDetailScreen() {
               </Text>
             </View>
           )}
+
+          {/* Trusted borrowers — lender view */}
+          {isBorrow && isMyItem && !!item.allowedBorrowers?.length && (() => {
+            const names = (item.allowedBorrowers ?? []).map(uid => getUserById(uid)?.name.split(' ')[0] ?? 'Unknown');
+            const shown = names.slice(0, 3).join(', ');
+            const extra = names.length > 3 ? ` +${names.length - 3} more` : '';
+            return (
+              <View style={styles.trustedCard}>
+                <FontAwesome name="lock" size={14} color="#7BA7BC" />
+                <Text style={styles.trustedText}>
+                  Only visible to <Text style={{ fontWeight: '700', color: INK }}>{shown}</Text>{extra}
+                </Text>
+              </View>
+            );
+          })()}
 
           {/* Blocked periods — Borrow lender view */}
           {isBorrow && isMyItem && (
@@ -1197,6 +1212,11 @@ const styles = StyleSheet.create({
   blockedCard: {
     backgroundColor: CREAM_2, borderRadius: 16, padding: 16, marginBottom: 12,
   },
+  trustedCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: CREAM_2, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 12,
+  },
+  trustedText: { flex: 1, fontSize: 13, color: INK_2 },
   blockedCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   blockedCardTitle: { fontSize: 14, fontWeight: '700', color: INK, flex: 1 },
   blockedAddBtn: {

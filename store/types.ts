@@ -49,6 +49,8 @@ export interface Item {
   blockedPeriods: BlockedPeriod[];
   borrowedBy?: string;
   borrowedUntil?: string;
+  // Empty/undefined = visible to all friends; otherwise only these user ids
+  allowedBorrowers?: string[];
 }
 
 export interface SearchNotification {

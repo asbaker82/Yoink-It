@@ -145,3 +145,9 @@ begin
   delete from auth.users where id = auth.uid();
 end;
 $$;
+
+-- ────────────────────────────────────────────────────────────
+-- Trusted borrowers: null = visible to all friends,
+-- otherwise only the listed user ids can see the item.
+-- ────────────────────────────────────────────────────────────
+alter table public.items add column if not exists allowed_borrowers uuid[];

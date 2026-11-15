@@ -26,6 +26,7 @@ interface AppContextType {
   getUserById: (id: string) => User | undefined;
   getFriendItems: () => Item[];
   getMyItems: () => Item[];
+  canSeeRestricted: (item: Item, userId: string) => boolean;
   createItem: (data: Omit<Item, 'id' | 'donorId' | 'status' | 'waitlist' | 'createdAt' | 'borrowRequests' | 'borrowedBy' | 'borrowedUntil'>) => Promise<void>;
   updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
@@ -84,7 +85,17 @@ if (updates.restrictions        !== undefined) f.restrictions        = updates.r
   if (updates.blockedPeriods      !== undefined) f.blocked_periods     = updates.blockedPeriods;
   if (updates.borrowedBy          !== undefined) f.borrowed_by         = updates.borrowedBy ?? null;
   if (updates.borrowedUntil       !== undefined) f.borrowed_until      = updates.borrowedUntil ?? null;
+  if (updates.allowedBorrowers    !== undefined) f.allowed_borrowers   = updates.allowedBorrowers?.length ? updates.allowedBorrowers : null;
   return f as Parameters<typeof updateItemFields>[1];
+}
+
+// Existing borrowers/requesters keep access if later removed, so they can still return the item.
+function canSeeRestricted(item: Item, userId: string): boolean {
+  if (!item.allowedBorrowers?.length) return true;
+  return item.donorId === userId ||
+    item.allowedBorrowers.includes(userId) ||
+    item.borrowedBy === userId ||
+    item.borrowRequests.some(r => r.requesterId === userId && (r.status === 'pending' || r.status === 'approved'));
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -512,6 +523,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (item.listingType === 'give' && (item.status === 'picked_up' || item.status === 'disposed')) return false;
       if (item.listingType === 'borrow' && item.status === 'picked_up') return false;
       if (!myFriendIds.has(item.donorId)) return false;
+      if (!canSeeRestricted(item, currentUser.id)) return false;
       const donor = getUserById(item.donorId);
       if (!donor) return false;
       const visibility = donor.itemVisibility ?? 'added';
@@ -590,6 +602,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getUserById,
         getFriendItems,
         getMyItems,
+        canSeeRestricted,
         createItem:  async (data) => { await createItemMutation.mutateAsync(data as Parameters<typeof createItemMutation.mutateAsync>[0]); },
         updateItem:  async (id, updates) => { await updateItemMutation.mutateAsync({ id, updates }); },
         deleteItem:  async (id) => { await deleteItemMutation.mutateAsync(id); },
@@ -630,7 +643,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         createBorrowRequest: async (itemId, startDate, endDate) => {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === itemId);
-          if (!item) return;
+          if (!item || !canSeeRestricted(item, currentUser.id)) return;
           const newReq: BorrowRequest = {
             id: `${Date.now()}_${currentUser.id}`,
             requesterId: currentUser.id,

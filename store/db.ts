@@ -26,6 +26,7 @@ interface ItemRow {
   blocked_periods: BlockedPeriod[] | null;
   borrowed_by: string | null;
   borrowed_until: string | null;
+  allowed_borrowers: string[] | null;
 }
 
 interface ProfileRow {
@@ -73,6 +74,7 @@ export function rowToItem(row: ItemRow): Item {
     blockedPeriods:     row.blocked_periods ?? [],
     borrowedBy:         row.borrowed_by ?? undefined,
     borrowedUntil:      row.borrowed_until ? toDateOnly(row.borrowed_until) : undefined,
+    allowedBorrowers:   row.allowed_borrowers?.length ? row.allowed_borrowers : undefined,
   };
 }
 
@@ -119,6 +121,7 @@ export async function insertItem(
       listing_type:        item.listingType ?? 'give',
       borrow_requests:     [],
       blocked_periods:     item.blockedPeriods ?? [],
+      allowed_borrowers:   item.allowedBorrowers?.length ? item.allowedBorrowers : null,
     })
     .select()
     .single();
@@ -146,6 +149,7 @@ export async function updateItemFields(
     blocked_periods:     BlockedPeriod[];
     borrowed_by:         string | null;
     borrowed_until:      string | null;
+    allowed_borrowers:   string[] | null;
   }>
 ): Promise<Item> {
   const { data, error } = await supabase

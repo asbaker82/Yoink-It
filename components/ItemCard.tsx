@@ -20,6 +20,7 @@ export default function ItemCard({ item, onPress }: Props) {
     (item.status === 'claimed' || item.status === 'pending_pickup');
   const youBorrowed = isBorrow && item.borrowedBy === currentUser.id &&
     (item.status === 'borrowed' || item.status === 'pending_return');
+  const showTrustedLock = isBorrow && item.donorId === currentUser.id && !!item.allowedBorrowers?.length;
 
   const disposalDate = isBorrow ? null : new Date(item.disposalDate);
   const msLeft = disposalDate ? disposalDate.getTime() - Date.now() : null;
@@ -44,6 +45,14 @@ export default function ItemCard({ item, onPress }: Props) {
             ? (item.status === 'borrowed' || item.status === 'pending_return' ? '#F4C95D' : '#7BA7BC')
             : statusStyle.bg,
         }]}>
+          {showTrustedLock && (
+            <FontAwesome
+              name="lock"
+              size={10}
+              color={item.status === 'borrowed' || item.status === 'pending_return' ? INK : CREAM}
+              style={{ marginRight: 4 }}
+            />
+          )}
           <Text style={[styles.statusText, {
             color: isBorrow
               ? (item.status === 'borrowed' || item.status === 'pending_return' ? INK : CREAM)
@@ -182,6 +191,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statusText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase' },
   body: { padding: 14 },

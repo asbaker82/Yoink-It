@@ -17,6 +17,7 @@ import { DisposalMethod, DISPOSAL_METHOD_LABELS, ListingType, BlockedPeriod } fr
 import AddressInput from '@/components/AddressInput';
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
+import AllowedBorrowersInput from '@/components/AllowedBorrowersInput';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -36,7 +37,7 @@ async function pickImageWeb(): Promise<string | null> {
 
 const DISPOSAL_METHODS: DisposalMethod[] = ['charity', 'keep', 'trash'];
 
-type FieldKey = 'title' | 'pickupLocation' | 'pickupWindow' | 'disposalDate' | 'claimPickupHours';
+type FieldKey = 'title' | 'pickupLocation' | 'pickupWindow' | 'disposalDate' | 'claimPickupHours' | 'allowedBorrowers';
 type Errors = Partial<Record<FieldKey, string>>;
 
 function FieldError({ message }: { message?: string }) {
@@ -51,7 +52,9 @@ function FieldError({ message }: { message?: string }) {
 
 export default function NewItemScreen() {
   const router = useRouter();
-  const { createItem, currentUser } = useApp();
+  const { createItem, currentUser, users } = useApp();
+  const friends = users.filter(u => currentUser.friends.includes(u.id));
+  const [allowedBorrowers, setAllowedBorrowers] = useState<string[] | undefined>(undefined);
   const scrollRef = useRef<ScrollView>(null);
   const fieldOffsets = useRef<Partial<Record<FieldKey, number>>>({});
 
@@ -133,9 +136,12 @@ export default function NewItemScreen() {
       }
     }
 
+    if (listingType === 'borrow' && allowedBorrowers && allowedBorrowers.length === 0)
+      next.allowedBorrowers = 'Pick at least one friend, or choose All friends.';
+
     if (Object.keys(next).length > 0) {
       setErrors(next);
-      const order: FieldKey[] = ['title', 'pickupLocation', 'pickupWindow', 'disposalDate', 'claimPickupHours'];
+      const order: FieldKey[] = ['title', 'pickupLocation', 'pickupWindow', 'disposalDate', 'claimPickupHours', 'allowedBorrowers'];
       const firstField = order.find(f => next[f]);
       if (firstField && fieldOffsets.current[firstField] !== undefined) {
         scrollRef.current?.scrollTo({ y: fieldOffsets.current[firstField]! - 20, animated: true });
@@ -157,6 +163,7 @@ export default function NewItemScreen() {
       claimPickupHours: listingType === 'give' ? days * 24 : 0,
       listingType,
       blockedPeriods,
+      allowedBorrowers: listingType === 'borrow' ? allowedBorrowers : undefined,
     });
     router.back();
   };
@@ -344,6 +351,19 @@ export default function NewItemScreen() {
             />
           </View>
           <FieldError message={errors.claimPickupHours} />
+        </View>
+      )}
+
+      {/* Borrow: Who can borrow */}
+      {listingType === 'borrow' && (
+        <View style={styles.section} {...trackOffset('allowedBorrowers')}>
+          <Text style={styles.label}>Who can borrow this?</Text>
+          <AllowedBorrowersInput
+            value={allowedBorrowers}
+            onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}
+            friends={friends}
+            error={errors.allowedBorrowers}
+          />
         </View>
       )}
 
