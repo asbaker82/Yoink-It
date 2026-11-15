@@ -226,7 +226,14 @@ export default function BrowseScreen() {
 
   const handleSetAlert = async () => {
     const keyword = search.trim();
-    if (!keyword) return;
+    if (!keyword) {
+      if (Platform.OS === 'web') {
+        window.alert('Type a keyword in the search bar first, then tap the bell to set an alert.');
+      } else {
+        Alert.alert('Set an Alert', 'Type a keyword in the search bar first, then tap the bell to get notified when a match is posted.');
+      }
+      return;
+    }
     addToSearchHistory(keyword);
     const alreadyExists = await addSearchNotification(keyword);
     if (alreadyExists) {
@@ -291,23 +298,21 @@ export default function BrowseScreen() {
           ) : null}
         </View>
 
-        {/* Set alert button — shown when there's a search query */}
-        {search.trim().length > 0 && (
-          <Pressable
-            style={[
-              styles.alertBtn,
-              searchNotifications.some(n => n.keyword.toLowerCase() === search.trim().toLowerCase()) && styles.alertBtnActive,
-            ]}
-            onPress={handleSetAlert}
-            hitSlop={6}
-          >
-            <FontAwesome
-              name="bell"
-              size={15}
-              color={searchNotifications.some(n => n.keyword.toLowerCase() === search.trim().toLowerCase()) ? '#FBF6EE' : '#F26B3A'}
-            />
-          </Pressable>
-        )}
+        {/* Set alert button — always visible */}
+        <Pressable
+          style={[
+            styles.alertBtn,
+            searchNotifications.some(n => n.keyword.toLowerCase() === search.trim().toLowerCase()) && search.trim().length > 0 && styles.alertBtnActive,
+          ]}
+          onPress={handleSetAlert}
+          hitSlop={6}
+        >
+          <FontAwesome
+            name="bell"
+            size={15}
+            color={searchNotifications.some(n => n.keyword.toLowerCase() === search.trim().toLowerCase()) && search.trim().length > 0 ? '#FBF6EE' : '#F26B3A'}
+          />
+        </Pressable>
       </View>
 
       {/* Search history dropdown */}

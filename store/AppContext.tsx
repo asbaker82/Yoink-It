@@ -22,6 +22,7 @@ interface AppContextType {
   currentUser: User;
   users: User[];
   items: Item[];
+  itemsLoaded: boolean;
   getUserById: (id: string) => User | undefined;
   getFriendItems: () => Item[];
   getMyItems: () => Item[];
@@ -69,13 +70,11 @@ function itemToUpdateFields(updates: Partial<Item>) {
   if (updates.title               !== undefined) f.title               = updates.title;
   if (updates.description         !== undefined) f.description         = updates.description;
   if (updates.photos              !== undefined) f.photos              = updates.photos;
-  if (updates.condition           !== undefined) f.condition           = updates.condition;
-  if (updates.restrictions        !== undefined) f.restrictions        = updates.restrictions ?? null;
+if (updates.restrictions        !== undefined) f.restrictions        = updates.restrictions ?? null;
   if (updates.pickupLocation      !== undefined) f.pickup_location     = updates.pickupLocation;
   if (updates.pickupWindow        !== undefined) f.pickup_window       = updates.pickupWindow;
   if (updates.disposalDate        !== undefined) f.disposal_date       = updates.disposalDate;
   if (updates.disposalMethod      !== undefined) f.disposal_method     = updates.disposalMethod;
-  if (updates.disposalMethodNote  !== undefined) f.disposal_method_note = updates.disposalMethodNote ?? null;
   if (updates.claimPickupHours    !== undefined) f.claim_pickup_hours  = updates.claimPickupHours;
   if (updates.status              !== undefined) f.status              = updates.status;
   if (updates.claimedBy           !== undefined) f.claimed_by          = updates.claimedBy ?? null;
@@ -140,7 +139,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
-  const { data: items = [] } = useQuery({
+  const { data: items = [], isSuccess: itemsLoaded } = useQuery({
     queryKey: QUERY_KEYS.items,
     queryFn:  fetchAllItems,
     enabled:  !!authUser,
@@ -587,6 +586,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         users,
         items,
+        itemsLoaded,
         getUserById,
         getFriendItems,
         getMyItems,

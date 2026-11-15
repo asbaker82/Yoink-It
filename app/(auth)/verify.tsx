@@ -16,15 +16,22 @@ const BORDER    = '#E8DDD0';
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const { verifyOTP, isExistingUser, pendingPhone } = useAuth();
+  const { verifyOTP, isExistingUser, pendingPhone, sendOTP } = useAuth();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(30);
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     setTimeout(() => inputRef.current?.focus(), 300);
   }, []);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setInterval(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearInterval(id);
+  }, [resendCooldown]);
 
   const handleChange = (text: string) => {
     const digits = text.replace(/\D/g, '').slice(0, 4);
@@ -41,6 +48,7 @@ export default function VerifyScreen() {
     if (!ok) {
       setError('Incorrect code. Please check your messages and try again.');
       setCode('');
+      setTimeout(() => inputRef.current?.focus(), 50);
       return;
     }
     if (isExistingUser) {
@@ -106,7 +114,18 @@ export default function VerifyScreen() {
 
           <Text style={styles.hint}>
             Didn't receive a code?{' '}
-            <Text style={styles.hintLink} onPress={() => router.back()}>Re-enter your number</Text>
+            <Text
+              style={[styles.hintLink, resendCooldown > 0 && styles.hintLinkDisabled]}
+              onPress={async () => {
+                if (resendCooldown > 0 || !pendingPhone) return;
+                await sendOTP(pendingPhone);
+                setResendCooldown(30);
+              }}
+            >
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+            </Text>
+            {' · '}
+            <Text style={styles.hintLink} onPress={() => router.back()}>Re-enter number</Text>
           </Text>
         </View>
       </View>
@@ -160,4 +179,5 @@ const styles = StyleSheet.create({
   btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
   hint: { marginTop: 24, fontSize: 13, color: MUTE, textAlign: 'center' },
   hintLink: { fontWeight: '700', color: TANGERINE },
+  hintLinkDisabled: { color: MUTE },
 });

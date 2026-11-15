@@ -13,9 +13,10 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
-import { ItemCondition, DisposalMethod, DISPOSAL_METHOD_LABELS, CONDITION_LABELS } from '@/store/types';
+import { DisposalMethod, DISPOSAL_METHOD_LABELS, BlockedPeriod } from '@/store/types';
 import AddressInput from '@/components/AddressInput';
 import DatePickerInput from '@/components/DatePickerInput';
+import DateRangePicker from '@/components/DateRangePicker';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -33,10 +34,15 @@ async function pickImageWeb(): Promise<string | null> {
   });
 }
 
-const CONDITIONS: ItemCondition[] = ['excellent', 'good', 'fair', 'poor'];
-const DISPOSAL_METHODS: DisposalMethod[] = [
-  'goodwill', 'salvation_army', 'habitat', 'food_bank', 'other_charity', 'trash', 'keep',
-];
+const TANGERINE  = '#F26B3A';
+const TANG_DEEP  = '#D8531F';
+const CREAM      = '#FBF6EE';
+const CREAM_2    = '#F4ECDD';
+const INK        = '#1F1A17';
+const MUTE       = '#847A70';
+const BORDER     = '#E8DDD0';
+
+const DISPOSAL_METHODS: DisposalMethod[] = ['charity', 'keep', 'trash'];
 
 type FieldKey = 'title' | 'pickupLocation' | 'pickupWindow' | 'disposalDate' | 'claimPickupHours';
 type Errors = Partial<Record<FieldKey, string>>;
@@ -45,7 +51,7 @@ function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
     <View style={styles.errorRow}>
-      <FontAwesome name="exclamation-circle" size={13} color="#e53e3e" style={{ marginRight: 5 }} />
+      <FontAwesome name="exclamation-circle" size={13} color={TANG_DEEP} style={{ marginRight: 5 }} />
       <Text style={styles.errorText}>{message}</Text>
     </View>
   );
@@ -76,14 +82,19 @@ export default function EditItemScreen() {
   const [photos, setPhotos] = useState<string[]>(item.photos);
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description);
-  const [condition, setCondition] = useState<ItemCondition>(item.condition);
+
   const [restrictions, setRestrictions] = useState(item.restrictions ?? '');
+  const [blockedPeriods, setBlockedPeriods] = useState<BlockedPeriod[]>(item.blockedPeriods ?? []);
   const [pickupLocation, setPickupLocation] = useState(item.pickupLocation);
   const [pickupWindow, setPickupWindow] = useState(item.pickupWindow);
   const [disposalDate, setDisposalDate] = useState(initialDisposalDate);
-  const [disposalMethod, setDisposalMethod] = useState<DisposalMethod>(item.disposalMethod);
-  const [disposalMethodNote, setDisposalMethodNote] = useState(item.disposalMethodNote ?? '');
-  const [claimPickupHours, setClaimPickupHours] = useState(String(item.claimPickupHours));
+  const [disposalMethod, setDisposalMethod] = useState<DisposalMethod>(() => {
+    const m = item.disposalMethod as string;
+    if (m === 'trash') return 'trash';
+    if (m === 'keep') return 'keep';
+    return 'charity'; // goodwill, salvation_army, habitat, food_bank, other_charity → charity
+  });
+  const [claimPickupDays, setClaimPickupDays] = useState(String(Math.max(1, Math.round(item.claimPickupHours / 24))));
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -112,19 +123,20 @@ export default function EditItemScreen() {
       next.pickupLocation = 'Please enter a pickup location.';
     if (!pickupWindow.trim())
       next.pickupWindow = 'Please describe when the item can be picked up.';
-    if (!disposalDate.trim())
-      next.disposalDate = 'Please choose a disposal date.';
-    else if (isNaN(new Date(disposalDate).getTime()))
-      next.disposalDate = 'That date doesn\'t look right — pick one from the calendar or type MM-DD-YYYY.';
-    const hours = parseInt(claimPickupHours, 10);
-    if (isNaN(hours) || hours < 1)
-      next.claimPickupHours = 'Please enter a pickup window of at least 1 hour.';
 
-    // Claim window must fit before the disposal deadline
-    if (!next.disposalDate && !next.claimPickupHours && disposalDate && !isNaN(hours)) {
-      const hoursUntilDisposal = (new Date(disposalDate).getTime() - Date.now()) / 3_600_000;
-      if (hours >= hoursUntilDisposal) {
-        next.claimPickupHours = `The pickup window (${hours}h) must be shorter than the time until disposal (~${Math.floor(hoursUntilDisposal)}h away). Shorten the pickup window or choose a later disposal date.`;
+    const days = parseInt(claimPickupDays, 10);
+    if (item.listingType === 'give') {
+      if (!disposalDate.trim())
+        next.disposalDate = 'Please choose a disposal date.';
+      else if (isNaN(new Date(disposalDate).getTime()))
+        next.disposalDate = 'That date doesn\'t look right — pick one from the calendar or type MM-DD-YYYY.';
+      if (isNaN(days) || days < 1)
+        next.claimPickupHours = 'Please enter a pickup window of at least 1 day.';
+      if (!next.disposalDate && !next.claimPickupHours && disposalDate && !isNaN(days)) {
+        const daysUntilDisposal = (new Date(disposalDate).getTime() - Date.now()) / 86_400_000;
+        if (days >= daysUntilDisposal) {
+          next.claimPickupHours = `The pickup window (${days}d) must be shorter than the time until disposal (~${Math.floor(daysUntilDisposal)}d away). Shorten the pickup window or choose a later disposal date.`;
+        }
       }
     }
 
@@ -143,14 +155,16 @@ export default function EditItemScreen() {
       title: title.trim(),
       description: description.trim(),
       photos,
-      condition,
       restrictions: restrictions.trim() || undefined,
       pickupLocation: pickupLocation.trim(),
       pickupWindow: pickupWindow.trim(),
-      disposalDate: new Date(disposalDate).toISOString(),
-      disposalMethod,
-      disposalMethodNote: disposalMethodNote.trim() || undefined,
-      claimPickupHours: hours,
+      ...(item.listingType === 'give' ? {
+        disposalDate: new Date(disposalDate).toISOString(),
+        disposalMethod,
+        claimPickupHours: days * 24,
+      } : {
+        blockedPeriods,
+      }),
     });
     router.back();
   };
@@ -218,24 +232,6 @@ export default function EditItemScreen() {
         />
       </View>
 
-      {/* Condition */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Condition <Text style={styles.required}>*</Text></Text>
-        <View style={styles.chipRow}>
-          {CONDITIONS.map(c => (
-            <Pressable
-              key={c}
-              style={[styles.chip, condition === c && styles.chipActive]}
-              onPress={() => setCondition(c)}
-            >
-              <Text style={[styles.chipText, condition === c && styles.chipTextActive]}>
-                {CONDITION_LABELS[c]}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
       {/* Restrictions */}
       <View style={styles.section}>
         <Text style={styles.label}>Restrictions <Text style={styles.optional}>(optional)</Text></Text>
@@ -248,9 +244,9 @@ export default function EditItemScreen() {
         />
       </View>
 
-      {/* Pickup Location */}
+      {/* Item Location */}
       <View style={[styles.section, { zIndex: 10 }]} {...trackOffset('pickupLocation')}>
-        <Text style={styles.label}>Pickup Location <Text style={styles.required}>*</Text></Text>
+        <Text style={styles.label}>Item Location <Text style={styles.required}>*</Text></Text>
         <AddressInput
           value={pickupLocation}
           onChangeText={t => { setPickupLocation(t); clearError('pickupLocation'); }}
@@ -273,71 +269,96 @@ export default function EditItemScreen() {
         <FieldError message={errors.pickupWindow} />
       </View>
 
-      {/* Disposal Date */}
-      <View style={[styles.section, { zIndex: 20 }]} {...trackOffset('disposalDate')}>
-        <Text style={styles.label}>Disposal Date <Text style={styles.required}>*</Text></Text>
-        <Text style={styles.hint}>If no one picks up the item by this date, it will be disposed of.</Text>
-        <DatePickerInput
-          value={disposalDate}
-          onChange={d => { setDisposalDate(d); clearError('disposalDate'); }}
-        />
-        <FieldError message={errors.disposalDate} />
-      </View>
-
-      {/* Disposal Method */}
-      <View style={styles.section}>
-        <Text style={styles.label}>If unclaimed, goes to… <Text style={styles.required}>*</Text></Text>
-        <View style={styles.chipRow}>
-          {DISPOSAL_METHODS.map(m => (
-            <Pressable
-              key={m}
-              style={[styles.chip, disposalMethod === m && styles.chipActive]}
-              onPress={() => setDisposalMethod(m)}
-            >
-              <Text style={[styles.chipText, disposalMethod === m && styles.chipTextActive]}>
-                {DISPOSAL_METHOD_LABELS[m]}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-        {disposalMethod === 'other_charity' && (
-          <TextInput
-            style={[styles.input, { marginTop: 10 }]}
-            placeholder="Specify the charity…"
-            placeholderTextColor="#a0aec0"
-            value={disposalMethodNote}
-            onChangeText={setDisposalMethodNote}
+      {/* Give: Disposal Date */}
+      {item.listingType !== 'borrow' && (
+        <View style={[styles.section, { zIndex: 20 }]} {...trackOffset('disposalDate')}>
+          <Text style={styles.label}>Disposal Date <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.hint}>If no one picks up the item by this date, it will be disposed of.</Text>
+          <DatePickerInput
+            value={disposalDate}
+            onChange={d => { setDisposalDate(d); clearError('disposalDate'); }}
           />
-        )}
-      </View>
+          <FieldError message={errors.disposalDate} />
+        </View>
+      )}
 
-      {/* Claim Pickup Hours */}
-      <View style={styles.section} {...trackOffset('claimPickupHours')}>
-        <Text style={styles.label}>Hours to pick up after claiming <Text style={styles.required}>*</Text></Text>
-        <Text style={styles.hint}>How long does a donee have to arrange pickup before the next person on the waitlist is asked?</Text>
-        <View style={styles.row}>
-          {['24', '48', '72', '96'].map(h => (
-            <Pressable
-              key={h}
-              style={[styles.chip, claimPickupHours === h && styles.chipActive]}
-              onPress={() => { setClaimPickupHours(h); clearError('claimPickupHours'); }}
-            >
-              <Text style={[styles.chipText, claimPickupHours === h && styles.chipTextActive]}>
-                {h}h
+      {/* Give: Disposal Method */}
+      {item.listingType !== 'borrow' && (
+        <View style={styles.section}>
+          <Text style={styles.label}>If unclaimed, goes to… <Text style={styles.required}>*</Text></Text>
+          <View style={styles.chipRow}>
+            {DISPOSAL_METHODS.map(m => (
+              <Pressable
+                key={m}
+                style={[styles.chip, disposalMethod === m && styles.chipActive]}
+                onPress={() => setDisposalMethod(m)}
+              >
+                <Text style={[styles.chipText, disposalMethod === m && styles.chipTextActive]}>
+                  {DISPOSAL_METHOD_LABELS[m]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Give: Claim Pickup Days */}
+      {item.listingType !== 'borrow' && (
+        <View style={styles.section} {...trackOffset('claimPickupHours')}>
+          <Text style={styles.label}>Days to pick up after claiming <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.hint}>How long does a donee have to arrange pickup before the next person on the waitlist is asked?</Text>
+          <View style={styles.row}>
+            {['1', '2', '3', '4'].map(d => (
+              <Pressable
+                key={d}
+                style={[styles.chip, claimPickupDays === d && styles.chipActive]}
+                onPress={() => { setClaimPickupDays(d); clearError('claimPickupHours'); }}
+              >
+                <Text style={[styles.chipText, claimPickupDays === d && styles.chipTextActive]}>
+                  {d}d
+                </Text>
+              </Pressable>
+            ))}
+            <TextInput
+              style={[styles.input, styles.hoursInput, errors.claimPickupHours && styles.inputError]}
+              placeholder="Custom"
+              placeholderTextColor="#a0aec0"
+              value={['1', '2', '3', '4'].includes(claimPickupDays) ? '' : claimPickupDays}
+              onChangeText={t => { setClaimPickupDays(t); clearError('claimPickupHours'); }}
+              keyboardType="numeric"
+            />
+          </View>
+          <FieldError message={errors.claimPickupHours} />
+        </View>
+      )}
+
+      {/* Borrow: Blocked Periods */}
+      {item.listingType === 'borrow' && (
+        <View style={styles.section}>
+          <Text style={styles.label}>Block Out Dates <Text style={styles.optional}>(optional)</Text></Text>
+          <Text style={styles.hint}>Add periods when this item is unavailable — e.g. vacations, scheduled use.</Text>
+          {blockedPeriods.map((p, i) => (
+            <View key={i} style={styles.blockedPeriodRow}>
+              <FontAwesome name="ban" size={12} color="#a0aec0" style={{ marginRight: 6 }} />
+              <Text style={styles.blockedPeriodText}>
+                {new Date(p.start + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {' – '}
+                {new Date(p.end + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </Text>
-            </Pressable>
+              <Pressable onPress={() => setBlockedPeriods(prev => prev.filter((_, j) => j !== i))} style={{ marginLeft: 'auto' }}>
+                <FontAwesome name="times" size={14} color="#a0aec0" />
+              </Pressable>
+            </View>
           ))}
-          <TextInput
-            style={[styles.input, styles.hoursInput, errors.claimPickupHours && styles.inputError]}
-            placeholder="Custom"
-            placeholderTextColor="#a0aec0"
-            value={['24', '48', '72', '96'].includes(claimPickupHours) ? '' : claimPickupHours}
-            onChangeText={t => { setClaimPickupHours(t); clearError('claimPickupHours'); }}
-            keyboardType="numeric"
+          <DateRangePicker
+            startDate=''
+            endDate=''
+            onChange={(start, end) => {
+              if (start && end) setBlockedPeriods(prev => [...prev, { start, end }]);
+            }}
           />
         </View>
-        <FieldError message={errors.claimPickupHours} />
-      </View>
+      )}
 
       {/* Save */}
       <Pressable
@@ -353,33 +374,35 @@ export default function EditItemScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fa' },
+  container: { flex: 1, backgroundColor: CREAM },
   content: { paddingBottom: 40 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  notFoundText: { fontSize: 16, color: '#718096' },
+  notFoundText: { fontSize: 16, color: MUTE },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: CREAM_2,
     marginTop: 10,
+    marginHorizontal: 16,
+    borderRadius: 12,
     padding: 16,
   },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#2d3748', marginBottom: 12 },
-  label: { fontSize: 14, fontWeight: '700', color: '#2d3748', marginBottom: 6 },
-  required: { color: '#e53e3e' },
-  optional: { color: '#a0aec0', fontWeight: '400', fontSize: 13 },
-  hint: { fontSize: 12, color: '#a0aec0', marginBottom: 8 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: INK, marginBottom: 12 },
+  label: { fontSize: 14, fontWeight: '700', color: INK, marginBottom: 6 },
+  required: { color: TANG_DEEP },
+  optional: { color: MUTE, fontWeight: '400', fontSize: 13 },
+  hint: { fontSize: 12, color: MUTE, marginBottom: 8 },
   input: {
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: BORDER,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 15,
-    color: '#2d3748',
-    backgroundColor: '#fafafa',
+    color: INK,
+    backgroundColor: CREAM,
   },
   inputError: {
-    borderColor: '#fc8181',
-    backgroundColor: '#fff5f5',
+    borderColor: TANG_DEEP,
+    backgroundColor: '#FFF5F0',
   },
   errorRow: {
     flexDirection: 'row',
@@ -388,7 +411,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: '#e53e3e',
+    color: TANG_DEEP,
     flex: 1,
   },
   textArea: { minHeight: 100, paddingTop: 10 },
@@ -400,7 +423,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    backgroundColor: '#fff',
+    backgroundColor: CREAM,
     borderRadius: 10,
   },
   addPhotoBtn: {
@@ -408,13 +431,13 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#10B981',
+    borderColor: TANGERINE,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
-  addPhotoText: { fontSize: 12, color: '#10B981', fontWeight: '600' },
+  addPhotoText: { fontSize: 12, color: TANGERINE, fontWeight: '600' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   chip: {
@@ -422,26 +445,36 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f7fafc',
+    borderColor: BORDER,
+    backgroundColor: CREAM,
   },
-  chipActive: { backgroundColor: '#10B981', borderColor: '#10B981' },
-  chipText: { fontSize: 13, color: '#4a5568', fontWeight: '600' },
-  chipTextActive: { color: '#fff' },
+  chipActive: { backgroundColor: TANGERINE, borderColor: TANGERINE },
+  chipText: { fontSize: 13, color: INK, fontWeight: '600' },
+  chipTextActive: { color: CREAM },
   submitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#10B981',
+    backgroundColor: TANGERINE,
     margin: 16,
     borderRadius: 14,
     paddingVertical: 16,
-    shadowColor: '#000',
+    shadowColor: TANG_DEEP,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,
   },
   submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { fontSize: 17, fontWeight: '800', color: '#fff' },
+  submitBtnText: { fontSize: 17, fontWeight: '800', color: CREAM },
+  blockedPeriodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: CREAM,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 6,
+  },
+  blockedPeriodText: { fontSize: 13, color: INK, fontWeight: '600' },
 });

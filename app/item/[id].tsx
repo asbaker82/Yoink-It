@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
+  ActivityIndicator,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -101,6 +102,7 @@ export default function ItemDetailScreen() {
   const insets = useSafeAreaInsets();
   const {
     items,
+    itemsLoaded,
     currentUser,
     getUserById,
     claimItem,
@@ -149,6 +151,13 @@ export default function ItemDetailScreen() {
 
 
   if (!item) {
+    if (!itemsLoaded) {
+      return (
+        <View style={styles.notFound}>
+          <ActivityIndicator size="large" color={TANGERINE} />
+        </View>
+      );
+    }
     return (
       <View style={styles.notFound}>
         <Text style={styles.notFoundText}>Item not found.</Text>
@@ -775,8 +784,8 @@ export default function ItemDetailScreen() {
         )}
 
         {!isBorrow && !isMyItem && isOnWaitlist && (
-          <Pressable style={styles.primaryBtn} onPress={() => setShowLeaveWaitlistSheet(true)}>
-            <Text style={styles.primaryBtnText}>Leave Waitlist</Text>
+          <Pressable style={styles.ghostBtn} onPress={() => setShowLeaveWaitlistSheet(true)}>
+            <Text style={styles.ghostBtnText}>Leave Waitlist</Text>
           </Pressable>
         )}
 
