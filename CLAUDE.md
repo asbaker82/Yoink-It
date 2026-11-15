@@ -186,13 +186,17 @@ Two-level filter system:
 1. **Listing type bar** (segmented control): All / Free / Borrow — styled with distinct active colors (dark / tangerine / sky). Changing this resets the status filter.
 2. **Status chips** (shown only when listing type ≠ All): Free → All / Available / Claimed; Borrow → All / Available / Borrowed. The "Borrowed" chip matches both `borrowed` and `pending_return` statuses.
 
-**Fuzzy search** — `fuzzyScore(query, item)` uses Levenshtein edit distance with strict thresholds:
+**Fuzzy search** — `fuzzyScore(query, item)` in `utils/search.ts` (also used for search-alert matching):
 - Exact phrase match → score 100
-- Token substring match → score 10 per token
+- Whole query is a synonym term (e.g. "love seat") and a group-mate appears → 90
+- Token substring match → score 10 per token (reverse containment only for listing words ≥ 4 chars, so "of"/"a" never match)
+- Synonym match → 8 per token (whole words, plurals folded, no typo tolerance)
 - Edit distance: words ≥ 6 chars allow 1 edit; words ≥ 9 chars allow 2 edits
 - **Multi-word queries require ALL tokens to match** — partial hits return 0
 
-Do not loosen thresholds without testing "can opener" does not return car seats.
+**Synonyms** — `utils/searchSynonyms.ts` holds `SYNONYM_GROUPS` (sofa = couch = loveseat …). Keep groups tight, never add bare generic words that collide across items ("seat", "frame", "washer", "saw"), and keep each term in one group.
+
+Do not loosen thresholds or add synonyms without testing "can opener" does not return car seats.
 
 ### Profile screen — `app/(tabs)/profile.tsx`
 - Friends list is a **collapsible card** (collapsed by default). The Add button is always visible.

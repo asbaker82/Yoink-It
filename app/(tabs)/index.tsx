@@ -16,71 +16,12 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
 import SwipeableCard from '@/components/SwipeableCard';
+import { fuzzyScore } from '@/utils/search';
 import ConfirmSheet from '@/components/ConfirmSheet';
-
-import { Item } from '@/store/types';
 
 type ListingFilter = 'all' | 'free' | 'borrow' | 'skill';
 type FreeStatusFilter = 'all' | 'available' | 'claimed';
 type BorrowStatusFilter = 'all' | 'available' | 'borrowed';
-
-// Levenshtein edit distance
-function editDistance(a: string, b: string): number {
-  const m = a.length, n = b.length;
-  const dp: number[][] = [];
-  for (let i = 0; i <= m; i++) {
-    dp[i] = [];
-    for (let j = 0; j <= n; j++) {
-      dp[i][j] = i === 0 ? j : j === 0 ? i : 0;
-    }
-  }
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] = a[i - 1] === b[j - 1]
-        ? dp[i - 1][j - 1]
-        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-    }
-  }
-  return dp[m][n];
-}
-
-function fuzzyScore(query: string, item: Item): number {
-  const q = query.toLowerCase().trim();
-  if (!q) return 1;
-
-  const corpus = `${item.title} ${item.description} ${item.restrictions ?? ''}`.toLowerCase();
-
-  // Exact phrase match wins immediately
-  if (corpus.includes(q)) return 100;
-
-  const qTokens = q.split(/\s+/).filter(t => t.length > 1);
-  const cTokens = corpus.split(/\s+/).filter(Boolean);
-
-  let totalScore = 0;
-  let matchedTokens = 0;
-
-  for (const qt of qTokens) {
-    let best = 0;
-    for (const ct of cTokens) {
-      if (ct.includes(qt) || qt.includes(ct)) {
-        best = Math.max(best, 10);
-      } else if (qt.length >= 6 && editDistance(qt, ct) <= 1) {
-        // Allow 1 typo only for words 6+ chars (e.g. "opener" → "openers")
-        best = Math.max(best, 4);
-      } else if (qt.length >= 9 && editDistance(qt, ct) <= 2) {
-        // Allow 2 typos only for long words (e.g. "bookshelf" → "bookshelve")
-        best = Math.max(best, 4);
-      }
-    }
-    if (best > 0) matchedTokens++;
-    totalScore += best;
-  }
-
-  // For multi-word queries every token must match — no partial hits
-  if (qTokens.length > 1 && matchedTokens < qTokens.length) return 0;
-
-  return totalScore;
-}
 
 export default function BrowseScreen() {
   const {
