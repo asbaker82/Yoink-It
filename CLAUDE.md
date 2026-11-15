@@ -193,6 +193,7 @@ Two-level filter system:
 - Synonym match → 8 per token (whole words, plurals folded, no typo tolerance)
 - Edit distance: words ≥ 6 chars allow 1 edit; words ≥ 9 chars allow 2 edits
 - **Multi-word queries require ALL tokens to match** — partial hits return 0
+- Title, description, and restrictions are all searched; if the title alone also matches, `TITLE_BONUS` (200) is added so title hits rank above description-only hits
 
 **Synonyms** — `utils/searchSynonyms.ts` holds `SYNONYM_GROUPS` (sofa = couch = loveseat …). Keep groups tight, never add bare generic words that collide across items ("seat", "frame", "washer", "saw"), and keep each term in one group.
 

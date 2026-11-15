@@ -50,11 +50,20 @@ const synonymsFor = (term: string) => SYNONYM_INDEX.get(stemPhrase(term)) ?? [];
 // Whole-word/phrase match against a corpus prepared by stemmedCorpus().
 const hasPhrase = (corpus: string, phrase: string) => corpus.includes(` ${phrase} `);
 
+// Added when the title alone matches, so title hits outrank description-only hits.
+const TITLE_BONUS = 200;
+
 export function fuzzyScore(query: string, item: Item): number {
   const q = query.toLowerCase().trim();
   if (!q) return 1;
 
-  const raw = `${item.title} ${item.description} ${item.restrictions ?? ''}`.toLowerCase();
+  const full = scoreText(q, `${item.title} ${item.description} ${item.restrictions ?? ''}`);
+  if (full === 0) return 0;
+  return scoreText(q, item.title) > 0 ? full + TITLE_BONUS : full;
+}
+
+function scoreText(q: string, text: string): number {
+  const raw = text.toLowerCase();
 
   // Exact phrase match wins immediately
   if (raw.includes(q)) return 100;
