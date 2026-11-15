@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, SectionList, Pressable, StyleSheet,
-  ActivityIndicator, Platform, Alert,
+  ActivityIndicator, Platform, Alert, Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -17,7 +17,7 @@ const INK_2     = '#3A332E';
 const MUTE      = '#847A70';
 const DIVIDER   = 'rgba(31,26,23,0.06)';
 
-type Section = { title: string; subtitle?: string; data: User[] };
+type Section = { title: string; subtitle?: string; data: User[]; showPhone?: boolean };
 
 export default function AddFriendsScreen() {
   const router = useRouter();
@@ -59,6 +59,7 @@ export default function AddFriendsScreen() {
           title: 'People on Yoink It',
           subtitle: 'Allow contact access in Settings to see which friends are already here.',
           data: allCandidates,
+          showPhone: false,
         }]);
         setLoading(false);
         return;
@@ -86,6 +87,7 @@ export default function AddFriendsScreen() {
           title: 'From Your Contacts',
           subtitle: "These people are in your phone's contacts and already on Yoink It.",
           data: fromContacts,
+          showPhone: true,
         });
       }
       if (others.length > 0) {
@@ -93,6 +95,7 @@ export default function AddFriendsScreen() {
           title: 'Others on Yoink It',
           subtitle: fromContacts.length > 0 ? 'Other app users not in your contacts.' : undefined,
           data: others,
+          showPhone: false,
         });
       }
       if (built.length === 0) {
@@ -144,6 +147,11 @@ export default function AddFriendsScreen() {
               ? 'Allow contact access in Settings so we can find your friends.'
               : 'Invite your friends to join Yoink It!'}
           </Text>
+          {contactsPermission === 'denied' && (
+            <Pressable style={styles.settingsBtn} onPress={() => Linking.openSettings()}>
+              <Text style={styles.settingsBtnText}>Open Settings</Text>
+            </Pressable>
+          )}
         </View>
       ) : (
         <SectionList
@@ -158,10 +166,16 @@ export default function AddFriendsScreen() {
               {section.subtitle ? (
                 <Text style={styles.sectionSubtitle}>{section.subtitle}</Text>
               ) : null}
+              {contactsPermission === 'denied' && section.title === 'People on Yoink It' && (
+                <Pressable onPress={() => Linking.openSettings()} style={styles.settingsLink}>
+                  <Text style={styles.settingsLinkText}>Open Settings →</Text>
+                </Pressable>
+              )}
             </View>
           )}
-          renderItem={({ item }) => {
+          renderItem={({ item, section }) => {
             const isAdded = added.has(item.id);
+            const showPhone = (section as Section).showPhone ?? (Platform.OS === 'web');
             return (
               <View style={styles.row}>
                 <View style={styles.avatar}>
@@ -171,7 +185,7 @@ export default function AddFriendsScreen() {
                 </View>
                 <View style={styles.info}>
                   <Text style={styles.name}>{item.name}</Text>
-                  {item.phone && (
+                  {showPhone && item.phone && (
                     <Text style={styles.phone}>
                       {item.phone.replace(/(\+1)(\d{3})(\d{3})(\d{4})/, '$1 ($2) $3-$4')}
                     </Text>
@@ -280,4 +294,14 @@ const styles = StyleSheet.create({
   },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: CREAM },
   btnPressed: { opacity: 0.75 },
+  settingsBtn: {
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: TANGERINE,
+  },
+  settingsBtnText: { fontSize: 14, fontWeight: '700', color: CREAM },
+  settingsLink: { marginTop: 6 },
+  settingsLinkText: { fontSize: 12, fontWeight: '700', color: TANGERINE },
 });

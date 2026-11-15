@@ -701,6 +701,38 @@ export default function ItemDetailScreen() {
         {isBorrow && !isMyItem && !myBorrowRequest && item.status === 'available' && (
           <View style={styles.borrowRequestForm}>
             <Text style={styles.borrowFormTitle}>Request to Borrow</Text>
+
+            {/* Existing bookings / blocked periods */}
+            {(item.blockedPeriods.length > 0 || item.borrowRequests.some(r => r.status === 'approved')) && (
+              <View style={styles.bookingsCard}>
+                <Text style={styles.bookingsTitle}>Unavailable dates</Text>
+                {item.borrowRequests.filter(r => r.status === 'approved').map(r => (
+                  <View key={r.id} style={styles.bookingRow}>
+                    <FontAwesome name="calendar-check-o" size={12} color={SKY} style={{ marginTop: 1 }} />
+                    <Text style={styles.bookingText}>
+                      {new Date(r.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {' – '}
+                      {new Date(r.endDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {'  '}
+                      <Text style={styles.bookingLabel}>booked</Text>
+                    </Text>
+                  </View>
+                ))}
+                {item.blockedPeriods.map((p, i) => (
+                  <View key={i} style={styles.bookingRow}>
+                    <FontAwesome name="ban" size={12} color={MUTE} style={{ marginTop: 1 }} />
+                    <Text style={styles.bookingText}>
+                      {new Date(p.start + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {' – '}
+                      {new Date(p.end + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {'  '}
+                      <Text style={styles.bookingLabel}>blocked</Text>
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
             <DateRangePicker
               startDate={borrowStart}
               endDate={borrowEnd}
@@ -1238,6 +1270,17 @@ const styles = StyleSheet.create({
   borrowFormTitle: { fontSize: 16, fontWeight: '700', color: INK, marginBottom: 4 },
   borrowFormLabel: { fontSize: 12, fontWeight: '700', color: MUTE, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 },
   borrowConflictText: { fontSize: 12, color: TANGERINE_DEEP, marginTop: 4 },
+  bookingsCard: {
+    backgroundColor: CREAM,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    gap: 6,
+  },
+  bookingsTitle: { fontSize: 12, fontWeight: '700', color: MUTE, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
+  bookingRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  bookingText: { fontSize: 13, color: INK_2, flex: 1 },
+  bookingLabel: { fontSize: 12, color: MUTE, fontWeight: '600' },
 
   // Expiry banner
   expiryBanner: {

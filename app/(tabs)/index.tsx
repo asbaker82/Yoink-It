@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
   ScrollView,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -88,6 +89,7 @@ export default function BrowseScreen() {
     items,
     dismissed,
     dismissItem,
+    restoreItem,
     searchHistory,
     addToSearchHistory,
     clearSearchHistory,
@@ -114,6 +116,28 @@ export default function BrowseScreen() {
   const inputRef = useRef<TextInput>(null);
   const [activeSheet, setActiveSheet] = useState<string | null>(null);
   const [pendingMarkPickupId, setPendingMarkPickupId] = useState<string | null>(null);
+  const [undoItemId, setUndoItemId] = useState<string | null>(null);
+  const [undoItemTitle, setUndoItemTitle] = useState('');
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const undoAnim = useRef(new Animated.Value(0)).current;
+
+  const handleDismiss = (itemId: string, title: string) => {
+    dismissItem(itemId);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    setUndoItemId(itemId);
+    setUndoItemTitle(title);
+    Animated.spring(undoAnim, { toValue: 1, useNativeDriver: true, bounciness: 4 }).start();
+    undoTimer.current = setTimeout(() => {
+      Animated.timing(undoAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => setUndoItemId(null));
+    }, 4000);
+  };
+
+  const handleUndo = () => {
+    if (!undoItemId) return;
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    restoreItem(undoItemId);
+    Animated.timing(undoAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => setUndoItemId(null));
+  };
 
   const friendItems = getFriendItems();
 
@@ -441,7 +465,7 @@ export default function BrowseScreen() {
           data={sortedFiltered}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <SwipeableCard onDismiss={() => dismissItem(item.id)}>
+            <SwipeableCard onDismiss={() => handleDismiss(item.id, item.title)}>
               <ItemCard item={item} onPress={() => { addToSearchHistory(search.trim()); router.push(`/item/${item.id}`); }} />
             </SwipeableCard>
           )}
@@ -572,6 +596,24 @@ export default function BrowseScreen() {
         onConfirm={() => { if (pendingMarkPickupId) markPickedUp(pendingMarkPickupId); setPendingMarkPickupId(null); }}
         onCancel={() => setPendingMarkPickupId(null)}
       />
+
+      {/* Undo toast */}
+      {undoItemId && (
+        <Animated.View
+          style={[styles.undoToast, {
+            opacity: undoAnim,
+            transform: [{ translateY: undoAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+          }]}
+          pointerEvents="box-none"
+        >
+          <Text style={styles.undoText} numberOfLines={1}>
+            Hidden: <Text style={{ fontWeight: '700' }}>{undoItemTitle}</Text>
+          </Text>
+          <Pressable onPress={handleUndo} style={styles.undoBtn}>
+            <Text style={styles.undoBtnText}>Undo</Text>
+          </Pressable>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -835,4 +877,30 @@ const styles = StyleSheet.create({
   },
   sheetBorrowName:  { fontSize: 13, fontWeight: '700', color: '#1F1A17' },
   sheetBorrowDates: { fontSize: 12, color: '#847A70' },
+  undoToast: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+    backgroundColor: '#1F1A17',
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  undoText: { flex: 1, fontSize: 13, color: '#FBF6EE' },
+  undoBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F26B3A',
+  },
+  undoBtnText: { fontSize: 13, fontWeight: '700', color: '#FBF6EE' },
 });
