@@ -4,6 +4,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Item } from '@/store/types';
 import { useApp } from '@/store/AppContext';
 import { formatCalendarDate } from '@/utils/dates';
+import { shortLocation } from '@/utils/location';
 
 interface Props {
   item: Item;
@@ -93,7 +94,7 @@ export default function ItemCard({ item, onPress }: Props) {
           ) : (
             <View style={styles.footerItem}>
               <FontAwesome name="map-marker" size={12} color={SKY} style={{ marginRight: 4 }} />
-              <Text style={styles.footerText} numberOfLines={1}>{item.pickupLocation ? `ZIP ${item.pickupLocation}` : ''}</Text>
+              <Text style={styles.footerText} numberOfLines={1}>{shortLocation(item.pickupLocation)}</Text>
             </View>
           )}
           <View style={styles.footerRight}>

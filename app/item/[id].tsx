@@ -22,6 +22,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import * as Haptics from 'expo-haptics';
 import { playClaimSound, playWaitlistSound } from '@/utils/sounds';
 import { formatCalendarDate } from '@/utils/dates';
+import { shortLocation } from '@/utils/location';
 import { useApp } from '@/store/AppContext';
 import {
   DISPOSAL_METHOD_LABELS,
@@ -348,7 +349,7 @@ export default function ItemDetailScreen() {
           <Text style={styles.categoryLabel}>
             {[
               item.restrictions ? 'RESTRICTED' : '',
-              item.pickupLocation ? `NEAR ${item.pickupLocation}` : '',
+              item.pickupLocation ? shortLocation(item.pickupLocation).toUpperCase() : '',
             ].filter(Boolean).join('  ·  ')}
           </Text>
 
@@ -452,7 +453,7 @@ export default function ItemDetailScreen() {
           {isGive && item.status !== 'picked_up' && (
             <View style={styles.detailsGrid}>
               {[
-                { k: 'ZIP Code',    v: item.pickupLocation },
+                { k: 'Area',        v: item.pickupLocation },
                 { k: 'Window',      v: item.pickupWindow },
                 { k: 'Pick Up Within', v: pickUpWithinValue },
                 { k: 'Disposal',    v: disposalDate ? `${disposalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${daysLeft! <= 0 ? 'expired' : daysLeft === 1 ? 'last day' : `${daysLeft}d left`}${isUrgent ? ' ⚠️' : ''}` : '' },
@@ -471,7 +472,7 @@ export default function ItemDetailScreen() {
           {isBorrow && (
             <View style={styles.detailsGrid}>
               {[
-                ...(!isBorrowedByMe ? [{ k: 'ZIP Code', v: item.pickupLocation }, { k: 'Availability', v: item.pickupWindow }] : []),
+                ...(!isBorrowedByMe ? [{ k: 'Area', v: item.pickupLocation }, { k: 'Availability', v: item.pickupWindow }] : []),
                 item.borrowedUntil && !isBorrowedByMe ? { k: 'Borrowed until', v: formatCalendarDate(item.borrowedUntil, { month: 'long', day: 'numeric', year: 'numeric' }) } : null,
                 item.borrowedUntil && isBorrowedByMe ? { k: 'Return Date', v: formatCalendarDate(item.borrowedUntil, { month: 'long', day: 'numeric', year: 'numeric' }) } : null,
                 item.borrowedUntil && isBorrowedByMe ? (() => {
@@ -495,7 +496,7 @@ export default function ItemDetailScreen() {
                 <FontAwesome name="map-marker" size={20} color={SAGE} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.mapCardTitle}>{isBorrowedByMe ? 'Return area' : 'Pickup area'} · ZIP {item.pickupLocation}</Text>
+                <Text style={styles.mapCardTitle}>{isBorrowedByMe ? 'Return area' : 'Pickup area'} · {item.pickupLocation}</Text>
                 <Text style={styles.mapCardSub}>
                   {isMyItem
                     ? 'Share the exact address by text when you arrange pickup.'

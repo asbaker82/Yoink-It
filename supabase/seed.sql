@@ -47,34 +47,34 @@ on conflict (id) do nothing;
 -- ── 2. Profiles ───────────────────────────────────────────────
 insert into public.profiles (id, name, email, phone, default_address, item_visibility, friends) values
 
-  ('a1000000-0000-0000-0000-000000000001', 'Sarah Chen', 'sarah.chen@seed.yoinkit', '+14155550101', '94117', 'both',
+  ('a1000000-0000-0000-0000-000000000001', 'Sarah Chen', 'sarah.chen@seed.yoinkit', '+14155550101', 'San Francisco, CA 94117', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000002', 'Marcus Williams', 'marcus.williams@seed.yoinkit', '+13105550102', '90046', 'both',
+  ('a1000000-0000-0000-0000-000000000002', 'Marcus Williams', 'marcus.williams@seed.yoinkit', '+13105550102', 'Los Angeles, CA 90046', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000003', 'Emily Rodriguez', 'emily.rodriguez@seed.yoinkit', '+17185550103', '10118', 'both',
+  ('a1000000-0000-0000-0000-000000000003', 'Emily Rodriguez', 'emily.rodriguez@seed.yoinkit', '+17185550103', 'New York, NY 10118', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000004', 'James Thompson', 'james.thompson@seed.yoinkit', '+17735550104', '60606', 'both',
+  ('a1000000-0000-0000-0000-000000000004', 'James Thompson', 'james.thompson@seed.yoinkit', '+17735550104', 'Chicago, IL 60606', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000005', 'Aisha Patel', 'aisha.patel@seed.yoinkit', '+14695550105', '78701', 'both',
+  ('a1000000-0000-0000-0000-000000000005', 'Aisha Patel', 'aisha.patel@seed.yoinkit', '+14695550105', 'Austin, TX 78701', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000006', 'Derek Johnson', 'derek.johnson@seed.yoinkit', '+14045550106', '30303', 'both',
+  ('a1000000-0000-0000-0000-000000000006', 'Derek Johnson', 'derek.johnson@seed.yoinkit', '+14045550106', 'Atlanta, GA 30303', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000007', 'Nicole Foster', 'nicole.foster@seed.yoinkit', '+12065550107', '98109', 'both',
+  ('a1000000-0000-0000-0000-000000000007', 'Nicole Foster', 'nicole.foster@seed.yoinkit', '+12065550107', 'Seattle, WA 98109', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000008', 'Ryan Park', 'ryan.park@seed.yoinkit', '+16175550108', '02139', 'both',
+  ('a1000000-0000-0000-0000-000000000008', 'Ryan Park', 'ryan.park@seed.yoinkit', '+16175550108', 'Cambridge, MA 02139', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000009', 'Lucia Morales', 'lucia.morales@seed.yoinkit', '+13035550109', '80202', 'both',
+  ('a1000000-0000-0000-0000-000000000009', 'Lucia Morales', 'lucia.morales@seed.yoinkit', '+13035550109', 'Denver, CO 80202', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-00000000000a']::uuid[]),
 
-  ('a1000000-0000-0000-0000-00000000000a', 'Tom Bradley', 'tom.bradley@seed.yoinkit', '+16025550110', '85004', 'both',
+  ('a1000000-0000-0000-0000-00000000000a', 'Tom Bradley', 'tom.bradley@seed.yoinkit', '+16025550110', 'Phoenix, AZ 85004', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009']::uuid[])
 
 on conflict (id) do nothing;
@@ -100,7 +100,7 @@ insert into public.items (
     'https://picsum.photos/id/1060/800/600'
   ],
   'Pick up only — it''s heavy! Please bring someone to help carry.',
-  '94117',
+  'San Francisco, CA 94117',
   'Weekends 10am–4pm or weekday evenings after 6pm',
   now() + interval '21 days',
   'goodwill',
@@ -121,7 +121,7 @@ insert into public.items (
     'https://picsum.photos/id/1080/800/600'
   ],
   null,
-  '94117',
+  'San Francisco, CA 94117',
   'Weekends 10am–4pm',
   now() + interval '28 days',
   'goodwill',
@@ -145,7 +145,7 @@ insert into public.items (
     'https://picsum.photos/id/1041/800/600'
   ],
   'Must have a truck or large SUV — does not fit in a sedan.',
-  '90046',
+  'Los Angeles, CA 90046',
   'Saturday or Sunday, anytime between 9am–5pm',
   now() + interval '14 days',
   'habitat',
@@ -166,7 +166,7 @@ insert into public.items (
     'https://picsum.photos/id/1025/800/600'
   ],
   'Requires at least 3 people and a moving truck. I can help disassemble.',
-  '90046',
+  'Los Angeles, CA 90046',
   'Flexible — just give 24hr notice',
   now() + interval '10 days',
   'salvation_army',
@@ -189,7 +189,7 @@ insert into public.items (
     'https://picsum.photos/id/374/800/600'
   ],
   null,
-  '10118',
+  'New York, NY 10118',
   'Weekdays after 5pm, weekends anytime',
   now() + interval '30 days',
   'other_charity',
@@ -210,7 +210,7 @@ insert into public.items (
     'https://picsum.photos/id/247/800/600'
   ],
   'These are heavy! Plan on two trips or bring a cart.',
-  '10118',
+  'New York, NY 10118',
   'Weekends only, 10am–3pm',
   now() + interval '21 days',
   'other_charity',
@@ -234,7 +234,7 @@ insert into public.items (
     'https://picsum.photos/id/442/800/600'
   ],
   null,
-  '60606',
+  'Chicago, IL 60606',
   'Mon–Fri 9am–6pm (lobby pickup)',
   now() + interval '14 days',
   'trash',
@@ -255,7 +255,7 @@ insert into public.items (
     'https://picsum.photos/id/159/800/600'
   ],
   null,
-  '60606',
+  'Chicago, IL 60606',
   'Weekdays 12pm–2pm or after 5pm',
   now() + interval '21 days',
   'keep',
@@ -278,7 +278,7 @@ insert into public.items (
     'https://picsum.photos/id/200/800/600'
   ],
   'Women''s size 8 / EU 38. Please check sizing before claiming.',
-  '78701',
+  'Austin, TX 78701',
   'Evenings after 6pm or weekends',
   now() + interval '14 days',
   'goodwill',
@@ -299,7 +299,7 @@ insert into public.items (
     'https://picsum.photos/id/1015/800/600'
   ],
   null,
-  '78701',
+  'Austin, TX 78701',
   'Flexible — just message ahead',
   now() + interval '21 days',
   'goodwill',
@@ -322,7 +322,7 @@ insert into public.items (
     'https://picsum.photos/id/145/800/600'
   ],
   null,
-  '30303',
+  'Atlanta, GA 30303',
   'Weekends 8am–12pm',
   now() + interval '14 days',
   'goodwill',
@@ -344,7 +344,7 @@ insert into public.items (
     'https://picsum.photos/id/488/800/600'
   ],
   'Very heavy — bring help and a truck.',
-  '30303',
+  'Atlanta, GA 30303',
   'Saturday mornings 8am–11am only',
   now() + interval '10 days',
   'trash',
@@ -368,7 +368,7 @@ insert into public.items (
     'https://picsum.photos/id/1062/800/600'
   ],
   null,
-  '98109',
+  'Seattle, WA 98109',
   'Weekdays after 4pm, weekends anytime',
   now() + interval '21 days',
   'goodwill',
@@ -389,7 +389,7 @@ insert into public.items (
     'https://picsum.photos/id/184/800/600'
   ],
   null,
-  '98109',
+  'Seattle, WA 98109',
   'Flexible — message to arrange',
   now() + interval '30 days',
   'goodwill',
@@ -413,7 +413,7 @@ insert into public.items (
     'https://picsum.photos/id/375/800/600'
   ],
   'Best for riders 5''8" to 6''0".',
-  '02139',
+  'Cambridge, MA 02139',
   'Weekends 9am–2pm',
   now() + interval '14 days',
   'keep',
@@ -434,7 +434,7 @@ insert into public.items (
     'https://picsum.photos/id/447/800/600'
   ],
   null,
-  '02139',
+  'Cambridge, MA 02139',
   'Any day after 5pm or weekends',
   now() + interval '30 days',
   'goodwill',
@@ -458,7 +458,7 @@ insert into public.items (
     'https://picsum.photos/id/1074/800/600'
   ],
   null,
-  '80202',
+  'Denver, CO 80202',
   'Evenings 6–9pm or Saturday mornings',
   now() + interval '30 days',
   'goodwill',
@@ -479,7 +479,7 @@ insert into public.items (
     'https://picsum.photos/id/1025/800/600'
   ],
   'Pouf needs restuffing — about $10 of cotton batting from any craft store.',
-  '80202',
+  'Denver, CO 80202',
   'Flexible — just text ahead',
   now() + interval '21 days',
   'other_charity',
@@ -503,7 +503,7 @@ insert into public.items (
     'https://picsum.photos/id/279/800/600'
   ],
   'Please only claim if you plan to actually use them — tools deserve a good home!',
-  '85004',
+  'Phoenix, AZ 85004',
   'Weekends 7am–12pm',
   now() + interval '14 days',
   'keep',
@@ -524,7 +524,7 @@ insert into public.items (
     'https://picsum.photos/id/162/800/600'
   ],
   'You''ll need a truck or at least a large roof rack.',
-  '85004',
+  'Phoenix, AZ 85004',
   'Saturday or Sunday mornings only',
   now() + interval '21 days',
   'keep',
@@ -586,34 +586,34 @@ on conflict (id) do nothing;
 -- ── 6. Profiles ───────────────────────────────────────────────
 insert into public.profiles (id, name, email, phone, default_address, item_visibility, friends) values
 
-  ('a1000000-0000-0000-0000-00000000000b', 'Priya Sharma', 'priya.sharma@seed.yoinkit', '+15035550105', '97209', 'both',
+  ('a1000000-0000-0000-0000-00000000000b', 'Priya Sharma', 'priya.sharma@seed.yoinkit', '+15035550105', 'Portland, OR 97209', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000013','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-00000000000c', 'Carlos Mendez', 'carlos.mendez@seed.yoinkit', '+13055550106', '33131', 'both',
+  ('a1000000-0000-0000-0000-00000000000c', 'Carlos Mendez', 'carlos.mendez@seed.yoinkit', '+13055550106', 'Miami, FL 33131', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000013','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-00000000000d', 'Jessica Wu', 'jessica.wu@seed.yoinkit', '+17135550107', '77002', 'both',
+  ('a1000000-0000-0000-0000-00000000000d', 'Jessica Wu', 'jessica.wu@seed.yoinkit', '+17135550107', 'Houston, TX 77002', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000013','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-00000000000e', 'David Kim', 'david.kim@seed.yoinkit', '+16195550108', '92101', 'both',
+  ('a1000000-0000-0000-0000-00000000000e', 'David Kim', 'david.kim@seed.yoinkit', '+16195550108', 'San Diego, CA 92101', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000013','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-00000000000f', 'Rachel Green', 'rachel.green@seed.yoinkit', '+16155550109', '37201', 'both',
+  ('a1000000-0000-0000-0000-00000000000f', 'Rachel Green', 'rachel.green@seed.yoinkit', '+16155550109', 'Nashville, TN 37201', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000013','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000010', 'Omar Hassan', 'omar.hassan@seed.yoinkit', '+16125550110', '55401', 'both',
+  ('a1000000-0000-0000-0000-000000000010', 'Omar Hassan', 'omar.hassan@seed.yoinkit', '+16125550110', 'Minneapolis, MN 55401', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000013','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000011', 'Stephanie Lee', 'stephanie.lee@seed.yoinkit', '+15035550111', '97210', 'both',
+  ('a1000000-0000-0000-0000-000000000011', 'Stephanie Lee', 'stephanie.lee@seed.yoinkit', '+15035550111', 'Portland, OR 97210', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000013','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000012', 'Ben Torres', 'ben.torres@seed.yoinkit', '+12155550112', '19102', 'both',
+  ('a1000000-0000-0000-0000-000000000012', 'Ben Torres', 'ben.torres@seed.yoinkit', '+12155550112', 'Philadelphia, PA 19102', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000013','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000013', 'Megan O''Brien', 'megan.obrien@seed.yoinkit', '+16175550113', '02116', 'both',
+  ('a1000000-0000-0000-0000-000000000013', 'Megan O''Brien', 'megan.obrien@seed.yoinkit', '+16175550113', 'Boston, MA 02116', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000014']::uuid[]),
 
-  ('a1000000-0000-0000-0000-000000000014', 'Andre Jackson', 'andre.jackson@seed.yoinkit', '+15045550114', '70112', 'both',
+  ('a1000000-0000-0000-0000-000000000014', 'Andre Jackson', 'andre.jackson@seed.yoinkit', '+15045550114', 'New Orleans, LA 70112', 'both',
    ARRAY['a1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-00000000000a','a1000000-0000-0000-0000-00000000000b','a1000000-0000-0000-0000-00000000000c','a1000000-0000-0000-0000-00000000000d','a1000000-0000-0000-0000-00000000000e','a1000000-0000-0000-0000-00000000000f','a1000000-0000-0000-0000-000000000010','a1000000-0000-0000-0000-000000000011','a1000000-0000-0000-0000-000000000012','a1000000-0000-0000-0000-000000000013']::uuid[])
 
 on conflict (id) do nothing;
@@ -662,7 +662,7 @@ insert into public.items (
   'Lululemon The Mat 5mm in midnight navy (lightly used), two cork yoga blocks, a stretch strap, and a Manduka mat bag. Cleaned and ready to go. Switching to a studio practice.',
   ARRAY['https://picsum.photos/id/1039/800/600','https://picsum.photos/id/447/800/600'],
   null,
-  '97209',
+  'Portland, OR 97209',
   'Evenings after 6pm or weekends',
   now() + interval '14 days',
   'goodwill',
@@ -681,7 +681,7 @@ insert into public.items (
   'All-weather resin wicker sectional — two loveseats, a coffee table, and an armchair. Cushions are weatherproof and clean. Selling the house, can''t take it with me.',
   ARRAY['https://picsum.photos/id/577/800/600','https://picsum.photos/id/280/800/600'],
   'Must have a truck or large SUV for transport.',
-  '33131',
+  'Miami, FL 33131',
   'Saturday or Sunday mornings',
   now() + interval '10 days',
   'other_charity',
@@ -700,7 +700,7 @@ insert into public.items (
   'Box of 20+ maternity pieces — jeans, leggings, flowy tops, two work blouses, and a maxi dress. Brands include ASOS Maternity, H&M, and Motherhood. All washed and folded.',
   ARRAY['https://picsum.photos/id/1059/800/600','https://picsum.photos/id/200/800/600'],
   'Size small/medium pre-pregnancy (fits up to 36 weeks).',
-  '77002',
+  'Houston, TX 77002',
   'Any day after 5pm',
   now() + interval '21 days',
   'other_charity',
@@ -719,7 +719,7 @@ insert into public.items (
   'Firewire 6''2" shortboard in great shape — no delams, two small dings on the rail (repaired). Includes a 3/2mm O''Neill Psychofreak fullsuit (size medium) and a board sock.',
   ARRAY['https://picsum.photos/id/974/800/600','https://picsum.photos/id/875/800/600'],
   'Best for intermediate surfers, ~150–185 lbs.',
-  '92101',
+  'San Diego, CA 92101',
   'Weekends, arrange by Friday',
   now() + interval '14 days',
   'keep',
@@ -738,7 +738,7 @@ insert into public.items (
   'Yamaha FG800 dreadnought acoustic — solid spruce top, nato back and sides. Light pick marks near the soundhole, frets in great shape. Includes a TSA-lockable SKB hard case and a clip tuner.',
   ARRAY['https://picsum.photos/id/145/800/600','https://picsum.photos/id/1/800/600'],
   null,
-  '37201',
+  'Nashville, TN 37201',
   'Afternoons Mon–Sat',
   now() + interval '30 days',
   'goodwill',
@@ -757,7 +757,7 @@ insert into public.items (
   'Complete classic XC ski set: Salomon 170cm skis, Salomon bindings, Escape 7 boots (size 10), and Swix carbon poles (140cm). Waxed and ready. Moving to Arizona.',
   ARRAY['https://picsum.photos/id/392/800/600','https://picsum.photos/id/384/800/600'],
   'Fits approximately a size 10 ski boot / men''s 10 shoe.',
-  '55401',
+  'Minneapolis, MN 55401',
   'Weekends 9am–1pm',
   now() + interval '21 days',
   'goodwill',
@@ -776,7 +776,7 @@ insert into public.items (
   'Curated collection of 75+ LPs — heavy on jazz (Coltrane, Miles, Monk), soul (Marvin Gaye, Aretha), and classic rock. Most are VG+ or better. Full tracklist available. Downsizing.',
   ARRAY['https://picsum.photos/id/493/800/600','https://picsum.photos/id/1074/800/600'],
   null,
-  '97210',
+  'Portland, OR 97210',
   'Saturdays 11am–4pm',
   now() + interval '14 days',
   'other_charity',
@@ -795,7 +795,7 @@ insert into public.items (
   'Fully loaded Aeron in graphite — PostureFit SL, adjustable arms, lumbar support. Size B (fits up to 6''2" / 185 lbs). Minor scuffs on the base, everything functions perfectly. Retail $1,400+.',
   ARRAY['https://picsum.photos/id/239/800/600','https://picsum.photos/id/160/800/600'],
   'Bring help — it''s heavy.',
-  '19102',
+  'Philadelphia, PA 19102',
   'Weekends only',
   now() + interval '21 days',
   'keep',
@@ -814,7 +814,7 @@ insert into public.items (
   'Impact collapsible crate (42"L x 28"W x 30"H) — fits labs, goldens, border collies. Comes with an Orvis memory-foam orthopedic bed. Dog adopted a crate-free lifestyle. Both clean and like new.',
   ARRAY['https://picsum.photos/id/1062/800/600','https://picsum.photos/id/453/800/600'],
   'Please only claim if you have a large breed. Crate won''t fit in a sedan.',
-  '02116',
+  'Boston, MA 02116',
   'Any morning before noon',
   now() + interval '30 days',
   'goodwill',
@@ -833,7 +833,7 @@ insert into public.items (
   'Lodge 5-piece set: 8" skillet, 10" skillet, 12" skillet with lid, and a 5-quart dutch oven with lid. All pre-seasoned and well-maintained. Moving into a smaller place with an induction cooktop.',
   ARRAY['https://picsum.photos/id/431/800/600','https://picsum.photos/id/292/800/600'],
   null,
-  '70112',
+  'New Orleans, LA 70112',
   'Evenings after 6pm or Saturday mornings',
   now() + interval '14 days',
   'other_charity',
@@ -862,7 +862,7 @@ insert into public.items (
   'Zojirushi BB-PDC20 2lb bread maker — programmed for everything from white to gluten-free. Measuring cup, spoon, and kneading blade included. Returns with the paddle clean, please.',
   ARRAY['https://picsum.photos/id/766/800/600'],
   null,
-  '97209',
+  'Portland, OR 97209',
   'Weekends 10am–4pm',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -882,7 +882,7 @@ insert into public.items (
   'Sun Joe SPX3001 3000 PSI pressure washer with 20-foot hose, five quick-connect nozzles, and onboard detergent tank. Great for driveways, fences, and patio furniture.',
   ARRAY['https://picsum.photos/id/116/800/600','https://picsum.photos/id/488/800/600'],
   null,
-  '33131',
+  'Miami, FL 33131',
   'Weekdays after 5pm or weekends',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -902,7 +902,7 @@ insert into public.items (
   'Nanit Pro smart baby monitor with floor stand, breathing-wear band, and two months of Insights subscription remaining. HD video, sleep tracking, two-way audio. Return it with the stand folded.',
   ARRAY['https://picsum.photos/id/486/800/600','https://picsum.photos/id/184/800/600'],
   'Families with infants under 12 months only.',
-  '77002',
+  'Houston, TX 77002',
   'Evenings after 6pm',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -922,7 +922,7 @@ insert into public.items (
   'Tern GSD S10 long-tail cargo e-bike — dual battery, 400 lb payload, 10-speed Shimano Deore, hydraulic disc brakes. Can carry two kids or a week of groceries. Comes with two helmets.',
   ARRAY['https://picsum.photos/id/274/800/600','https://picsum.photos/id/164/800/600'],
   null,
-  '92101',
+  'San Diego, CA 92101',
   'Weekends only',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -942,7 +942,7 @@ insert into public.items (
   'Brother SE700 computerized sewing and embroidery machine with 135 built-in designs, 7"x5" hoop, and USB port for custom patterns. All accessories included. Please return threaded and cleaned.',
   ARRAY['https://picsum.photos/id/1060/800/600','https://picsum.photos/id/219/800/600'],
   null,
-  '37201',
+  'Nashville, TN 37201',
   'Evenings after 6pm or weekends',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -962,7 +962,7 @@ insert into public.items (
   'REI Half Dome 4+ tent — freestanding double-wall design, 63" peak height, two doors and vestibules. Stakes, guylines, footprint, and stuff sack all included. Great for camping or backyard sleepovers.',
   ARRAY['https://picsum.photos/id/237/800/600','https://picsum.photos/id/1029/800/600'],
   null,
-  '55401',
+  'Minneapolis, MN 55401',
   'Any day after 5pm',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -982,7 +982,7 @@ insert into public.items (
   'Sony A7III body with 28-70mm kit lens, 50mm f/1.8, two NP-FZ100 batteries, charger, 64GB card, and a Peak Design wrist strap. Great for events, portraits, or street photography. Return with batteries charged.',
   ARRAY['https://picsum.photos/id/119/800/600','https://picsum.photos/id/442/800/600'],
   null,
-  '97210',
+  'Portland, OR 97210',
   'Evenings after 6pm',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -1002,7 +1002,7 @@ insert into public.items (
   'Swingline ClassicCut 24" rotary trimmer — cuts up to 10 sheets at once, replacement blade included. Great for art projects, invitations, photos, or school presentations.',
   ARRAY['https://picsum.photos/id/0/800/600','https://picsum.photos/id/159/800/600'],
   null,
-  '19102',
+  'Philadelphia, PA 19102',
   'Any day after 4pm',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -1022,7 +1022,7 @@ insert into public.items (
   'Clarke American EZ-8 drum floor sander for refinishing hardwood floors. Comes with 60-grit and 100-grit sleeves (partially used) plus an edge sander. Return with the dust bag emptied.',
   ARRAY['https://picsum.photos/id/175/800/600','https://picsum.photos/id/145/800/600'],
   null,
-  '02116',
+  'Boston, MA 02116',
   'Weekends only',
   '2099-12-31T00:00:00.000Z',
   'keep',
@@ -1042,7 +1042,7 @@ insert into public.items (
   'Fender Starcaster semi-hollow in aged natural — coil-tapped humbuckers, great for jazz, blues, and indie. Paired with a Fender Frontman 15G practice amp. Both in great shape. Return with strings intact.',
   ARRAY['https://picsum.photos/id/145/800/600','https://picsum.photos/id/1/800/600'],
   null,
-  '70112',
+  'New Orleans, LA 70112',
   'Any evening or weekend',
   '2099-12-31T00:00:00.000Z',
   'keep',

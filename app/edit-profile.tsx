@@ -15,7 +15,8 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAuth } from '@/store/AuthContext';
 import { useApp } from '@/store/AppContext';
-import ZipInput, { isValidZip, extractZip } from '@/components/ZipInput';
+import LocationInput from '@/components/LocationInput';
+import { Location, parseLocation, formatLocation, locationError } from '@/utils/location';
 import ImageCropModal from '@/components/ImageCropModal';
 import { ItemVisibility } from '@/store/types';
 
@@ -68,7 +69,7 @@ export default function EditProfileScreen() {
 
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email ?? '');
-  const [zip, setZip] = useState(extractZip(user.defaultAddress));
+  const [location, setLocation] = useState<Location>(parseLocation(user.defaultAddress));
   const [zipError, setZipError] = useState('');
   const [profilePhoto, setProfilePhoto] = useState(user.profilePhoto ?? '');
   const [itemVisibility, setItemVisibility] = useState<ItemVisibility>(user.itemVisibility ?? 'added');
@@ -105,8 +106,9 @@ export default function EditProfileScreen() {
       return;
     }
     setNameError('');
-    if (zip && !isValidZip(zip)) {
-      setZipError('Enter a 5-digit ZIP code, or leave it blank.');
+    const locError = locationError(location, false);
+    if (locError) {
+      setZipError(locError);
       return;
     }
     setZipError('');
@@ -115,7 +117,7 @@ export default function EditProfileScreen() {
       name: trimmedName,
       email: email.trim(),
       // '' clears it (mapped to null in AuthContext)
-      defaultAddress: zip,
+      defaultAddress: formatLocation(location),
       profilePhoto: profilePhoto || undefined,
       itemVisibility,
     });
@@ -197,11 +199,11 @@ export default function EditProfileScreen() {
 
       {/* ZIP code */}
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>ZIP Code</Text>
+        <Text style={styles.sectionTitle}>Your Area</Text>
         <Text style={styles.sectionSubtitle}>
-          Pre-fills the pickup ZIP on new listings. Yoink It never stores your street address. Share the exact spot by text when you arrange a pickup.
+          Pre-fills the pickup area on new listings. Enter your ZIP and we'll fill in the city. Yoink It never stores your street address.
         </Text>
-        <ZipInput value={zip} onChangeText={z => { setZip(z); setZipError(''); }} error={!!zipError} />
+        <LocationInput value={location} onChange={loc => { setLocation(loc); setZipError(''); }} error={!!zipError} />
         {zipError ? <Text style={styles.zipError}>{zipError}</Text> : null}
       </View>
 

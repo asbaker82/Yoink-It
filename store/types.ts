@@ -33,7 +33,7 @@ export interface Item {
   description: string;
   photos: string[];
   restrictions?: string;
-  // 5-digit ZIP only ('' for skills) — never a street address; exact spot is arranged by text
+  // "City, ST 12345" ('' for skills) — never a street address; exact spot is arranged by text
   pickupLocation: string;
   pickupWindow: string;
   disposalDate: string;
@@ -71,7 +71,7 @@ export interface User {
   phone?: string;
   friends: string[];
   profilePhoto?: string;
-  // 5-digit ZIP only — the app never stores a user's street address
+  // "City, ST 12345" — the app never stores a user's street address
   defaultAddress?: string;
   /** Who can see this user's listings.
    *  'added' (default) = only people this user has added as friends.

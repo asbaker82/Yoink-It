@@ -69,7 +69,7 @@ app/
   items-list.tsx           Sectioned listing view — ?filter=listed|active|claimed
   friend/[id].tsx          A friend's open listings (Free / Borrow / Skills), reached by tapping a friend in Profile. Uses getFriendItems() so visibility rules apply.
   add-friends.tsx          Friend discovery — contacts section + others section
-  edit-profile.tsx         Edit name, email, photo, ZIP code, item visibility
+  edit-profile.tsx         Edit name, email, photo, area (city/state/ZIP), item visibility
 ```
 
 Path alias `@/` maps to the repo root.
@@ -130,11 +130,12 @@ Three helpers for calendar fields that store dates as `YYYY-MM-DD` strings:
 - `playWaitlistSound()` — softer two-note ascending boop, same dual-path approach.
 - Both fail silently so animations still run if audio is blocked.
 
-### Location privacy — ZIP codes only
-- The app **never stores street addresses**. `Item.pickupLocation` and `User.defaultAddress` keep their names but hold a 5-digit ZIP (`pickupLocation` is `''` for skills). Exact pickup spots are arranged by text.
-- DB check constraints `items_pickup_zip_check` and `profiles_zip_check` reject anything that isn't a ZIP.
-- `components/ZipInput.tsx` is the only location input (digits only, max 5). It exports `isValidZip` and `extractZip` (pulls a trailing ZIP out of legacy address strings).
-- Item detail shows a non-tappable "Pickup area · ZIP …" card — no maps/directions link. No third-party geocoding.
+### Location privacy — city, state, ZIP only
+- The app **never stores street addresses**. `Item.pickupLocation` and `User.defaultAddress` keep their names but hold `"City, ST 12345"` (older rows may be a bare ZIP; `pickupLocation` is `''` for skills). Exact pickup spots are arranged by text.
+- `utils/location.ts`: `Location` type, `parseLocation` / `formatLocation` / `shortLocation` ("City, ST" for cards), `locationError`, and `lookupZip` (Zippopotam.us — only the ZIP is sent; cached per session).
+- `components/LocationInput.tsx` (ZIP · City · State): typing a ZIP auto-fills city/state; both stay editable. Opening a ZIP-only row fills them in.
+- DB check constraints `items_pickup_zip_check` / `profiles_zip_check` allow only `"City, ST 12345"` or a bare ZIP — city can't contain digits or commas, which blocks street addresses.
+- Item detail shows a non-tappable "Pickup area · City, ST ZIP" card — no maps/directions link.
 
 ### Photo grids
 Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in `item/[id].tsx` use `flexDirection: 'row', flexWrap: 'wrap', gap: 10` — **not** a horizontal `ScrollView`. The delete (×) button on each photo thumbnail is `position: 'absolute', top: 4, right: 4` so it stays inside the photo bounds, not floating outside.
@@ -153,9 +154,9 @@ Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in 
 | `HeaderLogo` | Speed-wordmark logo used as `headerTitle` on all screens. Accepts `size` prop (default 22). Uses `BricolageGrotesque_800ExtraBold` font. |
 | `CustomTabBar` | Custom bottom tab bar (Browse + My Items). Also owns the hidden-items trash icon and restore sheet. Reads dismissed state from `useApp()`. |
 | `ProfileHeaderButton` | Avatar/initials button (40×40) in header right → profile screen |
-| `ItemCard` | Card used in Browse, My Items, items-list, and friend pages. Shows the pickup ZIP. Borrow items show a single left badge: "Borrow" (sky-blue) when available, "Borrowed" (yellow/dark text) when out. |
+| `ItemCard` | Card used in Browse, My Items, items-list, and friend pages. Shows the pickup city/state. Borrow items show a single left badge: "Borrow" (sky-blue) when available, "Borrowed" (yellow/dark text) when out. |
 | `SwipeableCard` | Wraps `ItemCard` in Browse. `PanResponder`-based swipe-left-to-dismiss. Shows an `eye-slash` hint icon as the card slides. Calls `onDismiss` after animation completes. |
-| `ZipInput` | 5-digit ZIP field used for item pickup and profile. Exports `isValidZip` / `extractZip`. |
+| `LocationInput` | ZIP · City · State fields for item pickup and profile; ZIP auto-fills city/state via `lookupZip`. |
 | `FriendAccessInput` | Everyone / Only these / All except picker for listing visibility. |
 | `DatePickerInput` | Custom calendar for single date selection. Displays and accepts **MM-DD-YYYY** format. On web: absolute dropdown (no `dropUp`); with `dropUp` prop: Modal overlay (bypasses overflow clipping). Fixed width 276 px — never stretch. Past dates disabled. |
 | `DateRangePicker` | Calendar for selecting a start+end date range (used in borrow request form). Always uses Modal overlay. First tap sets start, second tap (later date) sets end and closes. Highlights the range between selected dates. |

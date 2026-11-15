@@ -183,3 +183,81 @@ alter table public.items add constraint items_pickup_zip_check
 alter table public.profiles drop constraint if exists profiles_zip_check;
 alter table public.profiles add constraint profiles_zip_check
   check (default_address is null or default_address ~ '^\d{5}$');
+
+-- ────────────────────────────────────────────────────────────
+-- Locations: "City, ST 12345" (still never a street address).
+-- Replaces the ZIP-only constraints; a bare ZIP is still allowed
+-- for older rows, and the app fills in city/state when edited.
+-- City may not contain digits or commas, which blocks street
+-- addresses like "742 Evergreen Terrace, …".
+-- ────────────────────────────────────────────────────────────
+alter table public.items drop constraint if exists items_pickup_zip_check;
+alter table public.items add constraint items_pickup_zip_check
+  check (pickup_location ~ '^(([^,0-9]{1,40}, [A-Z]{2} )?[0-9]{5})?$');
+
+alter table public.profiles drop constraint if exists profiles_zip_check;
+alter table public.profiles add constraint profiles_zip_check
+  check (default_address is null or default_address ~ '^([^,0-9]{1,40}, [A-Z]{2} )?[0-9]{5}$');
+
+-- Fill in city/state for ZIP-only rows using known seed ZIPs.
+with zip_city(zip, city_state) as (values
+  ('02116', 'Boston, MA'),
+  ('02139', 'Cambridge, MA'),
+  ('10118', 'New York, NY'),
+  ('19102', 'Philadelphia, PA'),
+  ('30303', 'Atlanta, GA'),
+  ('33131', 'Miami, FL'),
+  ('37201', 'Nashville, TN'),
+  ('55401', 'Minneapolis, MN'),
+  ('60606', 'Chicago, IL'),
+  ('70112', 'New Orleans, LA'),
+  ('77002', 'Houston, TX'),
+  ('78701', 'Austin, TX'),
+  ('80202', 'Denver, CO'),
+  ('85004', 'Phoenix, AZ'),
+  ('90046', 'Los Angeles, CA'),
+  ('92101', 'San Diego, CA'),
+  ('94117', 'San Francisco, CA'),
+  ('97209', 'Portland, OR'),
+  ('97210', 'Portland, OR'),
+  ('98109', 'Seattle, WA'),
+  ('62701', 'Springfield, IL'),
+  ('62702', 'Springfield, IL'),
+  ('62703', 'Springfield, IL'),
+  ('62704', 'Springfield, IL')
+)
+update public.items i
+set pickup_location = z.city_state || ' ' || z.zip
+from zip_city z
+where i.pickup_location = z.zip;
+
+with zip_city(zip, city_state) as (values
+  ('02116', 'Boston, MA'),
+  ('02139', 'Cambridge, MA'),
+  ('10118', 'New York, NY'),
+  ('19102', 'Philadelphia, PA'),
+  ('30303', 'Atlanta, GA'),
+  ('33131', 'Miami, FL'),
+  ('37201', 'Nashville, TN'),
+  ('55401', 'Minneapolis, MN'),
+  ('60606', 'Chicago, IL'),
+  ('70112', 'New Orleans, LA'),
+  ('77002', 'Houston, TX'),
+  ('78701', 'Austin, TX'),
+  ('80202', 'Denver, CO'),
+  ('85004', 'Phoenix, AZ'),
+  ('90046', 'Los Angeles, CA'),
+  ('92101', 'San Diego, CA'),
+  ('94117', 'San Francisco, CA'),
+  ('97209', 'Portland, OR'),
+  ('97210', 'Portland, OR'),
+  ('98109', 'Seattle, WA'),
+  ('62701', 'Springfield, IL'),
+  ('62702', 'Springfield, IL'),
+  ('62703', 'Springfield, IL'),
+  ('62704', 'Springfield, IL')
+)
+update public.profiles p
+set default_address = z.city_state || ' ' || z.zip
+from zip_city z
+where p.default_address = z.zip;
