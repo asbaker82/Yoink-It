@@ -13,9 +13,10 @@ import {
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
-import { ItemCondition, DisposalMethod, DISPOSAL_METHOD_LABELS, CONDITION_LABELS, ListingType, BlockedPeriod } from '@/store/types';
+import { DisposalMethod, DISPOSAL_METHOD_LABELS, ListingType, BlockedPeriod } from '@/store/types';
 import AddressInput from '@/components/AddressInput';
 import DatePickerInput from '@/components/DatePickerInput';
+import DateRangePicker from '@/components/DateRangePicker';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -33,10 +34,7 @@ async function pickImageWeb(): Promise<string | null> {
   });
 }
 
-const CONDITIONS: ItemCondition[] = ['excellent', 'good', 'fair', 'poor'];
-const DISPOSAL_METHODS: DisposalMethod[] = [
-  'goodwill', 'salvation_army', 'habitat', 'food_bank', 'other_charity', 'trash', 'keep',
-];
+const DISPOSAL_METHODS: DisposalMethod[] = ['charity', 'keep', 'trash'];
 
 type FieldKey = 'title' | 'pickupLocation' | 'pickupWindow' | 'disposalDate' | 'claimPickupHours';
 type Errors = Partial<Record<FieldKey, string>>;
@@ -61,11 +59,9 @@ export default function NewItemScreen() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [condition, setCondition] = useState<ItemCondition>('good');
+
   const [restrictions, setRestrictions] = useState('');
   const [blockedPeriods, setBlockedPeriods] = useState<BlockedPeriod[]>([]);
-  const [blockedStart, setBlockedStart] = useState('');
-  const [blockedEnd, setBlockedEnd] = useState('');
   const [pickupLocation, setPickupLocation] = useState(currentUser.defaultAddress ?? '');
 
   // Fill in default address once profile is available (handles async profile load)
@@ -76,9 +72,8 @@ export default function NewItemScreen() {
   }, [currentUser.defaultAddress]);
   const [pickupWindow, setPickupWindow] = useState('');
   const [disposalDate, setDisposalDate] = useState('');
-  const [disposalMethod, setDisposalMethod] = useState<DisposalMethod>('goodwill');
-  const [disposalMethodNote, setDisposalMethodNote] = useState('');
-  const [claimPickupHours, setClaimPickupHours] = useState('72');
+  const [disposalMethod, setDisposalMethod] = useState<DisposalMethod>('charity');
+  const [claimPickupDays, setClaimPickupDays] = useState('3');
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -98,14 +93,6 @@ export default function NewItemScreen() {
   const removePhoto = (index: number) =>
     setPhotos(prev => prev.filter((_, i) => i !== index));
 
-  const addBlockedPeriod = () => {
-    if (!blockedStart || !blockedEnd) return;
-    if (blockedEnd < blockedStart) return;
-    setBlockedPeriods(prev => [...prev, { start: blockedStart, end: blockedEnd }]);
-    setBlockedStart('');
-    setBlockedEnd('');
-  };
-
   const handleSubmit = () => {
     const next: Errors = {};
 
@@ -121,13 +108,13 @@ export default function NewItemScreen() {
         next.disposalDate = 'Please choose a disposal date.';
       else if (isNaN(new Date(disposalDate).getTime()))
         next.disposalDate = 'That date doesn\'t look right — pick one from the calendar or type MM-DD-YYYY.';
-      const hours = parseInt(claimPickupHours, 10);
-      if (isNaN(hours) || hours < 1)
-        next.claimPickupHours = 'Please enter a pickup window of at least 1 hour.';
-      if (!next.disposalDate && !next.claimPickupHours && disposalDate && !isNaN(hours)) {
-        const hoursUntilDisposal = (new Date(disposalDate).getTime() - Date.now()) / 3_600_000;
-        if (hours >= hoursUntilDisposal) {
-          next.claimPickupHours = `The pickup window (${hours}h) must be shorter than the time until disposal (~${Math.floor(hoursUntilDisposal)}h away). Shorten the pickup window or choose a later disposal date.`;
+      const days = parseInt(claimPickupDays, 10);
+      if (isNaN(days) || days < 1)
+        next.claimPickupHours = 'Please enter a pickup window of at least 1 day.';
+      if (!next.disposalDate && !next.claimPickupHours && disposalDate && !isNaN(days)) {
+        const daysUntilDisposal = (new Date(disposalDate).getTime() - Date.now()) / 86_400_000;
+        if (days >= daysUntilDisposal) {
+          next.claimPickupHours = `The pickup window (${days}d) must be shorter than the time until disposal (~${Math.floor(daysUntilDisposal)}d away). Shorten the pickup window or choose a later disposal date.`;
         }
       }
     }
@@ -142,20 +129,18 @@ export default function NewItemScreen() {
       return;
     }
 
-    const hours = parseInt(claimPickupHours, 10);
+    const days = parseInt(claimPickupDays, 10);
     setSubmitting(true);
     createItem({
       title: title.trim(),
       description: description.trim(),
       photos,
-      condition,
       restrictions: restrictions.trim() || undefined,
       pickupLocation: pickupLocation.trim(),
       pickupWindow: pickupWindow.trim(),
       disposalDate: listingType === 'give' ? new Date(disposalDate).toISOString() : '2099-12-31T00:00:00.000Z',
       disposalMethod: listingType === 'give' ? disposalMethod : 'keep',
-      disposalMethodNote: listingType === 'give' ? (disposalMethodNote.trim() || undefined) : undefined,
-      claimPickupHours: listingType === 'give' ? hours : 0,
+      claimPickupHours: listingType === 'give' ? days * 24 : 0,
       listingType,
       blockedPeriods,
     });
@@ -183,7 +168,7 @@ export default function NewItemScreen() {
           >
             <FontAwesome name="gift" size={18} color={listingType === 'give' ? CREAM : MUTE} />
             <Text style={[styles.typeBtnText, listingType === 'give' && styles.typeBtnTextActive]}>Give Away</Text>
-            <Text style={[styles.typeBtnSub, listingType === 'give' && { color: 'rgba(251,246,238,0.75)' }]}>Keep it forever</Text>
+            <Text style={[styles.typeBtnSub, listingType === 'give' && { color: 'rgba(251,246,238,0.75)' }]}>Gone for good</Text>
           </Pressable>
           <Pressable
             style={[styles.typeBtn, listingType === 'borrow' && styles.typeBtnActiveBorrow]}
@@ -248,24 +233,6 @@ export default function NewItemScreen() {
         />
       </View>
 
-      {/* Condition */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Condition <Text style={styles.required}>*</Text></Text>
-        <View style={styles.chipRow}>
-          {CONDITIONS.map(c => (
-            <Pressable
-              key={c}
-              style={[styles.chip, condition === c && styles.chipActive]}
-              onPress={() => setCondition(c)}
-            >
-              <Text style={[styles.chipText, condition === c && styles.chipTextActive]}>
-                {CONDITION_LABELS[c]}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
       {/* Restrictions */}
       <View style={styles.section}>
         <Text style={styles.label}>Restrictions <Text style={styles.optional}>(optional)</Text></Text>
@@ -278,9 +245,9 @@ export default function NewItemScreen() {
         />
       </View>
 
-      {/* Pickup Location */}
+      {/* Item Location */}
       <View style={[styles.section, { zIndex: 10 }]} {...trackOffset('pickupLocation')}>
-        <Text style={styles.label}>Pickup Location <Text style={styles.required}>*</Text></Text>
+        <Text style={styles.label}>Item Location <Text style={styles.required}>*</Text></Text>
         <AddressInput
           value={pickupLocation}
           onChangeText={t => { setPickupLocation(t); clearError('pickupLocation'); }}
@@ -333,32 +300,23 @@ export default function NewItemScreen() {
               </Pressable>
             ))}
           </View>
-          {disposalMethod === 'other_charity' && (
-            <TextInput
-              style={[styles.input, { marginTop: 10 }]}
-              placeholder="Specify the charity…"
-              placeholderTextColor="#a0aec0"
-              value={disposalMethodNote}
-              onChangeText={setDisposalMethodNote}
-            />
-          )}
         </View>
       )}
 
-      {/* Give Away: Claim Pickup Hours */}
+      {/* Give Away: Claim Pickup Days */}
       {listingType === 'give' && (
         <View style={styles.section} {...trackOffset('claimPickupHours')}>
-          <Text style={styles.label}>Hours to pick up after claiming <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.label}>Days to pick up after claiming <Text style={styles.required}>*</Text></Text>
           <Text style={styles.hint}>How long does a donee have to arrange pickup before the next person on the waitlist is asked?</Text>
           <View style={styles.row}>
-            {['24', '48', '72', '96'].map(h => (
+            {['1', '2', '3', '4'].map(d => (
               <Pressable
-                key={h}
-                style={[styles.chip, claimPickupHours === h && styles.chipActive]}
-                onPress={() => { setClaimPickupHours(h); clearError('claimPickupHours'); }}
+                key={d}
+                style={[styles.chip, claimPickupDays === d && styles.chipActive]}
+                onPress={() => { setClaimPickupDays(d); clearError('claimPickupHours'); }}
               >
-                <Text style={[styles.chipText, claimPickupHours === h && styles.chipTextActive]}>
-                  {h}h
+                <Text style={[styles.chipText, claimPickupDays === d && styles.chipTextActive]}>
+                  {d}d
                 </Text>
               </Pressable>
             ))}
@@ -366,8 +324,8 @@ export default function NewItemScreen() {
               style={[styles.input, styles.hoursInput, errors.claimPickupHours && styles.inputError]}
               placeholder="Custom"
               placeholderTextColor="#a0aec0"
-              value={['24', '48', '72', '96'].includes(claimPickupHours) ? '' : claimPickupHours}
-              onChangeText={t => { setClaimPickupHours(t); clearError('claimPickupHours'); }}
+              value={['1', '2', '3', '4'].includes(claimPickupDays) ? '' : claimPickupDays}
+              onChangeText={t => { setClaimPickupDays(t); clearError('claimPickupHours'); }}
               keyboardType="numeric"
             />
           </View>
@@ -377,7 +335,7 @@ export default function NewItemScreen() {
 
       {/* Borrow: Blocked Periods */}
       {listingType === 'borrow' && (
-        <View style={[styles.section, { zIndex: 20 }]}>
+        <View style={styles.section}>
           <Text style={styles.label}>Block Out Dates <Text style={styles.optional}>(optional)</Text></Text>
           <Text style={styles.hint}>Add periods when this item is unavailable — e.g. vacations, scheduled use.</Text>
           {blockedPeriods.map((p, i) => (
@@ -393,20 +351,13 @@ export default function NewItemScreen() {
               </Pressable>
             </View>
           ))}
-          <Text style={[styles.hint, { marginTop: 10 }]}>Start date</Text>
-          <DatePickerInput value={blockedStart} onChange={setBlockedStart} />
-          {blockedStart && (
-            <>
-              <Text style={[styles.hint, { marginTop: 10 }]}>End date</Text>
-              <DatePickerInput value={blockedEnd} onChange={setBlockedEnd} />
-            </>
-          )}
-          {blockedStart && blockedEnd && (
-            <Pressable style={styles.addPeriodBtn} onPress={addBlockedPeriod}>
-              <FontAwesome name="plus" size={13} color={CREAM} style={{ marginRight: 6 }} />
-              <Text style={styles.addPeriodBtnText}>Add Blocked Period</Text>
-            </Pressable>
-          )}
+          <DateRangePicker
+            startDate=''
+            endDate=''
+            onChange={(start, end) => {
+              if (start && end) setBlockedPeriods(prev => [...prev, { start, end }]);
+            }}
+          />
         </View>
       )}
 

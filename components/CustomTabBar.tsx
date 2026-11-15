@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,7 +21,11 @@ const TABS: { name: string; label: string; icon: React.ComponentProps<typeof Fon
 
 export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { dismissed, restoreItem, restoreAll, getFriendItems } = useApp();
-  const hiddenItems = getFriendItems().filter(item => dismissed.has(item.id));
+  const hiddenItems = useMemo(
+    () => getFriendItems().filter(item => dismissed.has(item.id)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dismissed, getFriendItems],
+  );
   const hiddenCount = hiddenItems.length;
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -90,7 +94,10 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                       </View>
                     )}
                     <Text style={styles.rowTitle} numberOfLines={2}>{item.title}</Text>
-                    <Pressable style={styles.restoreBtn} onPress={() => restoreItem(item.id)}>
+                    <Pressable style={styles.restoreBtn} onPress={() => {
+                      restoreItem(item.id);
+                      if (hiddenCount === 1) setSheetOpen(false);
+                    }}>
                       <Text style={styles.restoreBtnText}>Restore</Text>
                     </Pressable>
                   </View>

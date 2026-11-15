@@ -8,15 +8,16 @@ import {
   Pressable,
   Alert,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
 import SwipeableCard from '@/components/SwipeableCard';
+import ConfirmSheet from '@/components/ConfirmSheet';
 
 import { Item } from '@/store/types';
-import { geocodeAddress, haversineMiles } from '@/utils/geocode';
 
 type ListingFilter = 'all' | 'free' | 'borrow';
 type FreeStatusFilter = 'all' | 'available' | 'claimed';
@@ -92,53 +93,29 @@ export default function BrowseScreen() {
     clearSearchHistory,
     searchNotifications,
     addSearchNotification,
+    confirmPickup,
+    releaseClaim,
+    approveBorrowRequest,
+    rejectBorrowRequest,
+    confirmBorrowReturn,
+    getUserById,
+    markPickedUp,
   } = useApp();
   const router = useRouter();
 
   const [search, setSearch] = useState('');
   const [listingFilter, setListingFilter] = useState<ListingFilter>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [maxMiles, setMaxMiles] = useState<number | null>(null);
-
   const handleListingFilterChange = (lf: ListingFilter) => {
     setListingFilter(lf);
     setStatusFilter('all');
   };
   const [historyOpen, setHistoryOpen] = useState(false);
   const inputRef = useRef<TextInput>(null);
-
-  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [itemDistances, setItemDistances] = useState<Record<string, number | null>>({});
+  const [activeSheet, setActiveSheet] = useState<string | null>(null);
+  const [pendingMarkPickupId, setPendingMarkPickupId] = useState<string | null>(null);
 
   const friendItems = getFriendItems();
-
-  // Geocode user's home address once
-  useEffect(() => {
-    if (!currentUser.defaultAddress) return;
-    geocodeAddress(currentUser.defaultAddress).then(c => { if (c) setUserCoords(c); });
-  }, [currentUser.defaultAddress]);
-
-  // Geocode each visible item's pickup address (lazy, cached in module)
-  useEffect(() => {
-    if (!userCoords) return;
-    let cancelled = false;
-    (async () => {
-      for (const item of friendItems) {
-        if (cancelled) break;
-        if (item.id in itemDistances) continue;
-        const coords = await geocodeAddress(item.pickupLocation);
-        if (!cancelled) {
-          setItemDistances(prev => ({
-            ...prev,
-            [item.id]: coords ? haversineMiles(userCoords, coords) : null,
-          }));
-        }
-        // Nominatim rate limit: 1 req/sec
-        await new Promise(r => setTimeout(r, 1100));
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [userCoords, friendItems.length]);
 
   // ── Action banners ────────────────────────────────────────────────────────
   const myTurn = items.filter(
@@ -176,30 +153,38 @@ export default function BrowseScreen() {
       icon: 'clock-o' as const,
       color: '#F26B3A',
       label: `${myTurn.length} item${myTurn.length > 1 ? 's' : ''} waiting for you to pick up`,
-      onPress: () => router.push({ pathname: '/items-list', params: { filter: 'claimed' } }),
     },
     pendingBorrowApprovals.length > 0 && {
       key: 'borrow-requests',
       icon: 'calendar-check-o' as const,
       color: '#7BA7BC',
       label: `${pendingBorrowApprovals.length} borrow request${pendingBorrowApprovals.length > 1 ? 's' : ''} waiting for your approval`,
-      onPress: () => router.push({ pathname: '/(tabs)/my-items', params: { tab: 'lending' } }),
     },
     needPickupConfirm.length > 0 && {
       key: 'confirm-pickup',
       icon: 'check-circle' as const,
       color: '#7FA88A',
       label: `${needPickupConfirm.length} pickup${needPickupConfirm.length > 1 ? 's' : ''} waiting for your confirmation`,
-      onPress: () => router.push({ pathname: '/(tabs)/my-items', params: { tab: 'listing' } }),
     },
     needReturnConfirm.length > 0 && {
       key: 'confirm-return',
       icon: 'undo' as const,
       color: '#7BA7BC',
       label: `${needReturnConfirm.length} return${needReturnConfirm.length > 1 ? 's' : ''} waiting for your confirmation`,
-      onPress: () => router.push({ pathname: '/(tabs)/my-items', params: { tab: 'lending' } }),
     },
-  ].filter(Boolean) as { key: string; icon: React.ComponentProps<typeof FontAwesome>['name']; color: string; label: string; onPress: () => void }[];
+  ].filter(Boolean) as { key: string; icon: React.ComponentProps<typeof FontAwesome>['name']; color: string; label: string }[];
+
+  // Auto-close action sheet when its items run out (e.g. last confirm tapped)
+  useEffect(() => {
+    if (!activeSheet) return;
+    const counts: Record<string, number> = {
+      'pickup':          myTurn.length,
+      'borrow-requests': pendingBorrowApprovals.length,
+      'confirm-pickup':  needPickupConfirm.length,
+      'confirm-return':  needReturnConfirm.length,
+    };
+    if ((counts[activeSheet] ?? 0) === 0) setActiveSheet(null);
+  }, [activeSheet, myTurn.length, pendingBorrowApprovals.length, needPickupConfirm.length, needReturnConfirm.length]);
 
   const scored = friendItems
     .map(item => ({ item, score: fuzzyScore(search, item) }))
@@ -211,13 +196,6 @@ export default function BrowseScreen() {
         return item.status === 'borrowed' || item.status === 'pending_return';
       }
       return item.status === statusFilter;
-    })
-    .filter(({ item }) => {
-      if (!maxMiles || !userCoords) return true;
-      const dist = itemDistances[item.id];
-      if (dist === undefined) return true; // still geocoding, show optimistically
-      if (dist === null) return true;      // geocode failed, distance unknown, show
-      return dist <= maxMiles;
     })
     .sort((a, b) =>
       b.score !== a.score
@@ -275,7 +253,7 @@ export default function BrowseScreen() {
   return (
     <View style={styles.container}>
       {actionBanners.map(b => (
-        <Pressable key={b.key} style={[styles.banner, { backgroundColor: b.color }]} onPress={b.onPress}>
+        <Pressable key={b.key} style={[styles.banner, { backgroundColor: b.color }]} onPress={() => setActiveSheet(b.key)}>
           <FontAwesome name={b.icon} size={14} color="#fff" style={{ marginRight: 8 }} />
           <Text style={styles.bannerText}>{b.label}</Text>
           <FontAwesome name="chevron-right" size={12} color="#fff" />
@@ -419,28 +397,6 @@ export default function BrowseScreen() {
       </View>
       )}
 
-      {/* Distance filter row — always visible */}
-      <View style={styles.filterRow}>
-        <FontAwesome name="location-arrow" size={12} color="#847A70" style={{ marginRight: 2 }} />
-        {currentUser.defaultAddress ? (
-          ([null, 5, 10, 25, 50] as (number | null)[]).map(miles => (
-            <Pressable
-              key={miles ?? 'any'}
-              style={[styles.filterBtn, styles.distanceBtn, maxMiles === miles && styles.distanceBtnActive]}
-              onPress={() => setMaxMiles(miles)}
-            >
-              <Text style={[styles.filterBtnText, styles.distanceBtnText, maxMiles === miles && styles.distanceBtnTextActive]}>
-                {miles === null ? 'Any' : `≤ ${miles} mi`}
-              </Text>
-            </Pressable>
-          ))
-        ) : (
-          <Pressable onPress={() => router.push('/edit-profile')} style={styles.setAddressPrompt}>
-            <Text style={styles.setAddressText}>Set your address in Profile to filter by distance →</Text>
-          </Pressable>
-        )}
-      </View>
-
       {sortedFiltered.length === 0 ? (
         <View style={styles.empty}>
           <FontAwesome
@@ -481,7 +437,7 @@ export default function BrowseScreen() {
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <SwipeableCard onDismiss={() => dismissItem(item.id)}>
-              <ItemCard item={item} onPress={() => { addToSearchHistory(search.trim()); router.push(`/item/${item.id}`); }} distance={itemDistances[item.id] ?? undefined} />
+              <ItemCard item={item} onPress={() => { addToSearchHistory(search.trim()); router.push(`/item/${item.id}`); }} />
             </SwipeableCard>
           )}
           contentContainerStyle={{ paddingBottom: 24, paddingTop: 8 }}
@@ -489,6 +445,128 @@ export default function BrowseScreen() {
         />
       )}
 
+      {/* ── Action sheet ────────────────────────────────────────────────── */}
+      {!!activeSheet && (
+        <View style={styles.sheetOverlay} pointerEvents="box-none">
+          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(31,26,23,0.5)' }]} onPress={() => setActiveSheet(null)} />
+          <View style={styles.sheetContainer}>
+            {/* Handle */}
+            <View style={styles.sheetHandle} />
+            {/* Header */}
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>
+                {activeSheet === 'pickup'          ? 'Ready to Pick Up'
+                 : activeSheet === 'borrow-requests' ? 'Borrow Requests'
+                 : activeSheet === 'confirm-pickup'  ? 'Confirm Pickups'
+                 :                                     'Confirm Returns'}
+              </Text>
+              <Pressable onPress={() => setActiveSheet(null)} style={styles.sheetClose}>
+                <FontAwesome name="times" size={18} color="#847A70" />
+              </Pressable>
+            </View>
+
+            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+              {(activeSheet === 'pickup' ? myTurn
+                : activeSheet === 'borrow-requests' ? pendingBorrowApprovals
+                : activeSheet === 'confirm-pickup'  ? needPickupConfirm
+                :                                     needReturnConfirm
+              ).map(item => (
+                <View key={item.id} style={styles.sheetItem}>
+                  <ItemCard
+                    item={item}
+                    onPress={() => { setActiveSheet(null); router.push(`/item/${item.id}`); }}
+                  />
+                  <View style={styles.sheetActionRow}>
+
+                    {/* Donee: pick up */}
+                    {activeSheet === 'pickup' && (
+                      <>
+                        <Pressable
+                          style={[styles.sheetBtn, styles.sheetBtnConfirm]}
+                          onPress={() => setPendingMarkPickupId(item.id)}
+                        >
+                          <FontAwesome name="check" size={13} color="#F26B3A" />
+                          <Text style={[styles.sheetBtnText, { color: '#F26B3A' }]}>I've Picked It Up</Text>
+                        </Pressable>
+                        <Pressable
+                          style={styles.sheetBtn}
+                          onPress={() => { setActiveSheet(null); router.push(`/item/${item.id}`); }}
+                        >
+                          <Text style={styles.sheetBtnText}>View Details →</Text>
+                        </Pressable>
+                      </>
+                    )}
+
+                    {/* Donor: approve/reject borrow requests */}
+                    {activeSheet === 'borrow-requests' && item.borrowRequests.filter(r => r.status === 'pending').map(req => {
+                      const requester = getUserById(req.requesterId);
+                      return (
+                        <View key={req.id} style={styles.sheetBorrowReqRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.sheetBorrowName}>{requester?.name ?? 'Someone'}</Text>
+                            <Text style={styles.sheetBorrowDates}>
+                              {new Date(req.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {' – '}
+                              {new Date(req.endDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </Text>
+                          </View>
+                          <Pressable style={[styles.sheetBtn, { backgroundColor: '#EEF5FA' }]} onPress={() => approveBorrowRequest(item.id, req.id)}>
+                            <FontAwesome name="check" size={13} color="#7BA7BC" />
+                            <Text style={[styles.sheetBtnText, { color: '#7BA7BC' }]}>Approve</Text>
+                          </Pressable>
+                          <Pressable style={styles.sheetBtn} onPress={() => rejectBorrowRequest(item.id, req.id)}>
+                            <FontAwesome name="times" size={13} color="#847A70" />
+                            <Text style={styles.sheetBtnText}>Decline</Text>
+                          </Pressable>
+                        </View>
+                      );
+                    })}
+
+                    {/* Donor: confirm give pickup */}
+                    {activeSheet === 'confirm-pickup' && (
+                      <>
+                        <Pressable style={[styles.sheetBtn, styles.sheetBtnConfirm]} onPress={() => confirmPickup(item.id)}>
+                          <FontAwesome name="check" size={13} color="#F26B3A" />
+                          <Text style={[styles.sheetBtnText, { color: '#F26B3A' }]}>Confirm Pickup</Text>
+                        </Pressable>
+                        <Pressable style={styles.sheetBtn} onPress={() => releaseClaim(item.id)}>
+                          <FontAwesome name="undo" size={13} color="#847A70" />
+                          <Text style={styles.sheetBtnText}>Not Picked Up</Text>
+                        </Pressable>
+                      </>
+                    )}
+
+                    {/* Donor: confirm borrow return */}
+                    {activeSheet === 'confirm-return' && (
+                      <>
+                        <Pressable style={[styles.sheetBtn, styles.sheetBtnConfirm]} onPress={() => confirmBorrowReturn(item.id)}>
+                          <FontAwesome name="check" size={13} color="#F26B3A" />
+                          <Text style={[styles.sheetBtnText, { color: '#F26B3A' }]}>Confirm Return</Text>
+                        </Pressable>
+                        <Pressable style={styles.sheetBtn} onPress={() => setActiveSheet(null)}>
+                          <FontAwesome name="clock-o" size={13} color="#847A70" />
+                          <Text style={styles.sheetBtnText}>Not Yet</Text>
+                        </Pressable>
+                      </>
+                    )}
+
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
+
+      <ConfirmSheet
+        visible={!!pendingMarkPickupId}
+        title="Confirm Pickup"
+        message="Confirm that you've picked up this item? The donor will be notified to complete the handoff."
+        confirmLabel="Yes, Picked Up"
+        cancelLabel="Not Yet"
+        onConfirm={() => { if (pendingMarkPickupId) markPickedUp(pendingMarkPickupId); setPendingMarkPickupId(null); }}
+        onCancel={() => setPendingMarkPickupId(null)}
+      />
     </View>
   );
 }
@@ -501,6 +579,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    marginBottom: 2,
   },
   bannerText: { flex: 1, color: '#FBF6EE', fontWeight: '600', fontSize: 14 },
   searchRow: {
@@ -646,13 +725,6 @@ const styles = StyleSheet.create({
   filterBtnTextActive: { color: '#FBF6EE' },
   statusBtn: { paddingHorizontal: 12, paddingVertical: 5 },
   matchCount: { fontSize: 12, color: '#847A70', marginLeft: 'auto' },
-  distanceBtn: { backgroundColor: '#F4ECDD', borderWidth: 1, borderColor: 'rgba(31,26,23,0.1)' },
-  distanceBtnActive: { backgroundColor: '#9DB7C9', borderColor: '#9DB7C9' },
-  distanceBtnText: { color: '#847A70' },
-  distanceBtnTextActive: { color: '#FBF6EE' },
-  setAddressPrompt: { flex: 1 },
-  setAddressText: { fontSize: 12, color: '#847A70', fontStyle: 'italic' },
-
   empty: {
     flex: 1,
     alignItems: 'center',
@@ -685,4 +757,77 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   emptyAlertBtnText: { fontSize: 13, color: '#D8531F', fontWeight: '600' },
+
+  // Action sheet
+  sheetOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    justifyContent: 'flex-end',
+    zIndex: 200,
+  },
+  sheetContainer: {
+    backgroundColor: '#FBF6EE',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%' as any,
+    paddingTop: 8,
+    shadowColor: '#1F1A17',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 20,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(31,26,23,0.18)',
+    marginBottom: 8,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(31,26,23,0.08)',
+  },
+  sheetTitle: { flex: 1, fontSize: 17, fontWeight: '800', color: '#1F1A17' },
+  sheetClose: { padding: 4 },
+  sheetItem: { marginBottom: 4 },
+  sheetActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 12,
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  sheetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F4ECDD',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 5,
+  },
+  sheetBtnConfirm: { backgroundColor: '#FFF3EC' },
+  sheetBtnText: { fontSize: 13, color: '#847A70', fontWeight: '600' },
+  sheetBorrowReqRow: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF5FA',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  sheetBorrowName:  { fontSize: 13, fontWeight: '700', color: '#1F1A17' },
+  sheetBorrowDates: { fontSize: 12, color: '#847A70' },
 });

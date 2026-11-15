@@ -24,13 +24,11 @@ import { formatCalendarDate } from '@/utils/dates';
 import { useApp } from '@/store/AppContext';
 import {
   DISPOSAL_METHOD_LABELS,
-  CONDITION_LABELS,
   BlockedPeriod,
 } from '@/store/types';
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
 import ImageLightbox from '@/components/ImageLightbox';
-import { geocodeAddress, haversineMiles } from '@/utils/geocode';
 import ClaimToast from '@/components/ClaimToast';
 import WaitlistToast from '@/components/WaitlistToast';
 import ConfirmSheet from '@/components/ConfirmSheet';
@@ -129,12 +127,12 @@ export default function ItemDetailScreen() {
   const [showClaimToast, setShowClaimToast]   = useState(false);
   const [claimDeadlineDate, setClaimDeadlineDate] = useState<Date | null>(null);
   const [showWaitlistToast, setShowWaitlistToast] = useState(false);
-  const [showReleaseSheet, setShowReleaseSheet]   = useState(false);
+  const [showReleaseSheet, setShowReleaseSheet]         = useState(false);
   const [showLeaveWaitlistSheet, setShowLeaveWaitlistSheet] = useState(false);
-  const [showRestrictionsSheet, setShowRestrictionsSheet] = useState(false);
+  const [showRestrictionsSheet, setShowRestrictionsSheet]   = useState(false);
+  const [showPickedUpSheet, setShowPickedUpSheet]           = useState(false);
   const [smsVisible, setSmsVisible]   = useState(false);
   const [smsMessage, setSmsMessage]   = useState('');
-  const [distanceMiles, setDistanceMiles] = useState<number | null>(null);
   const [borrowStart, setBorrowStart] = useState('');
   const [borrowEnd, setBorrowEnd]     = useState('');
   const [blockedStart, setBlockedStart] = useState('');
@@ -148,19 +146,7 @@ export default function ItemDetailScreen() {
 
   const item = items.find(i => i.id === id);
 
-  useEffect(() => {
-    if (!currentUser.defaultAddress || !item) return;
-    let cancelled = false;
-    (async () => {
-      const [userCoords, itemCoords] = await Promise.all([
-        geocodeAddress(currentUser.defaultAddress!),
-        geocodeAddress(item.pickupLocation),
-      ]);
-      if (!cancelled && userCoords && itemCoords)
-        setDistanceMiles(haversineMiles(userCoords, itemCoords));
-    })();
-    return () => { cancelled = true; };
-  }, [currentUser.defaultAddress, item?.pickupLocation]);
+
 
   if (!item) {
     return (
@@ -211,12 +197,6 @@ export default function ItemDetailScreen() {
     return `${parts.join(' ')} window`;
   })();
 
-  const distanceLabel = distanceMiles !== null
-    ? distanceMiles < 0.1 ? '<0.1 mi'
-    : distanceMiles < 10  ? `${distanceMiles.toFixed(1)} mi`
-    : `${Math.round(distanceMiles)} mi`
-    : null;
-
   const doClaimItem = () => {
     const deadline = new Date(Date.now() + item.claimPickupHours * 3600000);
     claimItem(item.id);
@@ -237,14 +217,7 @@ export default function ItemDetailScreen() {
   const handleRelease  = () => setShowReleaseSheet(true);
 
   const handlePickedUp = () => {
-    if (Platform.OS === 'web') {
-      if (confirm("Confirm that you've picked up this item?")) markPickedUp(item.id);
-      return;
-    }
-    Alert.alert('Mark as Picked Up', "Confirm that you've picked up this item?", [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Yes, Picked Up', onPress: () => markPickedUp(item.id) },
-    ]);
+    setShowPickedUpSheet(true);
   };
 
   const handleDeleteItem = () => {
@@ -305,12 +278,12 @@ export default function ItemDetailScreen() {
               <FontAwesome name="arrow-left" size={14} color={INK} />
             </Pressable>
             <View style={styles.heroNavRight}>
-              {isMyItem && (
+              {isMyItem && item.status !== 'pending_pickup' && item.status !== 'picked_up' && (
                 <Pressable style={styles.circBtn} onPress={() => router.push(`/item/edit/${item.id}`)}>
                   <FontAwesome name="pencil" size={14} color={INK} />
                 </Pressable>
               )}
-              {isMyItem && (
+              {isMyItem && item.status !== 'pending_pickup' && item.status !== 'picked_up' && (
                 <Pressable style={styles.circBtn} onPress={handleDeleteItem}>
                   <FontAwesome name="trash" size={14} color="#E53E3E" />
                 </Pressable>
@@ -325,11 +298,10 @@ export default function ItemDetailScreen() {
                 {statusConfig.label}
               </Text>
             </View>
-            {(distanceLabel || item.status === 'claimed') && (
+            {item.status === 'claimed' && (
               <View style={styles.infoPill}>
                 <Text style={styles.infoPillText}>
-                  {[distanceLabel, item.status === 'claimed' ? (timeLeftLabel || 'expired') : null]
-                    .filter(Boolean).join(' · ')}
+                  {timeLeftLabel || 'expired'}
                 </Text>
               </View>
             )}
@@ -431,8 +403,6 @@ export default function ItemDetailScreen() {
                 <Text style={styles.giverName}>{donor.name}</Text>
                 <Text style={styles.giverSub}>
                   {isMyItem ? 'Your listing' : 'Friend'}
-                  {' · '}
-                  {CONDITION_LABELS[item.condition]}
                 </Text>
               </View>
               {!isMyItem && donor.phone && (
@@ -461,7 +431,7 @@ export default function ItemDetailScreen() {
           {!isBorrow && item.status !== 'picked_up' && (
             <View style={styles.detailsGrid}>
               {[
-                { k: 'Pickup',      v: item.pickupLocation },
+                { k: 'Location',    v: item.pickupLocation },
                 { k: 'Window',      v: item.pickupWindow },
                 { k: 'Pick Up Within', v: pickUpWithinValue },
                 { k: 'Disposal',    v: disposalDate ? `${disposalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${daysLeft! <= 0 ? 'expired' : daysLeft === 1 ? 'last day' : `${daysLeft}d left`}${isUrgent ? ' ⚠️' : ''}` : '' },
@@ -480,7 +450,7 @@ export default function ItemDetailScreen() {
           {isBorrow && (
             <View style={styles.detailsGrid}>
               {[
-                ...(!isBorrowedByMe ? [{ k: 'Pickup', v: item.pickupLocation }, { k: 'Availability', v: item.pickupWindow }] : []),
+                ...(!isBorrowedByMe ? [{ k: 'Location', v: item.pickupLocation }, { k: 'Availability', v: item.pickupWindow }] : []),
                 item.borrowedUntil && !isBorrowedByMe ? { k: 'Borrowed until', v: formatCalendarDate(item.borrowedUntil, { month: 'long', day: 'numeric', year: 'numeric' }) } : null,
                 item.borrowedUntil && isBorrowedByMe ? { k: 'Return Date', v: formatCalendarDate(item.borrowedUntil, { month: 'long', day: 'numeric', year: 'numeric' }) } : null,
                 item.borrowedUntil && isBorrowedByMe ? (() => {
@@ -504,11 +474,8 @@ export default function ItemDetailScreen() {
                 <FontAwesome name="map-marker" size={20} color={SAGE} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.mapCardTitle}>{isBorrowedByMe ? 'Return' : 'Pickup'} · {item.pickupLocation}</Text>
-                <Text style={styles.mapCardSub}>
-                  Tap for directions
-                  {distanceLabel ? ` · ${distanceLabel} away` : ''}
-                </Text>
+                <Text style={styles.mapCardTitle}>{isBorrowedByMe ? 'Return Location' : 'Item Location'} · {item.pickupLocation}</Text>
+                <Text style={styles.mapCardSub}>Tap for directions</Text>
               </View>
               <FontAwesome name="location-arrow" size={14} color={MUTE} />
             </Pressable>
@@ -522,7 +489,6 @@ export default function ItemDetailScreen() {
                 If unclaimed, goes to{' '}
                 <Text style={{ color: INK_2, fontWeight: '600' }}>
                   {DISPOSAL_METHOD_LABELS[item.disposalMethod]}
-                  {item.disposalMethodNote ? ` — ${item.disposalMethodNote}` : ''}
                 </Text>
               </Text>
             </View>
@@ -848,16 +814,6 @@ export default function ItemDetailScreen() {
           </View>
         )}
 
-        {isMyItem && (
-          <View style={styles.btnRow}>
-            <Pressable style={styles.outlineBtn} onPress={() => router.push(`/item/edit/${item.id}`)}>
-              <Text style={styles.outlineBtnText}>Edit Listing</Text>
-            </Pressable>
-            <Pressable style={styles.dangerBtn} onPress={handleDeleteItem}>
-              <Text style={styles.dangerBtnText}>Remove</Text>
-            </Pressable>
-          </View>
-        )}
 
         {/* Disposed / picked-up state */}
         {!isBorrow && item.status === 'disposed' && (
@@ -886,6 +842,15 @@ export default function ItemDetailScreen() {
       <WaitlistToast
         visible={showWaitlistToast}
         onComplete={() => setShowWaitlistToast(false)}
+      />
+      <ConfirmSheet
+        visible={showPickedUpSheet}
+        title="Confirm Pickup"
+        message="Confirm that you've picked up this item? The donor will be notified to complete the handoff."
+        confirmLabel="Yes, Picked Up"
+        cancelLabel="Not Yet"
+        onConfirm={() => { setShowPickedUpSheet(false); markPickedUp(item.id); }}
+        onCancel={() => setShowPickedUpSheet(false)}
       />
       <ConfirmSheet
         visible={showLeaveWaitlistSheet}

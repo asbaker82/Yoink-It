@@ -16,24 +16,25 @@ import { Item, DISPOSAL_METHOD_LABELS } from '@/store/types';
 import ItemCard from '@/components/ItemCard';
 import { formatCalendarDate } from '@/utils/dates';
 
-const TANGERINE = '#F26B3A';
-const TANG_DEEP = '#D8531F';
-const CREAM_2   = '#F4ECDD';
-const BUTTER    = '#F4C95D';
-const ROSE      = '#E89A8D';
-const CREAM     = '#FBF6EE';
-const INK       = '#1F1A17';
-const MUTE      = '#847A70';
+const TANGERINE  = '#F26B3A';
+const TANG_DEEP  = '#D8531F';
+const CREAM_2    = '#F4ECDD';
+const BUTTER     = '#F4C95D';
+const ROSE       = '#E89A8D';
+const CREAM      = '#FBF6EE';
+const INK        = '#1F1A17';
+const MUTE       = '#847A70';
 const STEEL_BLUE = '#9DB7C9';
+const SKY        = '#7BA7BC';
 
 const TAB_ACTIVE: Record<string, { bg: string; text: string }> = {
-  listing:    { bg: TANGERINE,  text: CREAM },
-  claimed:    { bg: BUTTER,     text: INK   },
-  waitlisted: { bg: ROSE,       text: CREAM },
-  lending:    { bg: STEEL_BLUE, text: CREAM },
+  listing:    { bg: TANGERINE, text: CREAM },
+  claimed:    { bg: BUTTER,    text: INK   },
+  waitlisted: { bg: ROSE,      text: CREAM },
 };
 
-type Tab = 'listing' | 'claimed' | 'waitlisted' | 'lending';
+type Tab = 'listing' | 'claimed' | 'waitlisted';
+type ListingFilter = 'all' | 'free' | 'available_borrow' | 'borrowed';
 
 function formatTimeLeft(deadline: Date, now: Date): string {
   const ms = deadline.getTime() - now.getTime();
@@ -50,10 +51,15 @@ function formatTimeLeft(deadline: Date, now: Date): string {
 }
 
 export default function MyItemsScreen() {
-  const { items, getMyItems, deleteItem, markDisposed, confirmPickup, releaseClaim, getUserById, currentUser, approveBorrowRequest, rejectBorrowRequest, confirmBorrowReturn, markBorrowReturned } = useApp();
+  const {
+    items, getMyItems, deleteItem, markDisposed, confirmPickup, releaseClaim,
+    getUserById, currentUser,
+    approveBorrowRequest, rejectBorrowRequest, confirmBorrowReturn,
+  } = useApp();
   const router = useRouter();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: Tab }>();
   const [tab, setTab] = useState<Tab>(tabParam ?? 'listing');
+  const [listingFilter, setListingFilter] = useState<ListingFilter>('all');
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
@@ -61,22 +67,29 @@ export default function MyItemsScreen() {
   }, []);
 
   const myListings = getMyItems();
-  const activeListings    = myListings.filter(i => i.status === 'available' || i.status === 'claimed' || i.status === 'pending_pickup');
-  const completedListings = myListings.filter(i => i.status === 'picked_up' || i.status === 'disposed');
+
+  const filteredListings = listingFilter === 'all'             ? myListings
+    : listingFilter === 'free'                                 ? myListings.filter(i => i.listingType === 'give')
+    : listingFilter === 'available_borrow'                     ? myListings.filter(i => i.listingType === 'borrow' && i.status === 'available')
+    :                                                            myListings.filter(i => i.listingType === 'borrow' && i.status !== 'available');
+
+  const activeListings    = filteredListings.filter(i => i.status !== 'picked_up' && i.status !== 'disposed');
+  const completedListings = filteredListings.filter(i => i.status === 'picked_up' || i.status === 'disposed');
 
   const claimedItems    = items.filter(i => i.claimedBy === currentUser.id && i.donorId !== currentUser.id && (i.status === 'claimed' || i.status === 'pending_pickup'));
   const waitlistedItems = items.filter(i => i.waitlist.includes(currentUser.id) && i.donorId !== currentUser.id);
-
-  // Lending tab: items I own that are lend-type, plus items I'm borrowing
-  const myBorrowListings = myListings.filter(i => i.listingType === 'borrow');
-  const myActiveBorrows  = items.filter(i => i.listingType === 'borrow' && i.donorId !== currentUser.id && (i.borrowedBy === currentUser.id || i.borrowRequests.some(r => r.requesterId === currentUser.id && r.status === 'pending')));
-  const lendingCount     = myBorrowListings.reduce((n, i) => n + i.borrowRequests.filter(r => r.status === 'pending').length, 0) + myActiveBorrows.length;
 
   const TABS: { key: Tab; label: string; count: number }[] = [
     { key: 'listing',    label: 'Listing',    count: myListings.length },
     { key: 'claimed',    label: 'Claimed',    count: claimedItems.length },
     { key: 'waitlisted', label: 'Waitlisted', count: waitlistedItems.length },
-    { key: 'lending',    label: 'Lending',    count: lendingCount },
+  ];
+
+  const LISTING_FILTERS: { key: ListingFilter; label: string }[] = [
+    { key: 'all',             label: 'All' },
+    { key: 'free',            label: 'Free' },
+    { key: 'available_borrow', label: 'Available to Borrow' },
+    { key: 'borrowed',        label: 'Borrowed' },
   ];
 
   const handleDelete = (item: Item) => {
@@ -105,60 +118,121 @@ export default function MyItemsScreen() {
     );
   };
 
-  const renderDonorCard = ({ item }: { item: Item }) => (
-    <View>
-      <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
-      <View style={styles.actionRow}>
-        {item.claimedBy && item.status !== 'picked_up' && item.status !== 'disposed' && (
-          <View style={styles.claimedByChip}>
-            <FontAwesome name="user" size={11} color="#7A5C00" style={{ marginRight: 4 }} />
-            <Text style={styles.claimedByText}>
-              {item.status === 'pending_pickup'
-                ? `Pickup pending — ${getUserById(item.claimedBy)?.name ?? 'claimant'}`
-                : `Claimed by ${getUserById(item.claimedBy)?.name ?? 'someone'}`}
-            </Text>
-          </View>
-        )}
-        {item.waitlist.length > 0 && item.status !== 'pending_pickup' && (
-          <View style={styles.waitlistChip}>
-            <FontAwesome name="list" size={11} color="#8A3A3A" style={{ marginRight: 4 }} />
-            <Text style={styles.waitlistChipText}>{item.waitlist.length} waiting</Text>
-          </View>
-        )}
-        <View style={{ flex: 1 }} />
-        {item.status === 'pending_pickup' && (
-          <>
-            <Pressable style={[styles.actionBtn, styles.actionBtnConfirm]} onPress={() => confirmPickup(item.id)}>
-              <FontAwesome name="check" size={13} color={TANGERINE} />
-              <Text style={[styles.actionBtnText, { color: TANGERINE }]}>Confirm Pickup</Text>
-            </Pressable>
+  const renderDonorCard = ({ item }: { item: Item }) => {
+    const isBorrow = item.listingType === 'borrow';
+    const pendingReqs = isBorrow ? item.borrowRequests.filter(r => r.status === 'pending') : [];
+
+    return (
+      <View>
+        <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
+        <View style={styles.actionRow}>
+
+          {/* ── Give item: claimed/waitlist chips ── */}
+          {!isBorrow && item.claimedBy && item.status !== 'picked_up' && item.status !== 'disposed' && (
+            <View style={styles.claimedByChip}>
+              <FontAwesome name="user" size={11} color="#7A5C00" style={{ marginRight: 4 }} />
+              <Text style={styles.claimedByText}>
+                {item.status === 'pending_pickup'
+                  ? `Pickup pending — ${getUserById(item.claimedBy)?.name ?? 'claimant'}`
+                  : `Claimed by ${getUserById(item.claimedBy)?.name ?? 'someone'}`}
+              </Text>
+            </View>
+          )}
+          {!isBorrow && item.waitlist.length > 0 && item.status !== 'pending_pickup' && (
+            <View style={styles.waitlistChip}>
+              <FontAwesome name="list" size={11} color="#8A3A3A" style={{ marginRight: 4 }} />
+              <Text style={styles.waitlistChipText}>{item.waitlist.length} waiting</Text>
+            </View>
+          )}
+
+          {/* ── Borrow item: pending requests ── */}
+          {isBorrow && pendingReqs.map(req => {
+            const requester = getUserById(req.requesterId);
+            return (
+              <View key={req.id} style={styles.borrowReqRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.borrowReqName}>{requester?.name ?? 'Someone'}</Text>
+                  <Text style={styles.borrowReqDates}>
+                    {new Date(req.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {' – '}
+                    {new Date(req.endDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </Text>
+                </View>
+                <Pressable style={[styles.actionBtn, { backgroundColor: '#EEF5FA' }]} onPress={() => approveBorrowRequest(item.id, req.id)}>
+                  <FontAwesome name="check" size={13} color={STEEL_BLUE} />
+                  <Text style={[styles.actionBtnText, { color: STEEL_BLUE }]}>Approve</Text>
+                </Pressable>
+                <Pressable style={styles.actionBtn} onPress={() => rejectBorrowRequest(item.id, req.id)}>
+                  <FontAwesome name="times" size={13} color="#718096" />
+                  <Text style={styles.actionBtnText}>Decline</Text>
+                </Pressable>
+              </View>
+            );
+          })}
+
+          {/* ── Borrow item: currently borrowed ── */}
+          {isBorrow && item.status === 'borrowed' && (
+            <View style={styles.claimedByChip}>
+              <FontAwesome name="refresh" size={11} color="#7A5C00" style={{ marginRight: 4 }} />
+              <Text style={styles.claimedByText}>
+                Borrowed by {getUserById(item.borrowedBy ?? '')?.name ?? 'someone'}
+                {item.borrowedUntil ? ` until ${formatCalendarDate(item.borrowedUntil)}` : ''}
+              </Text>
+            </View>
+          )}
+
+          {/* ── Borrow item: pending return ── */}
+          {isBorrow && item.status === 'pending_return' && (
+            <>
+              <View style={styles.waitlistChip}>
+                <FontAwesome name="clock-o" size={11} color="#8A3A3A" style={{ marginRight: 4 }} />
+                <Text style={styles.waitlistChipText}>Return pending</Text>
+              </View>
+              <View style={{ flex: 1 }} />
+              <Pressable style={[styles.actionBtn, styles.actionBtnConfirm]} onPress={() => confirmBorrowReturn(item.id)}>
+                <FontAwesome name="check" size={13} color={TANGERINE} />
+                <Text style={[styles.actionBtnText, { color: TANGERINE }]}>Confirm Return</Text>
+              </Pressable>
+            </>
+          )}
+
+          <View style={{ flex: 1 }} />
+
+          {/* ── Give item: action buttons ── */}
+          {!isBorrow && item.status === 'pending_pickup' && (
+            <>
+              <Pressable style={[styles.actionBtn, styles.actionBtnConfirm]} onPress={() => confirmPickup(item.id)}>
+                <FontAwesome name="check" size={13} color={TANGERINE} />
+                <Text style={[styles.actionBtnText, { color: TANGERINE }]}>Confirm Pickup</Text>
+              </Pressable>
+              <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
+                <FontAwesome name="undo" size={13} color="#718096" />
+                <Text style={styles.actionBtnText}>Not Picked Up</Text>
+              </Pressable>
+            </>
+          )}
+          {!isBorrow && item.status === 'picked_up' && (
             <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
               <FontAwesome name="undo" size={13} color="#718096" />
-              <Text style={styles.actionBtnText}>Not Picked Up</Text>
+              <Text style={styles.actionBtnText}>Release Claim</Text>
             </Pressable>
-          </>
-        )}
-        {item.status === 'picked_up' && (
-          <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
-            <FontAwesome name="undo" size={13} color="#718096" />
-            <Text style={styles.actionBtnText}>Release Claim</Text>
-          </Pressable>
-        )}
-        {item.status !== 'picked_up' && item.status !== 'disposed' && item.status !== 'pending_pickup' && (
-          <>
-            <Pressable style={styles.actionBtn} onPress={() => handleDispose(item)}>
-              <FontAwesome name="check-circle" size={14} color="#718096" />
-              <Text style={styles.actionBtnText}>Dispose</Text>
-            </Pressable>
-            <Pressable style={[styles.actionBtn, styles.actionBtnDanger]} onPress={() => handleDelete(item)}>
-              <FontAwesome name="trash" size={14} color={TANG_DEEP} />
-              <Text style={[styles.actionBtnText, { color: TANG_DEEP }]}>Remove</Text>
-            </Pressable>
-          </>
-        )}
+          )}
+          {!isBorrow && item.status !== 'picked_up' && item.status !== 'disposed' && item.status !== 'pending_pickup' && (
+            <>
+              <Pressable style={styles.actionBtn} onPress={() => handleDispose(item)}>
+                <FontAwesome name="check-circle" size={14} color="#718096" />
+                <Text style={styles.actionBtnText}>Dispose</Text>
+              </Pressable>
+              <Pressable style={[styles.actionBtn, styles.actionBtnDanger]} onPress={() => handleDelete(item)}>
+                <FontAwesome name="trash" size={14} color={TANG_DEEP} />
+                <Text style={[styles.actionBtnText, { color: TANG_DEEP }]}>Remove</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const listingSections = [
     { title: 'Active', count: activeListings.length, data: activeListings },
@@ -178,13 +252,30 @@ export default function MyItemsScreen() {
                 onPress={() => setTab(t.key)}
               >
                 <Text style={[styles.filterBtnText, tab === t.key && { color: active.text }]}>
-                  {t.label}
-                  {t.count > 0 ? ` (${t.count})` : ''}
+                  {t.label}{t.count > 0 ? ` (${t.count})` : ''}
                 </Text>
               </Pressable>
             );
           })}
         </View>
+
+        {tab === 'listing' && (
+          <View style={[styles.filterRow, { marginTop: 8, flexWrap: 'wrap' }]}>
+            {LISTING_FILTERS.map(f => (
+              <Pressable
+                key={f.key}
+                style={[styles.filterBtn, listingFilter === f.key && {
+                  backgroundColor: f.key === 'free' ? TANGERINE : f.key === 'available_borrow' ? SKY : f.key === 'borrowed' ? BUTTER : INK,
+                }]}
+                onPress={() => setListingFilter(f.key)}
+              >
+                <Text style={[styles.filterBtnText, listingFilter === f.key && {
+                  color: f.key === 'borrowed' ? INK : CREAM,
+                }]}>{f.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
       </View>
 
       {tab === 'listing' && (
@@ -192,7 +283,9 @@ export default function MyItemsScreen() {
           <EmptyState
             icon="gift"
             title="No listings yet"
-            subtitle="Tap the + button to list an item for your friends"
+            subtitle="Share something with your friends"
+            ctaLabel="List something →"
+            onCta={() => router.push('/item/new')}
           />
         ) : (
           <SectionList
@@ -220,6 +313,8 @@ export default function MyItemsScreen() {
             icon="hand-o-right"
             title="No claimed items"
             subtitle="Items you claim from friends will appear here"
+            ctaLabel="Browse items →"
+            onCta={() => router.push('/')}
           />
         ) : (
           <FlatList
@@ -260,6 +355,8 @@ export default function MyItemsScreen() {
             icon="list"
             title="Not on any waitlists"
             subtitle="Items you've joined the waitlist for will appear here"
+            ctaLabel="Browse items →"
+            onCta={() => router.push('/')}
           />
         ) : (
           <FlatList
@@ -283,120 +380,32 @@ export default function MyItemsScreen() {
         )
       )}
 
-      {tab === 'lending' && (
-        myBorrowListings.length === 0 && myActiveBorrows.length === 0 ? (
-          <EmptyState
-            icon="refresh"
-            title="No lending activity"
-            subtitle="List an item as 'Lend Out' to share it with friends temporarily"
-          />
-        ) : (
-          <FlatList
-            data={[...myBorrowListings, ...myActiveBorrows.filter(i => !myBorrowListings.find(l => l.id === i.id))]}
-            keyExtractor={item => item.id}
-            contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => {
-              const isOwner = item.donorId === currentUser.id;
-              const pendingReqs = item.borrowRequests.filter(r => r.status === 'pending');
-              const myReq = item.borrowRequests.find(r => r.requesterId === currentUser.id && (r.status === 'pending' || r.status === 'approved'));
-              return (
-                <View>
-                  <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
-                  <View style={styles.actionRow}>
-                    {/* Donor: pending requests */}
-                    {isOwner && pendingReqs.map(req => {
-                      const requester = getUserById(req.requesterId);
-                      return (
-                        <View key={req.id} style={styles.borrowReqRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.borrowReqName}>{requester?.name ?? 'Someone'}</Text>
-                            <Text style={styles.borrowReqDates}>
-                              {new Date(req.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              {' – '}
-                              {new Date(req.endDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </Text>
-                          </View>
-                          <Pressable style={[styles.actionBtn, { backgroundColor: '#EEF5FA' }]} onPress={() => approveBorrowRequest(item.id, req.id)}>
-                            <FontAwesome name="check" size={13} color={STEEL_BLUE} />
-                            <Text style={[styles.actionBtnText, { color: STEEL_BLUE }]}>Approve</Text>
-                          </Pressable>
-                          <Pressable style={styles.actionBtn} onPress={() => rejectBorrowRequest(item.id, req.id)}>
-                            <FontAwesome name="times" size={13} color="#718096" />
-                            <Text style={styles.actionBtnText}>Decline</Text>
-                          </Pressable>
-                        </View>
-                      );
-                    })}
-                    {/* Donor: currently borrowed */}
-                    {isOwner && item.status === 'borrowed' && (
-                      <View style={styles.claimedByChip}>
-                        <FontAwesome name="refresh" size={11} color="#7A5C00" style={{ marginRight: 4 }} />
-                        <Text style={styles.claimedByText}>
-                          Borrowed by {getUserById(item.borrowedBy ?? '')?.name ?? 'someone'}
-                          {item.borrowedUntil ? ` until ${formatCalendarDate(item.borrowedUntil)}` : ''}
-                        </Text>
-                      </View>
-                    )}
-                    {/* Donor: pending return confirmation */}
-                    {isOwner && item.status === 'pending_return' && (
-                      <>
-                        <View style={styles.waitlistChip}>
-                          <FontAwesome name="clock-o" size={11} color="#8A3A3A" style={{ marginRight: 4 }} />
-                          <Text style={styles.waitlistChipText}>Return pending</Text>
-                        </View>
-                        <View style={{ flex: 1 }} />
-                        <Pressable style={[styles.actionBtn, styles.actionBtnConfirm]} onPress={() => confirmBorrowReturn(item.id)}>
-                          <FontAwesome name="check" size={13} color={TANGERINE} />
-                          <Text style={[styles.actionBtnText, { color: TANGERINE }]}>Confirm Return</Text>
-                        </Pressable>
-                      </>
-                    )}
-                    {/* Borrower: my request status */}
-                    {!isOwner && myReq && (
-                      <>
-                        <View style={myReq.status === 'approved' ? styles.claimedByChip : styles.waitlistChip}>
-                          <FontAwesome name={myReq.status === 'approved' ? 'check' : 'clock-o'} size={11} color={myReq.status === 'approved' ? '#7A5C00' : '#8A3A3A'} style={{ marginRight: 4 }} />
-                          <Text style={myReq.status === 'approved' ? styles.claimedByText : styles.waitlistChipText}>
-                            {myReq.status === 'approved' ? 'Approved' : 'Request pending'}
-                            {' · '}
-                            {new Date(myReq.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            {' – '}
-                            {new Date(myReq.endDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </Text>
-                        </View>
-                        {item.status === 'borrowed' && item.borrowedBy === currentUser.id && (
-                          <>
-                            <View style={{ flex: 1 }} />
-                            <Pressable style={[styles.actionBtn, styles.actionBtnConfirm]} onPress={() => markBorrowReturned(item.id)}>
-                              <FontAwesome name="undo" size={13} color={TANGERINE} />
-                              <Text style={[styles.actionBtnText, { color: TANGERINE }]}>Mark Returned</Text>
-                            </Pressable>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </View>
-                </View>
-              );
-            }}
-          />
-        )
+      {tab === 'listing' && (
+        <Pressable style={styles.fab} onPress={() => router.push('/item/new')}>
+          <FontAwesome name="plus" size={22} color="#fff" />
+        </Pressable>
       )}
-
-      <Pressable style={styles.fab} onPress={() => router.push('/item/new')}>
-        <FontAwesome name="plus" size={22} color="#fff" />
-      </Pressable>
     </View>
   );
 }
 
-function EmptyState({ icon, title, subtitle }: { icon: React.ComponentProps<typeof FontAwesome>['name']; title: string; subtitle?: string }) {
+function EmptyState({ icon, title, subtitle, ctaLabel, onCta }: {
+  icon: React.ComponentProps<typeof FontAwesome>['name'];
+  title: string;
+  subtitle?: string;
+  ctaLabel?: string;
+  onCta?: () => void;
+}) {
   return (
     <View style={styles.empty}>
       <FontAwesome name={icon} size={52} color="#cbd5e0" />
       <Text style={styles.emptyTitle}>{title}</Text>
       {subtitle && <Text style={styles.emptySubtitle}>{subtitle}</Text>}
+      {ctaLabel && onCta && (
+        <Pressable style={styles.emptyCta} onPress={onCta}>
+          <Text style={styles.emptyCtaText}>{ctaLabel}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -469,7 +478,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     gap: 4,
   },
-  actionBtnDanger: { backgroundColor: CREAM_2 },
+  actionBtnDanger:  { backgroundColor: CREAM_2 },
   actionBtnConfirm: { backgroundColor: CREAM_2 },
   actionBtnText: { fontSize: 12, color: MUTE, fontWeight: '600' },
   positionRow: {
@@ -494,6 +503,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 40,
   },
+  emptyCta: {
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#F26B3A',
+  },
+  emptyCtaText: { fontSize: 14, fontWeight: '700', color: '#FBF6EE' },
   borrowReqRow: {
     width: '100%',
     flexDirection: 'row',
@@ -505,7 +522,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     gap: 8,
   },
-  borrowReqName: { fontSize: 13, fontWeight: '700', color: INK },
+  borrowReqName:  { fontSize: 13, fontWeight: '700', color: INK },
   borrowReqDates: { fontSize: 12, color: MUTE },
   fab: {
     position: 'absolute',

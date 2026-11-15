@@ -77,7 +77,7 @@ export default function ProfileScreen() {
   const stats = [
     { label: 'Listed',         value: myItems.length,                                                                    icon: 'gift'        as const, color: TANGERINE, filter: 'listed'  as const },
     { label: 'Active',         value: myItems.filter(i => i.status === 'available' || i.status === 'claimed').length,    icon: 'check-circle' as const, color: SAGE,      filter: 'active'  as const },
-    { label: 'Claimed by You', value: items.filter(i => i.claimedBy === currentUser.id).length,                          icon: 'hand-o-right' as const, color: BUTTER,    filter: 'claimed' as const },
+    { label: 'Claimed by You', value: items.filter(i => i.claimedBy === currentUser.id && (i.status === 'claimed' || i.status === 'pending_pickup')).length, icon: 'hand-o-right' as const, color: BUTTER,    filter: 'claimed' as const },
   ];
 
   return (
