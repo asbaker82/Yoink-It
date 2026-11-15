@@ -20,7 +20,7 @@ const BORDER         = 'rgba(31,26,23,0.10)';
 export default function ProfileScreen() {
   const router = useRouter();
   const { logout, deleteAccount, updateAuthUser } = useAuth();
-  const { currentUser, users, getMyItems, items, searchNotifications, updateSearchNotification, deleteSearchNotification } = useApp();
+  const { currentUser, users, getMyItems, getFriendItems, items, searchNotifications, updateSearchNotification, deleteSearchNotification } = useApp();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const [friendsExpanded, setFriendsExpanded] = useState(false);
@@ -65,6 +65,10 @@ export default function ProfileScreen() {
   };
 
   const myItems = getMyItems();
+  const visibleCountByFriend = new Map<string, number>();
+  for (const i of getFriendItems()) {
+    visibleCountByFriend.set(i.donorId, (visibleCountByFriend.get(i.donorId) ?? 0) + 1);
+  }
   const friendList = users
     .filter(u => currentUser.friends.includes(u.id))
     .sort((a, b) => {
@@ -209,24 +213,32 @@ export default function ProfileScreen() {
             >
               {friendList.map(friend => (
                 <View key={friend.id} style={styles.friendRow}>
-                  <View style={styles.friendAvatar}>
-                    <Text style={styles.friendAvatarText}>
-                      {friend.name.split(' ').map(n => n[0]).join('')}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.friendName}>{friend.name}</Text>
-                    {friend.phone ? (
-                      <Text style={styles.friendMeta}>
-                        {friend.phone.replace(/(\+1)(\d{3})(\d{3})(\d{4})/, '($2) $3-$4')}
+                  <Pressable
+                    style={({ pressed }) => [styles.friendRowMain, pressed && { opacity: 0.6 }]}
+                    onPress={() => router.push(`/friend/${friend.id}`)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`See ${friend.name}'s listings`}
+                  >
+                    <View style={styles.friendAvatar}>
+                      <Text style={styles.friendAvatarText}>
+                        {friend.name.split(' ').map(n => n[0]).join('')}
                       </Text>
-                    ) : null}
-                  </View>
-                  <View style={styles.friendItemCount}>
-                    <Text style={styles.friendItemCountText}>
-                      {items.filter(i => i.donorId === friend.id && (i.status === 'available' || i.status === 'claimed')).length} items
-                    </Text>
-                  </View>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.friendName}>{friend.name}</Text>
+                      {friend.phone ? (
+                        <Text style={styles.friendMeta}>
+                          {friend.phone.replace(/(\+1)(\d{3})(\d{3})(\d{4})/, '($2) $3-$4')}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.friendItemCount}>
+                      <Text style={styles.friendItemCountText}>
+                        {visibleCountByFriend.get(friend.id) ?? 0} items
+                      </Text>
+                    </View>
+                    <FontAwesome name="chevron-right" size={11} color={MUTE} />
+                  </Pressable>
                   <Pressable
                     style={({ pressed }) => [styles.removeFriendBtn, pressed && { opacity: 0.6 }]}
                     onPress={() => removeFriend(friend.id)}
@@ -473,6 +485,7 @@ const styles = StyleSheet.create({
     borderBottomColor: DIVIDER,
     gap: 12,
   },
+  friendRowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   friendAvatar: {
     width: 40,
     height: 40,

@@ -110,6 +110,10 @@ function RootLayoutNav() {
           options={{ headerTitle: headerLogo, headerBackTitle: 'Back' }}
         />
         <Stack.Screen
+          name="friend/[id]"
+          options={{ headerTitle: headerLogo, headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
           name="add-friends"
           options={{ headerTitle: headerLogo, headerBackTitle: 'Back' }}
         />

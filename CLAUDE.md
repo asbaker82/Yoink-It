@@ -67,6 +67,7 @@ app/
     new.tsx                New listing form (modal)
     edit/[id].tsx          Edit listing form (modal)
   items-list.tsx           Sectioned listing view — ?filter=listed|active|claimed
+  friend/[id].tsx          A friend's open listings (Free / Borrow / Skills), reached by tapping a friend in Profile. Uses getFriendItems() so visibility rules apply.
   add-friends.tsx          Friend discovery — contacts section + others section
   edit-profile.tsx         Edit name, email, photo, default address, item visibility
 ```
