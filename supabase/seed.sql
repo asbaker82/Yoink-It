@@ -1147,3 +1147,69 @@ UPDATE public.items SET
     {"id":"br-seed-9","requesterId":"a1000000-0000-0000-0000-000000000007","startDate":"2026-05-14","endDate":"2026-05-23","status":"approved","createdAt":"2026-05-12T15:00:00.000Z"}
   ]'::jsonb
 WHERE id = 'b1000000-0000-0000-0000-000000000024';
+
+-- ════════════════════════════════════════════════════════════
+-- Section 11: Skill listings (listing_type = 'skill')
+-- Requires the 'skill' listing_type constraint and the
+-- allowed_borrowers column (see schema.sql). Safe to re-run.
+-- Two skills test trusted-friend restrictions:
+--   c1…0009 → visible only to the app owner's account
+--   c1…000a → visible only to Sarah Chen (owner should NOT see it)
+-- ════════════════════════════════════════════════════════════
+INSERT INTO public.items (
+  id, donor_id, title, description, photos, restrictions,
+  pickup_location, pickup_window, disposal_date, disposal_method, claim_pickup_hours,
+  status, waitlist, listing_type, borrow_requests, blocked_periods, allowed_borrowers
+) VALUES
+('c1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004',
+ 'Car Maintenance', 'Happy to help with oil changes, brake pads, battery swaps, and diagnosing check-engine lights. I have a full socket set and an OBD-II reader.',
+ ARRAY[]::text[], 'You bring the parts', '', 'Saturday mornings',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb, null),
+
+('c1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000009',
+ 'Leathercraft', 'I can teach basic stitching, edge finishing, and tooling — wallets, belts, and card holders are great first projects. Tools provided.',
+ ARRAY[]::text[], null, '', 'Weekday evenings',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb, null),
+
+('c1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-00000000000a',
+ 'Woodworking & Furniture Repair', 'Wobbly chairs, sticky drawers, small builds like shelves and cutting boards. Can work in my garage shop with table saw and router.',
+ ARRAY[]::text[], 'Safety glasses required in the shop', '', 'Weekends',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb, null),
+
+('c1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000006',
+ 'Lawn Care & Hedge Trimming', 'Mowing, edging, and hedge shaping. I bring my own mower and trimmer if you are within a few miles.',
+ ARRAY[]::text[], null, '', 'Sunday afternoons',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb, null),
+
+('c1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000001',
+ 'Resume & Cover Letter Review', 'Ten years in tech recruiting. I will mark up your resume and do a 30-minute mock interview if you want one.',
+ ARRAY[]::text[], null, '', 'Flexible — text me',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb, null),
+
+('c1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000007',
+ 'Bike Tune-Ups', 'Brake and derailleur adjustments, flat fixes, chain cleaning. Bring the bike by and we can work on it together.',
+ ARRAY[]::text[], null, '', 'Weeknights after 6pm',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb, null),
+
+('c1000000-0000-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000003',
+ 'Sewing & Clothing Alterations', 'Hemming pants, taking in seams, replacing zippers, and simple patches. I have a sewing machine and serger.',
+ ARRAY[]::text[], null, '', '',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb, null),
+
+('c1000000-0000-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000008',
+ 'Home Wi-Fi & Computer Setup', 'Router placement, mesh networks, new laptop setup, backups, and getting the printer to actually work.',
+ ARRAY[]::text[], null, '', 'Weekends',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb, null),
+
+('c1000000-0000-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000002',
+ 'Welding (Trusted Friends Only)', 'MIG welding for small repairs — trailer hitches, gates, brackets. Restricted to friends I know are comfortable around the equipment.',
+ ARRAY[]::text[], 'Must have welded before', '', 'By appointment',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb,
+ ARRAY['b88ac9ef-a48e-4246-b13f-762eb0324261']::uuid[]),
+
+('c1000000-0000-0000-0000-00000000000a', 'a1000000-0000-0000-0000-000000000005',
+ 'Tile & Grout Repair', 'Re-grouting showers and replacing cracked tiles. Only offering this to a couple of close friends right now.',
+ ARRAY[]::text[], null, '', 'Weekends',
+ '2099-12-31T00:00:00.000Z', 'keep', 0, 'available', ARRAY[]::uuid[], 'skill', '[]'::jsonb, '[]'::jsonb,
+ ARRAY['a1000000-0000-0000-0000-000000000001']::uuid[])
+ON CONFLICT (id) DO NOTHING;
