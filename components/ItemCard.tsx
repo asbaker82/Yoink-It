@@ -1,24 +1,30 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Item, CONDITION_LABELS } from '@/store/types';
+import { Item } from '@/store/types';
 import { useApp } from '@/store/AppContext';
 import { formatCalendarDate } from '@/utils/dates';
 
 interface Props {
   item: Item;
   onPress: () => void;
-  distance?: number; // miles from user's address
 }
 
-export default function ItemCard({ item, onPress, distance }: Props) {
-  const { getUserById } = useApp();
+export default function ItemCard({ item, onPress }: Props) {
+  const { getUserById, currentUser } = useApp();
   const donor = getUserById(item.donorId);
 
   const isBorrow = item.listingType === 'borrow';
 
+  const youClaimed = !isBorrow && item.claimedBy === currentUser.id &&
+    (item.status === 'claimed' || item.status === 'pending_pickup');
+  const youBorrowed = isBorrow && item.borrowedBy === currentUser.id &&
+    (item.status === 'borrowed' || item.status === 'pending_return');
+
   const disposalDate = isBorrow ? null : new Date(item.disposalDate);
-  const daysLeft = disposalDate ? Math.ceil((disposalDate.getTime() - Date.now()) / 86400000) : null;
+  const msLeft = disposalDate ? disposalDate.getTime() - Date.now() : null;
+  const hoursLeft = msLeft !== null ? msLeft / 3_600_000 : null;
+  const daysLeft = hoursLeft !== null ? Math.ceil(hoursLeft / 24) : null;
   const isUrgent = daysLeft !== null && daysLeft <= 3;
 
   const statusStyle = STATUS_STYLES[item.status] ?? STATUS_STYLES.available;
@@ -43,9 +49,13 @@ export default function ItemCard({ item, onPress, distance }: Props) {
               ? (item.status === 'borrowed' || item.status === 'pending_return' ? INK : CREAM)
               : statusStyle.text,
           }]}>
-            {isBorrow
-              ? (item.status === 'borrowed' || item.status === 'pending_return' ? 'Borrowed' : 'Borrow')
-              : STATUS_LABELS[item.status]}
+            {youClaimed ? 'You Claimed'
+              : youBorrowed ? 'You Borrowed'
+              : isBorrow
+                ? (item.status === 'borrowed' || item.status === 'pending_return'
+                    ? 'Borrowed'
+                    : item.donorId === currentUser.id ? 'Available to Borrow' : 'Borrow')
+                : STATUS_LABELS[item.status]}
           </Text>
         </View>
       </View>
@@ -53,10 +63,6 @@ export default function ItemCard({ item, onPress, distance }: Props) {
       <View style={styles.body}>
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
         <Text style={styles.donor}>from {donor?.name ?? 'Unknown'}</Text>
-
-        <View style={styles.conditionBadge}>
-          <Text style={styles.conditionText}>{CONDITION_LABELS[item.condition]}</Text>
-        </View>
 
         {item.restrictions ? (
           <View style={styles.restrictionRow}>
@@ -71,14 +77,6 @@ export default function ItemCard({ item, onPress, distance }: Props) {
             <Text style={styles.footerText} numberOfLines={1}>{item.pickupLocation}</Text>
           </View>
           <View style={styles.footerRight}>
-            {distance !== undefined && (
-              <View style={styles.distanceChip}>
-                <FontAwesome name="location-arrow" size={10} color={SKY} style={{ marginRight: 3 }} />
-                <Text style={styles.distanceText}>
-                  {distance < 0.1 ? '<0.1' : distance < 10 ? distance.toFixed(1) : Math.round(distance)} mi
-                </Text>
-              </View>
-            )}
             {!isBorrow && daysLeft !== null && (
               <View style={[styles.timeChip, isUrgent && styles.timeChipUrgent]}>
                 <FontAwesome
@@ -88,7 +86,9 @@ export default function ItemCard({ item, onPress, distance }: Props) {
                   style={{ marginRight: 3 }}
                 />
                 <Text style={[styles.timeText, isUrgent && styles.timeTextUrgent]}>
-                  {daysLeft <= 0 ? 'Expired' : daysLeft === 1 ? 'Last day!' : `${daysLeft}d left`}
+                  {hoursLeft !== null && hoursLeft <= 0 ? 'Expired'
+                    : hoursLeft !== null && hoursLeft < 24 ? 'today'
+                    : `${daysLeft}d left`}
                 </Text>
               </View>
             )}
@@ -187,15 +187,6 @@ const styles = StyleSheet.create({
   body: { padding: 14 },
   title: { fontSize: 16, fontWeight: '700', color: INK, marginBottom: 2, letterSpacing: -0.2 },
   donor: { fontSize: 13, color: MUTE, marginBottom: 8 },
-  conditionBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: CREAM_2,
-  },
-  conditionText: { fontSize: 12, fontWeight: '600', color: INK },
   restrictionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -215,15 +206,6 @@ const styles = StyleSheet.create({
   footerItem: { flexDirection: 'row', alignItems: 'center', flex: 1, minWidth: 0 },
   footerText: { fontSize: 12, color: MUTE, flex: 1 },
   footerRight: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 },
-  distanceChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(157,183,201,0.18)',
-    borderRadius: 8,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-  },
-  distanceText: { fontSize: 11, color: '#3A6A82', fontWeight: '600' },
   timeChip: {
     flexDirection: 'row',
     alignItems: 'center',

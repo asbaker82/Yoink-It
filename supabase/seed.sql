@@ -81,7 +81,7 @@ on conflict (id) do nothing;
 
 -- ── 3. Items ──────────────────────────────────────────────────
 insert into public.items (
-  id, donor_id, title, description, photos, condition,
+  id, donor_id, title, description, photos,
   restrictions, pickup_location, pickup_window,
   disposal_date, disposal_method, claim_pickup_hours,
   status, claimed_by, claim_deadline, waitlist
@@ -99,7 +99,6 @@ insert into public.items (
     'https://picsum.photos/id/431/800/600',
     'https://picsum.photos/id/1060/800/600'
   ],
-  'excellent',
   'Pick up only — it''s heavy! Please bring someone to help carry.',
   '742 Evergreen Terrace, San Francisco, CA 94117',
   'Weekends 10am–4pm or weekday evenings after 6pm',
@@ -121,7 +120,6 @@ insert into public.items (
     'https://picsum.photos/id/766/800/600',
     'https://picsum.photos/id/1080/800/600'
   ],
-  'good',
   null,
   '742 Evergreen Terrace, San Francisco, CA 94117',
   'Weekends 10am–4pm',
@@ -146,7 +144,6 @@ insert into public.items (
     'https://picsum.photos/id/1030/800/600',
     'https://picsum.photos/id/1041/800/600'
   ],
-  'good',
   'Must have a truck or large SUV — does not fit in a sedan.',
   '1600 Melrose Ave, Los Angeles, CA 90046',
   'Saturday or Sunday, anytime between 9am–5pm',
@@ -168,7 +165,6 @@ insert into public.items (
     'https://picsum.photos/id/1037/800/600',
     'https://picsum.photos/id/1025/800/600'
   ],
-  'fair',
   'Requires at least 3 people and a moving truck. I can help disassemble.',
   '1600 Melrose Ave, Los Angeles, CA 90046',
   'Flexible — just give 24hr notice',
@@ -192,7 +188,6 @@ insert into public.items (
     'https://picsum.photos/id/24/800/600',
     'https://picsum.photos/id/374/800/600'
   ],
-  'good',
   null,
   '350 Fifth Ave, New York, NY 10118',
   'Weekdays after 5pm, weekends anytime',
@@ -214,7 +209,6 @@ insert into public.items (
     'https://picsum.photos/id/1029/800/600',
     'https://picsum.photos/id/247/800/600'
   ],
-  'good',
   'These are heavy! Plan on two trips or bring a cart.',
   '350 Fifth Ave, New York, NY 10118',
   'Weekends only, 10am–3pm',
@@ -239,7 +233,6 @@ insert into public.items (
     'https://picsum.photos/id/119/800/600',
     'https://picsum.photos/id/442/800/600'
   ],
-  'good',
   null,
   '233 S Wacker Dr, Chicago, IL 60606',
   'Mon–Fri 9am–6pm (lobby pickup)',
@@ -261,7 +254,6 @@ insert into public.items (
     'https://picsum.photos/id/0/800/600',
     'https://picsum.photos/id/159/800/600'
   ],
-  'excellent',
   null,
   '233 S Wacker Dr, Chicago, IL 60606',
   'Weekdays 12pm–2pm or after 5pm',
@@ -285,7 +277,6 @@ insert into public.items (
     'https://picsum.photos/id/1059/800/600',
     'https://picsum.photos/id/200/800/600'
   ],
-  'excellent',
   'Women''s size 8 / EU 38. Please check sizing before claiming.',
   '1 Main St, Austin, TX 78701',
   'Evenings after 6pm or weekends',
@@ -307,7 +298,6 @@ insert into public.items (
     'https://picsum.photos/id/219/800/600',
     'https://picsum.photos/id/1015/800/600'
   ],
-  'excellent',
   null,
   '1 Main St, Austin, TX 78701',
   'Flexible — just message ahead',
@@ -331,7 +321,6 @@ insert into public.items (
     'https://picsum.photos/id/175/800/600',
     'https://picsum.photos/id/145/800/600'
   ],
-  'good',
   null,
   '191 Peachtree St NE, Atlanta, GA 30303',
   'Weekends 8am–12pm',
@@ -354,7 +343,6 @@ insert into public.items (
     'https://picsum.photos/id/674/800/600',
     'https://picsum.photos/id/488/800/600'
   ],
-  'fair',
   'Very heavy — bring help and a truck.',
   '191 Peachtree St NE, Atlanta, GA 30303',
   'Saturday mornings 8am–11am only',
@@ -379,7 +367,6 @@ insert into public.items (
     'https://picsum.photos/id/395/800/600',
     'https://picsum.photos/id/1062/800/600'
   ],
-  'good',
   null,
   '400 Broad St, Seattle, WA 98109',
   'Weekdays after 4pm, weekends anytime',
@@ -401,7 +388,6 @@ insert into public.items (
     'https://picsum.photos/id/486/800/600',
     'https://picsum.photos/id/184/800/600'
   ],
-  'excellent',
   null,
   '400 Broad St, Seattle, WA 98109',
   'Flexible — message to arrange',
@@ -426,7 +412,6 @@ insert into public.items (
     'https://picsum.photos/id/164/800/600',
     'https://picsum.photos/id/375/800/600'
   ],
-  'good',
   'Best for riders 5''8" to 6''0".',
   '1 Infinite Loop, Cambridge, MA 02139',
   'Weekends 9am–2pm',
@@ -448,7 +433,6 @@ insert into public.items (
     'https://picsum.photos/id/1039/800/600',
     'https://picsum.photos/id/447/800/600'
   ],
-  'excellent',
   null,
   '1 Infinite Loop, Cambridge, MA 02139',
   'Any day after 5pm or weekends',
@@ -473,7 +457,6 @@ insert into public.items (
     'https://picsum.photos/id/379/800/600',
     'https://picsum.photos/id/1074/800/600'
   ],
-  'excellent',
   null,
   '16th & Mission, Denver, CO 80202',
   'Evenings 6–9pm or Saturday mornings',
@@ -495,7 +478,6 @@ insert into public.items (
     'https://picsum.photos/id/325/800/600',
     'https://picsum.photos/id/1025/800/600'
   ],
-  'fair',
   'Pouf needs restuffing — about $10 of cotton batting from any craft store.',
   '16th & Mission, Denver, CO 80202',
   'Flexible — just text ahead',
@@ -520,7 +502,6 @@ insert into public.items (
     'https://picsum.photos/id/442/800/600',
     'https://picsum.photos/id/279/800/600'
   ],
-  'good',
   'Please only claim if you plan to actually use them — tools deserve a good home!',
   '1 Renaissance Square, Phoenix, AZ 85004',
   'Weekends 7am–12pm',
@@ -542,7 +523,6 @@ insert into public.items (
     'https://picsum.photos/id/398/800/600',
     'https://picsum.photos/id/162/800/600'
   ],
-  'good',
   'You''ll need a truck or at least a large roof rack.',
   '1 Renaissance Square, Phoenix, AZ 85004',
   'Saturday or Sunday mornings only',
@@ -668,7 +648,7 @@ where id in (
 
 -- ── 8. Give items from new users ──────────────────────────────
 insert into public.items (
-  id, donor_id, title, description, photos, condition,
+  id, donor_id, title, description, photos,
   restrictions, pickup_location, pickup_window,
   disposal_date, disposal_method, claim_pickup_hours,
   status, claimed_by, claim_deadline, waitlist
@@ -681,7 +661,6 @@ insert into public.items (
   'Lululemon Yoga Mat + Block Set',
   'Lululemon The Mat 5mm in midnight navy (lightly used), two cork yoga blocks, a stretch strap, and a Manduka mat bag. Cleaned and ready to go. Switching to a studio practice.',
   ARRAY['https://picsum.photos/id/1039/800/600','https://picsum.photos/id/447/800/600'],
-  'excellent',
   null,
   '1234 NW Burnside St, Portland, OR 97209',
   'Evenings after 6pm or weekends',
@@ -701,7 +680,6 @@ insert into public.items (
   '4-Piece Wicker Outdoor Patio Set',
   'All-weather resin wicker sectional — two loveseats, a coffee table, and an armchair. Cushions are weatherproof and clean. Selling the house, can''t take it with me.',
   ARRAY['https://picsum.photos/id/577/800/600','https://picsum.photos/id/280/800/600'],
-  'good',
   'Must have a truck or large SUV for transport.',
   '800 Brickell Ave, Miami, FL 33131',
   'Saturday or Sunday mornings',
@@ -721,7 +699,6 @@ insert into public.items (
   'Maternity Wardrobe Box (Size S/M)',
   'Box of 20+ maternity pieces — jeans, leggings, flowy tops, two work blouses, and a maxi dress. Brands include ASOS Maternity, H&M, and Motherhood. All washed and folded.',
   ARRAY['https://picsum.photos/id/1059/800/600','https://picsum.photos/id/200/800/600'],
-  'good',
   'Size small/medium pre-pregnancy (fits up to 36 weeks).',
   '1801 Main St, Houston, TX 77002',
   'Any day after 5pm',
@@ -741,7 +718,6 @@ insert into public.items (
   'Shortboard Surfboard (6''2") + Wetsuit',
   'Firewire 6''2" shortboard in great shape — no delams, two small dings on the rail (repaired). Includes a 3/2mm O''Neill Psychofreak fullsuit (size medium) and a board sock.',
   ARRAY['https://picsum.photos/id/974/800/600','https://picsum.photos/id/875/800/600'],
-  'good',
   'Best for intermediate surfers, ~150–185 lbs.',
   '1000 Kettner Blvd, San Diego, CA 92101',
   'Weekends, arrange by Friday',
@@ -761,7 +737,6 @@ insert into public.items (
   'Yamaha FG800 Acoustic Guitar + Hard Case',
   'Yamaha FG800 dreadnought acoustic — solid spruce top, nato back and sides. Light pick marks near the soundhole, frets in great shape. Includes a TSA-lockable SKB hard case and a clip tuner.',
   ARRAY['https://picsum.photos/id/145/800/600','https://picsum.photos/id/1/800/600'],
-  'good',
   null,
   '100 Broadway, Nashville, TN 37201',
   'Afternoons Mon–Sat',
@@ -781,7 +756,6 @@ insert into public.items (
   'Salomon Cross-Country Ski Set (170cm)',
   'Complete classic XC ski set: Salomon 170cm skis, Salomon bindings, Escape 7 boots (size 10), and Swix carbon poles (140cm). Waxed and ready. Moving to Arizona.',
   ARRAY['https://picsum.photos/id/392/800/600','https://picsum.photos/id/384/800/600'],
-  'good',
   'Fits approximately a size 10 ski boot / men''s 10 shoe.',
   '100 Washington Ave S, Minneapolis, MN 55401',
   'Weekends 9am–1pm',
@@ -801,7 +775,6 @@ insert into public.items (
   'Vinyl Record Collection (75+ LPs)',
   'Curated collection of 75+ LPs — heavy on jazz (Coltrane, Miles, Monk), soul (Marvin Gaye, Aretha), and classic rock. Most are VG+ or better. Full tracklist available. Downsizing.',
   ARRAY['https://picsum.photos/id/493/800/600','https://picsum.photos/id/1074/800/600'],
-  'good',
   null,
   '2233 NW Westover Rd, Portland, OR 97210',
   'Saturdays 11am–4pm',
@@ -821,7 +794,6 @@ insert into public.items (
   'Herman Miller Aeron Chair (Size B)',
   'Fully loaded Aeron in graphite — PostureFit SL, adjustable arms, lumbar support. Size B (fits up to 6''2" / 185 lbs). Minor scuffs on the base, everything functions perfectly. Retail $1,400+.',
   ARRAY['https://picsum.photos/id/239/800/600','https://picsum.photos/id/160/800/600'],
-  'good',
   'Bring help — it''s heavy.',
   '1500 Market St, Philadelphia, PA 19102',
   'Weekends only',
@@ -841,7 +813,6 @@ insert into public.items (
   'XL Dog Crate + Orthopedic Bed',
   'Impact collapsible crate (42"L x 28"W x 30"H) — fits labs, goldens, border collies. Comes with an Orvis memory-foam orthopedic bed. Dog adopted a crate-free lifestyle. Both clean and like new.',
   ARRAY['https://picsum.photos/id/1062/800/600','https://picsum.photos/id/453/800/600'],
-  'excellent',
   'Please only claim if you have a large breed. Crate won''t fit in a sedan.',
   '100 Boylston St, Boston, MA 02116',
   'Any morning before noon',
@@ -861,7 +832,6 @@ insert into public.items (
   'Lodge Cast Iron Cookware Set (5 pieces)',
   'Lodge 5-piece set: 8" skillet, 10" skillet, 12" skillet with lid, and a 5-quart dutch oven with lid. All pre-seasoned and well-maintained. Moving into a smaller place with an induction cooktop.',
   ARRAY['https://picsum.photos/id/431/800/600','https://picsum.photos/id/292/800/600'],
-  'good',
   null,
   '900 Canal St, New Orleans, LA 70112',
   'Evenings after 6pm or Saturday mornings',
@@ -878,7 +848,7 @@ on conflict (id) do nothing;
 
 -- ── 9. Borrow items from new users ────────────────────────────
 insert into public.items (
-  id, donor_id, title, description, photos, condition,
+  id, donor_id, title, description, photos,
   restrictions, pickup_location, pickup_window,
   disposal_date, disposal_method, claim_pickup_hours,
   status, waitlist, listing_type, borrow_requests, blocked_periods
@@ -891,7 +861,6 @@ insert into public.items (
   'Zojirushi Bread Machine',
   'Zojirushi BB-PDC20 2lb bread maker — programmed for everything from white to gluten-free. Measuring cup, spoon, and kneading blade included. Returns with the paddle clean, please.',
   ARRAY['https://picsum.photos/id/766/800/600'],
-  'excellent',
   null,
   '1234 NW Burnside St, Portland, OR 97209',
   'Weekends 10am–4pm',
@@ -912,7 +881,6 @@ insert into public.items (
   'Electric Pressure Washer (3000 PSI)',
   'Sun Joe SPX3001 3000 PSI pressure washer with 20-foot hose, five quick-connect nozzles, and onboard detergent tank. Great for driveways, fences, and patio furniture.',
   ARRAY['https://picsum.photos/id/116/800/600','https://picsum.photos/id/488/800/600'],
-  'good',
   null,
   '800 Brickell Ave, Miami, FL 33131',
   'Weekdays after 5pm or weekends',
@@ -933,7 +901,6 @@ insert into public.items (
   'Nanit Pro Baby Monitor + Floor Stand',
   'Nanit Pro smart baby monitor with floor stand, breathing-wear band, and two months of Insights subscription remaining. HD video, sleep tracking, two-way audio. Return it with the stand folded.',
   ARRAY['https://picsum.photos/id/486/800/600','https://picsum.photos/id/184/800/600'],
-  'excellent',
   'Families with infants under 12 months only.',
   '1801 Main St, Houston, TX 77002',
   'Evenings after 6pm',
@@ -954,7 +921,6 @@ insert into public.items (
   'Tern GSD Cargo E-Bike',
   'Tern GSD S10 long-tail cargo e-bike — dual battery, 400 lb payload, 10-speed Shimano Deore, hydraulic disc brakes. Can carry two kids or a week of groceries. Comes with two helmets.',
   ARRAY['https://picsum.photos/id/274/800/600','https://picsum.photos/id/164/800/600'],
-  'excellent',
   null,
   '1000 Kettner Blvd, San Diego, CA 92101',
   'Weekends only',
@@ -975,7 +941,6 @@ insert into public.items (
   'Brother SE700 Embroidery Machine',
   'Brother SE700 computerized sewing and embroidery machine with 135 built-in designs, 7"x5" hoop, and USB port for custom patterns. All accessories included. Please return threaded and cleaned.',
   ARRAY['https://picsum.photos/id/1060/800/600','https://picsum.photos/id/219/800/600'],
-  'excellent',
   null,
   '100 Broadway, Nashville, TN 37201',
   'Evenings after 6pm or weekends',
@@ -996,7 +961,6 @@ insert into public.items (
   'REI Co-op Half Dome 4-Person Tent',
   'REI Half Dome 4+ tent — freestanding double-wall design, 63" peak height, two doors and vestibules. Stakes, guylines, footprint, and stuff sack all included. Great for camping or backyard sleepovers.',
   ARRAY['https://picsum.photos/id/237/800/600','https://picsum.photos/id/1029/800/600'],
-  'good',
   null,
   '100 Washington Ave S, Minneapolis, MN 55401',
   'Any day after 5pm',
@@ -1017,7 +981,6 @@ insert into public.items (
   'Sony A7III Mirrorless Camera Kit',
   'Sony A7III body with 28-70mm kit lens, 50mm f/1.8, two NP-FZ100 batteries, charger, 64GB card, and a Peak Design wrist strap. Great for events, portraits, or street photography. Return with batteries charged.',
   ARRAY['https://picsum.photos/id/119/800/600','https://picsum.photos/id/442/800/600'],
-  'excellent',
   null,
   '2233 NW Westover Rd, Portland, OR 97210',
   'Evenings after 6pm',
@@ -1038,7 +1001,6 @@ insert into public.items (
   'Large Format Paper Cutter (24")',
   'Swingline ClassicCut 24" rotary trimmer — cuts up to 10 sheets at once, replacement blade included. Great for art projects, invitations, photos, or school presentations.',
   ARRAY['https://picsum.photos/id/0/800/600','https://picsum.photos/id/159/800/600'],
-  'good',
   null,
   '1500 Market St, Philadelphia, PA 19102',
   'Any day after 4pm',
@@ -1059,7 +1021,6 @@ insert into public.items (
   'Drum Floor Sander (Clarke American EZ-8)',
   'Clarke American EZ-8 drum floor sander for refinishing hardwood floors. Comes with 60-grit and 100-grit sleeves (partially used) plus an edge sander. Return with the dust bag emptied.',
   ARRAY['https://picsum.photos/id/175/800/600','https://picsum.photos/id/145/800/600'],
-  'good',
   null,
   '100 Boylston St, Boston, MA 02116',
   'Weekends only',
@@ -1080,7 +1041,6 @@ insert into public.items (
   'Fender Semi-Hollow Electric Guitar + Amp',
   'Fender Starcaster semi-hollow in aged natural — coil-tapped humbuckers, great for jazz, blues, and indie. Paired with a Fender Frontman 15G practice amp. Both in great shape. Return with strings intact.',
   ARRAY['https://picsum.photos/id/145/800/600','https://picsum.photos/id/1/800/600'],
-  'excellent',
   null,
   '900 Canal St, New Orleans, LA 70112',
   'Any evening or weekend',
@@ -1150,7 +1110,7 @@ WHERE id = 'b1000000-0000-0000-0000-000000000022';
 UPDATE public.items SET
   status         = 'borrowed',
   borrowed_by    = 'a1000000-0000-0000-0000-000000000002',
-  borrowed_until = (now() + interval '5 days')::date::text,
+  borrowed_until = now() + interval '5 days',
   borrow_requests = '[
     {"id":"br-seed-6","requesterId":"a1000000-0000-0000-0000-000000000002","startDate":"2026-05-22","endDate":"2026-05-30","status":"approved","createdAt":"2026-05-20T10:00:00.000Z"}
   ]'::jsonb
@@ -1160,7 +1120,7 @@ WHERE id = 'b1000000-0000-0000-0000-000000000018';
 UPDATE public.items SET
   status         = 'borrowed',
   borrowed_by    = 'a1000000-0000-0000-0000-000000000005',
-  borrowed_until = (now() + interval '3 days')::date::text,
+  borrowed_until = now() + interval '3 days',
   borrow_requests = '[
     {"id":"br-seed-7","requesterId":"a1000000-0000-0000-0000-000000000005","startDate":"2026-05-23","endDate":"2026-05-28","status":"approved","createdAt":"2026-05-21T08:00:00.000Z"}
   ]'::jsonb
@@ -1172,7 +1132,7 @@ WHERE id = 'b1000000-0000-0000-0000-000000000020';
 UPDATE public.items SET
   status         = 'pending_return',
   borrowed_by    = 'a1000000-0000-0000-0000-000000000006',
-  borrowed_until = (now() - interval '1 day')::date::text,
+  borrowed_until = now() - interval '1 day',
   borrow_requests = '[
     {"id":"br-seed-8","requesterId":"a1000000-0000-0000-0000-000000000006","startDate":"2026-05-15","endDate":"2026-05-24","status":"approved","createdAt":"2026-05-12T10:00:00.000Z"}
   ]'::jsonb
@@ -1182,7 +1142,7 @@ WHERE id = 'b1000000-0000-0000-0000-00000000001c';
 UPDATE public.items SET
   status         = 'pending_return',
   borrowed_by    = 'a1000000-0000-0000-0000-000000000007',
-  borrowed_until = (now() - interval '2 days')::date::text,
+  borrowed_until = now() - interval '2 days',
   borrow_requests = '[
     {"id":"br-seed-9","requesterId":"a1000000-0000-0000-0000-000000000007","startDate":"2026-05-14","endDate":"2026-05-23","status":"approved","createdAt":"2026-05-12T15:00:00.000Z"}
   ]'::jsonb
