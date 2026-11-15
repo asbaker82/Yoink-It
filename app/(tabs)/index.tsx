@@ -172,6 +172,13 @@ export default function BrowseScreen() {
   );
 
   const actionBanners = [
+    currentUser.friends.length === 0 && {
+      key: 'add-friends',
+      icon: 'user-plus' as const,
+      color: '#F26B3A',
+      label: 'Add friends to see their listings',
+      dest: '/add-friends',
+    },
     myTurn.length > 0 && {
       key: 'pickup',
       icon: 'clock-o' as const,
@@ -196,7 +203,7 @@ export default function BrowseScreen() {
       color: '#7BA7BC',
       label: `${needReturnConfirm.length} return${needReturnConfirm.length > 1 ? 's' : ''} waiting for your confirmation`,
     },
-  ].filter(Boolean) as { key: string; icon: React.ComponentProps<typeof FontAwesome>['name']; color: string; label: string }[];
+  ].filter(Boolean) as { key: string; icon: React.ComponentProps<typeof FontAwesome>['name']; color: string; label: string; dest?: string }[];
 
   // Auto-close action sheet when its items run out (e.g. last confirm tapped)
   useEffect(() => {
@@ -284,7 +291,7 @@ export default function BrowseScreen() {
   return (
     <View style={styles.container}>
       {actionBanners.map(b => (
-        <Pressable key={b.key} style={[styles.banner, { backgroundColor: b.color }]} onPress={() => setActiveSheet(b.key)}>
+        <Pressable key={b.key} style={[styles.banner, { backgroundColor: b.color }]} onPress={() => b.dest ? router.push(b.dest as any) : setActiveSheet(b.key)}>
           <FontAwesome name={b.icon} size={14} color="#fff" style={{ marginRight: 8 }} />
           <Text style={styles.bannerText}>{b.label}</Text>
           <FontAwesome name="chevron-right" size={12} color="#fff" />

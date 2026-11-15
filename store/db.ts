@@ -10,13 +10,11 @@ interface ItemRow {
   title: string;
   description: string;
   photos: string[];
-  condition: string;
   restrictions: string | null;
   pickup_location: string;
   pickup_window: string;
   disposal_date: string;
   disposal_method: string;
-  disposal_method_note: string | null;
   claim_pickup_hours: number;
   status: string;
   claimed_by: string | null;
@@ -59,13 +57,11 @@ export function rowToItem(row: ItemRow): Item {
     title:              row.title,
     description:        row.description,
     photos:             row.photos ?? [],
-    condition:          row.condition as Item['condition'],
     restrictions:       row.restrictions ?? undefined,
     pickupLocation:     row.pickup_location,
     pickupWindow:       row.pickup_window,
     disposalDate:       row.disposal_date,
     disposalMethod:     row.disposal_method as Item['disposalMethod'],
-    disposalMethodNote: row.disposal_method_note ?? undefined,
     claimPickupHours:   row.claim_pickup_hours,
     status:             row.status as ItemStatus,
     claimedBy:          row.claimed_by ?? undefined,
@@ -114,13 +110,11 @@ export async function insertItem(
       title:               item.title,
       description:         item.description,
       photos:              item.photos,
-      condition:           item.condition,
       restrictions:        item.restrictions ?? null,
       pickup_location:     item.pickupLocation,
       pickup_window:       item.pickupWindow,
       disposal_date:       item.disposalDate,
       disposal_method:     item.disposalMethod,
-      disposal_method_note: item.disposalMethodNote ?? null,
       claim_pickup_hours:  item.claimPickupHours,
       listing_type:        item.listingType ?? 'give',
       borrow_requests:     [],
@@ -138,13 +132,11 @@ export async function updateItemFields(
     title:               string;
     description:         string;
     photos:              string[];
-    condition:           string;
     restrictions:        string | null;
     pickup_location:     string;
     pickup_window:       string;
     disposal_date:       string;
     disposal_method:     string;
-    disposal_method_note: string | null;
     claim_pickup_hours:  number;
     status:              string;
     claimed_by:          string | null;
@@ -265,4 +257,12 @@ export async function deleteNotification(notificationId: string): Promise<void> 
     .delete()
     .eq('id', notificationId);
   if (error) throw error;
+}
+
+export async function addFriendMutual(targetUserId: string, myUserId: string): Promise<void> {
+  const { error } = await supabase.rpc('add_friend_mutual', {
+    target_id: targetUserId,
+    my_id: myUserId,
+  });
+  if (error) console.warn('addFriendMutual failed:', error.message);
 }

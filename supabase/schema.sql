@@ -61,14 +61,12 @@ create table if not exists public.items (
   title                text        not null,
   description          text        not null default '',
   photos               text[]      not null default '{}',
-  condition            text        not null
-                                   check (condition in ('excellent','good','fair','poor')),
   restrictions         text,
   pickup_location      text        not null,
   pickup_window        text        not null,
   disposal_date        timestamptz not null,
   disposal_method      text        not null
-                                   check (disposal_method in ('goodwill','salvation_army','habitat','food_bank','other_charity','trash','keep')),
+                                   check (disposal_method in ('charity','keep','trash')),
   disposal_method_note text,
   claim_pickup_hours   integer     not null default 72,
   status               text        not null default 'available'
@@ -120,3 +118,18 @@ create policy "search_notifications: owner only"
 -- Realtime: enable for items so clients get live updates
 -- ────────────────────────────────────────────────────────────
 alter publication supabase_realtime add table public.items;
+
+-- ────────────────────────────────────────────────────────────
+-- Mutual friend helper: appends my_id to target_id's friends
+-- array without duplicates. SECURITY DEFINER bypasses RLS so
+-- a user can write to another user's friends list.
+-- ────────────────────────────────────────────────────────────
+create or replace function public.add_friend_mutual(target_id uuid, my_id uuid)
+returns void language plpgsql security definer as $$
+begin
+  update public.profiles
+  set friends = friends || jsonb_build_array(my_id::text)
+  where id = target_id
+    and not (friends @> jsonb_build_array(my_id::text));
+end;
+$$;

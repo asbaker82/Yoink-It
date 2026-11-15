@@ -9,6 +9,7 @@ import { useAuth } from '@/store/AuthContext';
 import { useApp } from '@/store/AppContext';
 import { User } from '@/store/types';
 import { MOCK_USERS } from '@/store/mockData';
+import { addFriendMutual } from '@/store/db';
 
 const TANGERINE = '#F26B3A';
 const CREAM     = '#FBF6EE';
@@ -85,6 +86,7 @@ export default function ContactsScreen() {
       const existing = new Set(authUser.friends);
       added.forEach(id => existing.add(id));
       await updateAuthUser({ friends: Array.from(existing) });
+      await Promise.all(Array.from(added).map(id => addFriendMutual(id, authUser.id)));
     }
     router.replace('/(tabs)');
   };
