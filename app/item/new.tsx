@@ -17,7 +17,7 @@ import { DisposalMethod, DISPOSAL_METHOD_LABELS, ListingType, BlockedPeriod } fr
 import AddressInput from '@/components/AddressInput';
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
-import AllowedBorrowersInput from '@/components/AllowedBorrowersInput';
+import FriendAccessInput, { FriendAccess, friendAccessError } from '@/components/FriendAccessInput';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -54,7 +54,7 @@ export default function NewItemScreen() {
   const router = useRouter();
   const { createItem, currentUser, users } = useApp();
   const friends = users.filter(u => currentUser.friends.includes(u.id));
-  const [allowedBorrowers, setAllowedBorrowers] = useState<string[] | undefined>(undefined);
+  const [access, setAccess] = useState<FriendAccess>({});
   const scrollRef = useRef<ScrollView>(null);
   const fieldOffsets = useRef<Partial<Record<FieldKey, number>>>({});
 
@@ -137,8 +137,8 @@ export default function NewItemScreen() {
       }
     }
 
-    if (allowedBorrowers && allowedBorrowers.length === 0)
-      next.allowedBorrowers = 'Pick at least one friend, or choose All friends.';
+    const accessError = friendAccessError(access);
+    if (accessError) next.allowedBorrowers = accessError;
 
     if (Object.keys(next).length > 0) {
       setErrors(next);
@@ -164,7 +164,8 @@ export default function NewItemScreen() {
       claimPickupHours: listingType === 'give' ? days * 24 : 0,
       listingType,
       blockedPeriods,
-      allowedBorrowers,
+      allowedBorrowers: access.allowed,
+      excludedFriends: access.excluded,
     });
     router.back();
   };
@@ -376,9 +377,9 @@ export default function NewItemScreen() {
         <Text style={styles.label}>
           {isSkill ? 'Who can ask for help?' : listingType === 'borrow' ? 'Who can borrow this?' : 'Who can claim this?'}
         </Text>
-        <AllowedBorrowersInput
-          value={allowedBorrowers}
-          onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}
+        <FriendAccessInput
+          value={access}
+          onChange={v => { setAccess(v); clearError('allowedBorrowers'); }}
           friends={friends}
           error={errors.allowedBorrowers}
         />

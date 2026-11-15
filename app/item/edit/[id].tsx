@@ -17,7 +17,7 @@ import { DisposalMethod, DISPOSAL_METHOD_LABELS, BlockedPeriod } from '@/store/t
 import AddressInput from '@/components/AddressInput';
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
-import AllowedBorrowersInput from '@/components/AllowedBorrowersInput';
+import FriendAccessInput, { FriendAccess, friendAccessError } from '@/components/FriendAccessInput';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -87,7 +87,10 @@ export default function EditItemScreen() {
 
   const [restrictions, setRestrictions] = useState(item.restrictions ?? '');
   const [blockedPeriods, setBlockedPeriods] = useState<BlockedPeriod[]>(item.blockedPeriods ?? []);
-  const [allowedBorrowers, setAllowedBorrowers] = useState<string[] | undefined>(item.allowedBorrowers);
+  const [access, setAccess] = useState<FriendAccess>({
+    allowed: item.allowedBorrowers,
+    excluded: item.excludedFriends,
+  });
   const isSkill = item.listingType === 'skill';
   const [pickupLocation, setPickupLocation] = useState(item.pickupLocation);
   const [pickupWindow, setPickupWindow] = useState(item.pickupWindow);
@@ -158,8 +161,8 @@ export default function EditItemScreen() {
       }
     }
 
-    if (allowedBorrowers && allowedBorrowers.length === 0)
-      next.allowedBorrowers = 'Pick at least one friend, or choose All friends.';
+    const accessError = friendAccessError(access);
+    if (accessError) next.allowedBorrowers = accessError;
 
     if (Object.keys(next).length > 0) {
       setErrors(next);
@@ -179,8 +182,9 @@ export default function EditItemScreen() {
       restrictions: restrictions.trim() || undefined,
       pickupLocation: pickupLocation.trim(),
       pickupWindow: pickupWindow.trim(),
-      // [] clears the restriction (mapped to null in AppContext)
-      allowedBorrowers: allowedBorrowers ?? [],
+      // [] clears a list (mapped to null in AppContext)
+      allowedBorrowers: access.allowed ?? [],
+      excludedFriends: access.excluded ?? [],
       ...(item.listingType === 'give' ? {
         disposalDate: new Date(disposalDate).toISOString(),
         disposalMethod,
@@ -368,9 +372,9 @@ export default function EditItemScreen() {
         <Text style={styles.label}>
           {isSkill ? 'Who can ask for help?' : item.listingType === 'borrow' ? 'Who can borrow this?' : 'Who can claim this?'}
         </Text>
-        <AllowedBorrowersInput
-          value={allowedBorrowers}
-          onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}
+        <FriendAccessInput
+          value={access}
+          onChange={v => { setAccess(v); clearError('allowedBorrowers'); }}
           friends={friends}
           error={errors.allowedBorrowers}
         />

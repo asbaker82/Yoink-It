@@ -51,6 +51,8 @@ export interface Item {
   borrowedUntil?: string;
   // Empty/undefined = visible to all friends; otherwise only these user ids
   allowedBorrowers?: string[];
+  // Friends who must NOT see this item; mutually exclusive with allowedBorrowers
+  excludedFriends?: string[];
 }
 
 export interface SearchNotification {

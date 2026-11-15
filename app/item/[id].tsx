@@ -521,16 +521,19 @@ export default function ItemDetailScreen() {
             </View>
           )}
 
-          {/* Trusted friends — owner view */}
-          {isMyItem && !!item.allowedBorrowers?.length && (() => {
-            const names = (item.allowedBorrowers ?? []).map(uid => getUserById(uid)?.name.split(' ')[0] ?? 'Unknown');
+          {/* Friend access — owner view */}
+          {isMyItem && (!!item.allowedBorrowers?.length || !!item.excludedFriends?.length) && (() => {
+            const isOnly = !!item.allowedBorrowers?.length;
+            const ids = (isOnly ? item.allowedBorrowers : item.excludedFriends) ?? [];
+            const names = ids.map(uid => getUserById(uid)?.name.split(' ')[0] ?? 'Unknown');
             const shown = names.slice(0, 3).join(', ');
             const extra = names.length > 3 ? ` +${names.length - 3} more` : '';
             return (
               <View style={styles.trustedCard}>
-                <FontAwesome name="lock" size={14} color="#7BA7BC" />
+                <FontAwesome name={isOnly ? 'lock' : 'eye-slash'} size={14} color="#7BA7BC" />
                 <Text style={styles.trustedText}>
-                  Only visible to <Text style={{ fontWeight: '700', color: INK }}>{shown}</Text>{extra}
+                  {isOnly ? 'Only visible to ' : 'Hidden from '}
+                  <Text style={{ fontWeight: '700', color: INK }}>{shown}</Text>{extra}
                 </Text>
               </View>
             );

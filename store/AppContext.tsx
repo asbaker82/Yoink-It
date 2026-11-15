@@ -86,18 +86,23 @@ if (updates.restrictions        !== undefined) f.restrictions        = updates.r
   if (updates.borrowedBy          !== undefined) f.borrowed_by         = updates.borrowedBy ?? null;
   if (updates.borrowedUntil       !== undefined) f.borrowed_until      = updates.borrowedUntil ?? null;
   if (updates.allowedBorrowers    !== undefined) f.allowed_borrowers   = updates.allowedBorrowers?.length ? updates.allowedBorrowers : null;
+  if (updates.excludedFriends     !== undefined) f.excluded_friends    = updates.excludedFriends?.length ? updates.excludedFriends : null;
   return f as Parameters<typeof updateItemFields>[1];
 }
 
-// Existing claimants/waitlisters/borrowers/requesters keep access if later removed, so they can finish the handoff.
+// Existing claimants/waitlisters/borrowers/requesters keep access if later restricted, so they can finish the handoff.
 function canSeeRestricted(item: Item, userId: string): boolean {
-  if (!item.allowedBorrowers?.length) return true;
-  return item.donorId === userId ||
-    item.allowedBorrowers.includes(userId) ||
+  const onlyList = item.allowedBorrowers?.length ? item.allowedBorrowers : null;
+  const isExcluded = !!item.excludedFriends?.includes(userId);
+  if (!onlyList && !isExcluded) return true;
+  const hasActiveInvolvement = item.donorId === userId ||
     item.claimedBy === userId ||
     item.waitlist.includes(userId) ||
     item.borrowedBy === userId ||
     item.borrowRequests.some(r => r.requesterId === userId && (r.status === 'pending' || r.status === 'approved'));
+  if (hasActiveInvolvement) return true;
+  if (isExcluded) return false;
+  return onlyList!.includes(userId);
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

@@ -151,6 +151,8 @@ $$;
 -- otherwise only the listed user ids can see the item.
 -- ────────────────────────────────────────────────────────────
 alter table public.items add column if not exists allowed_borrowers uuid[];
+-- Inverse of allowed_borrowers: these friends can NOT see the item.
+alter table public.items add column if not exists excluded_friends uuid[];
 
 -- ────────────────────────────────────────────────────────────
 -- Skills: a third listing type for offering help/expertise.

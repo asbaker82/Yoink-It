@@ -22,7 +22,10 @@ export default function ItemCard({ item, onPress }: Props) {
     (item.status === 'claimed' || item.status === 'pending_pickup');
   const youBorrowed = isBorrow && item.borrowedBy === currentUser.id &&
     (item.status === 'borrowed' || item.status === 'pending_return');
-  const showTrustedLock = item.donorId === currentUser.id && !!item.allowedBorrowers?.length;
+  const accessIcon: 'lock' | 'eye-slash' | null = item.donorId !== currentUser.id ? null
+    : item.allowedBorrowers?.length ? 'lock'
+    : item.excludedFriends?.length ? 'eye-slash'
+    : null;
 
   const disposalDate = isGive ? new Date(item.disposalDate) : null;
   const msLeft = disposalDate ? disposalDate.getTime() - Date.now() : null;
@@ -52,8 +55,8 @@ export default function ItemCard({ item, onPress }: Props) {
             ? (item.status === 'borrowed' || item.status === 'pending_return' ? '#F4C95D' : '#7BA7BC')
             : statusStyle.bg,
         }]}>
-          {showTrustedLock && (
-            <FontAwesome name="lock" size={10} color={badgeTextColor} style={{ marginRight: 4 }} />
+          {accessIcon && (
+            <FontAwesome name={accessIcon} size={10} color={badgeTextColor} style={{ marginRight: 4 }} />
           )}
           <Text style={[styles.statusText, { color: badgeTextColor }]}>
             {isSkill ? 'Skill'
