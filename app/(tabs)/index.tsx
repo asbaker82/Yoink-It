@@ -280,9 +280,9 @@ export default function BrowseScreen() {
       ? `\n\n${matches.length} matching item${matches.length > 1 ? 's' : ''} already listed — check the results below.`
       : '';
     if (Platform.OS === 'web') {
-      window.alert(`Alert saved for "${keyword}".\n\nWe'll text you when a matching item is posted.${matchMsg}`);
+      window.alert(`Alert saved for "${keyword}".\n\nYou'll be notified when a matching item is posted.${matchMsg}`);
     } else {
-      Alert.alert('Alert Saved', `We'll text you when a matching item is posted for "${keyword}".${matchMsg}`);
+      Alert.alert('Alert Saved', `You'll be notified when a matching item is posted for "${keyword}".${matchMsg}`);
     }
   };
 

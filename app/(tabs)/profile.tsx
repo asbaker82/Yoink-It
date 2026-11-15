@@ -19,7 +19,7 @@ const BORDER         = 'rgba(31,26,23,0.10)';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { logout, updateAuthUser } = useAuth();
+  const { logout, deleteAccount, updateAuthUser } = useAuth();
   const { currentUser, users, getMyItems, items, searchNotifications, updateSearchNotification, deleteSearchNotification } = useApp();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
@@ -35,6 +35,33 @@ export default function ProfileScreen() {
         { text: 'Sign Out', style: 'destructive', onPress: doLogout },
       ]);
     }
+  };
+
+  const handleDeleteAccount = () => {
+    const msg = 'This permanently deletes your account and all your listings. This cannot be undone.';
+    const doDelete = async () => {
+      try {
+        await deleteAccount();
+      } catch {
+        const errMsg = 'Something went wrong deleting your account. Please try again.';
+        if (Platform.OS === 'web') window.alert(errMsg);
+        else Alert.alert('Error', errMsg);
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Delete your account?\n\n${msg}`)) doDelete();
+      return;
+    }
+    Alert.alert('Delete Account', msg, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete', style: 'destructive',
+        onPress: () => Alert.alert('Are you sure?', 'Your account and listings will be permanently deleted.', [
+          { text: 'Keep My Account', style: 'cancel' },
+          { text: 'Delete Forever', style: 'destructive', onPress: doDelete },
+        ]),
+      },
+    ]);
   };
 
   const myItems = getMyItems();
@@ -298,6 +325,10 @@ export default function ProfileScreen() {
           </View>
         ))}
       </View>
+
+      <Pressable style={({ pressed }) => [styles.deleteAccountBtn, pressed && { opacity: 0.7 }]} onPress={handleDeleteAccount}>
+        <Text style={styles.deleteAccountText}>Delete Account</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -357,6 +388,8 @@ const styles = StyleSheet.create({
     borderColor: BORDER,
   },
   logoutBtnText: { fontSize: 13, color: MUTE, fontWeight: '600' },
+  deleteAccountBtn: { alignSelf: 'center', marginTop: 8, paddingVertical: 10, paddingHorizontal: 16 },
+  deleteAccountText: { fontSize: 13, fontWeight: '600', color: TANG_DEEP },
 
   // Stats
   statsRow: { flexDirection: 'row', margin: 16, gap: 8 },

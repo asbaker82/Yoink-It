@@ -133,3 +133,15 @@ begin
     and not (friends @> jsonb_build_array(my_id::text));
 end;
 $$;
+
+-- ────────────────────────────────────────────────────────────
+-- Account deletion (required by App Store Guideline 5.1.1(v)).
+-- Deletes the calling user's auth record; profiles and items
+-- are removed via on-delete cascades.
+-- ────────────────────────────────────────────────────────────
+create or replace function public.delete_own_account()
+returns void language plpgsql security definer as $$
+begin
+  delete from auth.users where id = auth.uid();
+end;
+$$;

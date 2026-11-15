@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, Pressable, StyleSheet,
-  ActivityIndicator, Platform, Alert,
+  ActivityIndicator, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -35,7 +35,8 @@ export default function ContactsScreen() {
     if (!authUser) { setLoading(false); return; }
 
     if (Platform.OS === 'web') {
-      setSuggested(MOCK_USERS.filter(u => u.id !== authUser.id));
+      // Dev convenience only — web builds aren't shipped to app stores
+      setSuggested(__DEV__ ? MOCK_USERS.filter(u => u.id !== authUser.id) : []);
       setLoading(false);
       return;
     }
@@ -44,7 +45,7 @@ export default function ContactsScreen() {
       const Contacts = await import('expo-contacts');
       const { status } = await Contacts.requestPermissionsAsync();
       if (status !== 'granted') {
-        setSuggested(MOCK_USERS.filter(u => u.id !== authUser.id));
+        setSuggested([]);
         setLoading(false);
         return;
       }
@@ -61,12 +62,11 @@ export default function ContactsScreen() {
         }
       }
 
-      const matched = users.filter(
+      setSuggested(users.filter(
         u => u.id !== authUser.id && u.phone && contactPhones.has(u.phone)
-      );
-      setSuggested(matched.length > 0 ? matched : MOCK_USERS.filter(u => u.id !== authUser.id));
+      ));
     } catch {
-      setSuggested(MOCK_USERS.filter(u => u.id !== authUser.id));
+      setSuggested([]);
     } finally {
       setLoading(false);
     }

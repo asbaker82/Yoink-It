@@ -106,8 +106,22 @@ export default function EditItemScreen() {
     if (Platform.OS === 'web') {
       const uri = await pickImageWeb();
       if (uri) setPhotos(prev => [...prev, uri]);
-    } else {
-      Alert.alert('Camera', 'On a device, this would open the camera or photo library.');
+      return;
+    }
+    const ImagePicker = await import('expo-image-picker');
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Photos Access Needed', 'Allow photo access in Settings to add pictures to your listing.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.6,
+      base64: true,
+    });
+    const asset = result.canceled ? null : result.assets[0];
+    if (asset?.base64) {
+      setPhotos(prev => [...prev, `data:image/jpeg;base64,${asset.base64}`]);
     }
   };
 

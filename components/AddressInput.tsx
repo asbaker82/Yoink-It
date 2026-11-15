@@ -75,7 +75,7 @@ export default function AddressInput({ value, onChangeText, placeholder, style, 
           `?q=${encodeURIComponent(value)}` +
           `&format=json&addressdetails=1&limit=6&countrycodes=us`;
         const res = await fetch(url, {
-          headers: { 'User-Agent': 'DonateApp/1.0 (contact@example.com)' },
+          headers: { 'User-Agent': 'YoinkIt/1.0' },
         });
         const data: NominatimResult[] = await res.json();
         // De-dupe by formatted address

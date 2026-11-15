@@ -26,6 +26,7 @@ interface AuthContextType {
   verifyOTP: (code: string) => Promise<boolean>;
   completeRegistration: (name: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   updateAuthUser: (updates: Partial<User>) => Promise<void>;
 }
 
@@ -135,6 +136,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPendingPhone(null);
   };
 
+  const deleteAccount = async (): Promise<void> => {
+    const { error } = await supabase.rpc('delete_own_account');
+    if (error) throw error;
+    await supabase.auth.signOut();
+    setAuthUser(null);
+    setPendingPhone(null);
+  };
+
   const updateAuthUser = async (updates: Partial<User>): Promise<void> => {
     if (!authUser) return;
 
@@ -162,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       verifyOTP,
       completeRegistration,
       logout,
+      deleteAccount,
       updateAuthUser,
     }}>
       {children}
