@@ -26,6 +26,7 @@ const INK        = '#1F1A17';
 const MUTE       = '#847A70';
 const STEEL_BLUE = '#9DB7C9';
 const SKY        = '#7BA7BC';
+const SAGE       = '#7FA88A';
 
 const TAB_ACTIVE: Record<string, { bg: string; text: string }> = {
   listing:    { bg: TANGERINE, text: CREAM },
@@ -34,7 +35,7 @@ const TAB_ACTIVE: Record<string, { bg: string; text: string }> = {
 };
 
 type Tab = 'listing' | 'claimed' | 'waitlisted';
-type ListingFilter = 'all' | 'free' | 'available_borrow' | 'borrowed';
+type ListingFilter = 'all' | 'free' | 'available_borrow' | 'borrowed' | 'skills';
 
 function formatTimeLeft(deadline: Date, now: Date): string {
   const ms = deadline.getTime() - now.getTime();
@@ -71,7 +72,8 @@ export default function MyItemsScreen() {
   const filteredListings = listingFilter === 'all'             ? myListings
     : listingFilter === 'free'                                 ? myListings.filter(i => i.listingType === 'give')
     : listingFilter === 'available_borrow'                     ? myListings.filter(i => i.listingType === 'borrow' && i.status === 'available')
-    :                                                            myListings.filter(i => i.listingType === 'borrow' && i.status !== 'available');
+    : listingFilter === 'borrowed'                             ? myListings.filter(i => i.listingType === 'borrow' && i.status !== 'available')
+    :                                                            myListings.filter(i => i.listingType === 'skill');
 
   const activeListings    = filteredListings.filter(i => i.status !== 'picked_up' && i.status !== 'disposed');
   const completedListings = filteredListings.filter(i => i.status === 'picked_up' || i.status === 'disposed');
@@ -90,6 +92,7 @@ export default function MyItemsScreen() {
     { key: 'free',            label: 'Free' },
     { key: 'available_borrow', label: 'Available to Borrow' },
     { key: 'borrowed',        label: 'Borrowed' },
+    { key: 'skills',          label: 'Skills' },
   ];
 
   const handleDelete = (item: Item) => {
@@ -120,6 +123,7 @@ export default function MyItemsScreen() {
 
   const renderDonorCard = ({ item }: { item: Item }) => {
     const isBorrow = item.listingType === 'borrow';
+    const isGive   = item.listingType === 'give';
     const pendingReqs = isBorrow ? item.borrowRequests.filter(r => r.status === 'pending') : [];
 
     return (
@@ -128,7 +132,7 @@ export default function MyItemsScreen() {
         <View style={styles.actionRow}>
 
           {/* ── Give item: claimed/waitlist chips ── */}
-          {!isBorrow && item.claimedBy && item.status !== 'picked_up' && item.status !== 'disposed' && (
+          {isGive && item.claimedBy && item.status !== 'picked_up' && item.status !== 'disposed' && (
             <View style={styles.claimedByChip}>
               <FontAwesome name="user" size={11} color="#7A5C00" style={{ marginRight: 4 }} />
               <Text style={styles.claimedByText}>
@@ -138,7 +142,7 @@ export default function MyItemsScreen() {
               </Text>
             </View>
           )}
-          {!isBorrow && item.waitlist.length > 0 && item.status !== 'pending_pickup' && (
+          {isGive && item.waitlist.length > 0 && item.status !== 'pending_pickup' && (
             <View style={styles.waitlistChip}>
               <FontAwesome name="list" size={11} color="#8A3A3A" style={{ marginRight: 4 }} />
               <Text style={styles.waitlistChipText}>{item.waitlist.length} waiting</Text>
@@ -199,7 +203,7 @@ export default function MyItemsScreen() {
           <View style={{ flex: 1 }} />
 
           {/* ── Give item: action buttons ── */}
-          {!isBorrow && item.status === 'pending_pickup' && (
+          {isGive && item.status === 'pending_pickup' && (
             <>
               <Pressable style={[styles.actionBtn, styles.actionBtnConfirm]} onPress={() => confirmPickup(item.id)}>
                 <FontAwesome name="check" size={13} color={TANGERINE} />
@@ -211,13 +215,13 @@ export default function MyItemsScreen() {
               </Pressable>
             </>
           )}
-          {!isBorrow && item.status === 'picked_up' && (
+          {isGive && item.status === 'picked_up' && (
             <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
               <FontAwesome name="undo" size={13} color="#718096" />
               <Text style={styles.actionBtnText}>Release Claim</Text>
             </Pressable>
           )}
-          {!isBorrow && item.status !== 'picked_up' && item.status !== 'disposed' && item.status !== 'pending_pickup' && (
+          {isGive && item.status !== 'picked_up' && item.status !== 'disposed' && item.status !== 'pending_pickup' && (
             <>
               <Pressable style={styles.actionBtn} onPress={() => handleDispose(item)}>
                 <FontAwesome name="check-circle" size={14} color="#718096" />
@@ -228,6 +232,14 @@ export default function MyItemsScreen() {
                 <Text style={[styles.actionBtnText, { color: TANG_DEEP }]}>Remove</Text>
               </Pressable>
             </>
+          )}
+
+          {/* ── Skill: remove only ── */}
+          {item.listingType === 'skill' && (
+            <Pressable style={[styles.actionBtn, styles.actionBtnDanger]} onPress={() => handleDelete(item)}>
+              <FontAwesome name="trash" size={14} color={TANG_DEEP} />
+              <Text style={[styles.actionBtnText, { color: TANG_DEEP }]}>Remove</Text>
+            </Pressable>
           )}
         </View>
       </View>
@@ -265,7 +277,7 @@ export default function MyItemsScreen() {
               <Pressable
                 key={f.key}
                 style={[styles.filterBtn, listingFilter === f.key && {
-                  backgroundColor: f.key === 'free' ? TANGERINE : f.key === 'available_borrow' ? SKY : f.key === 'borrowed' ? BUTTER : INK,
+                  backgroundColor: f.key === 'free' ? TANGERINE : f.key === 'available_borrow' ? SKY : f.key === 'borrowed' ? BUTTER : f.key === 'skills' ? SAGE : INK,
                 }]}
                 onPress={() => setListingFilter(f.key)}
               >

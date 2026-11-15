@@ -20,7 +20,7 @@ import ConfirmSheet from '@/components/ConfirmSheet';
 
 import { Item } from '@/store/types';
 
-type ListingFilter = 'all' | 'free' | 'borrow';
+type ListingFilter = 'all' | 'free' | 'borrow' | 'skill';
 type FreeStatusFilter = 'all' | 'available' | 'claimed';
 type BorrowStatusFilter = 'all' | 'available' | 'borrowed';
 
@@ -220,7 +220,11 @@ export default function BrowseScreen() {
   const scored = friendItems
     .map(item => ({ item, score: fuzzyScore(search, item) }))
     .filter(({ score }) => score > 0)
-    .filter(({ item }) => listingFilter === 'all' ? true : listingFilter === 'free' ? item.listingType === 'give' : item.listingType === 'borrow')
+    .filter(({ item }) =>
+      listingFilter === 'all'    ? true :
+      listingFilter === 'free'   ? item.listingType === 'give' :
+      listingFilter === 'borrow' ? item.listingType === 'borrow' :
+                                   item.listingType === 'skill')
     .filter(({ item }) => {
       if (statusFilter === 'all') return true;
       if (listingFilter === 'borrow' && statusFilter === 'borrowed') {
@@ -396,14 +400,22 @@ export default function BrowseScreen() {
               Borrow
             </Text>
           </Pressable>
+          <Pressable
+            style={[styles.segment, listingFilter === 'skill' && styles.segmentActiveSkill]}
+            onPress={() => handleListingFilterChange('skill')}
+          >
+            <Text style={[styles.segmentText, listingFilter === 'skill' && styles.segmentTextActive]}>
+              Skills
+            </Text>
+          </Pressable>
         </View>
         {search.trim().length > 0 && scored.length > 0 && (
           <Text style={styles.matchCount}>{scored.length} match{scored.length !== 1 ? 'es' : ''}</Text>
         )}
       </View>
 
-      {/* Status filter — hidden when All is selected */}
-      {listingFilter !== 'all' && (
+      {/* Status filter — hidden for All and Skills (skills have no statuses) */}
+      {(listingFilter === 'free' || listingFilter === 'borrow') && (
       <View style={[styles.filterRow, { justifyContent: 'center' }]}>
         {listingFilter === 'free' ? (
           (['all', 'available', 'claimed'] as FreeStatusFilter[]).map(f => (
@@ -766,6 +778,14 @@ const styles = StyleSheet.create({
   segmentActiveBorrow: {
     backgroundColor: '#7BA7BC',
     shadowColor: '#7BA7BC',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  segmentActiveSkill: {
+    backgroundColor: '#7FA88A',
+    shadowColor: '#7FA88A',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 3,

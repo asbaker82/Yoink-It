@@ -88,6 +88,7 @@ export default function EditItemScreen() {
   const [restrictions, setRestrictions] = useState(item.restrictions ?? '');
   const [blockedPeriods, setBlockedPeriods] = useState<BlockedPeriod[]>(item.blockedPeriods ?? []);
   const [allowedBorrowers, setAllowedBorrowers] = useState<string[] | undefined>(item.allowedBorrowers);
+  const isSkill = item.listingType === 'skill';
   const [pickupLocation, setPickupLocation] = useState(item.pickupLocation);
   const [pickupWindow, setPickupWindow] = useState(item.pickupWindow);
   const [disposalDate, setDisposalDate] = useState(initialDisposalDate);
@@ -136,9 +137,9 @@ export default function EditItemScreen() {
 
     if (!title.trim())
       next.title = 'Please enter a title for this item.';
-    if (!pickupLocation.trim())
+    if (!isSkill && !pickupLocation.trim())
       next.pickupLocation = 'Please enter a pickup location.';
-    if (!pickupWindow.trim())
+    if (!isSkill && !pickupWindow.trim())
       next.pickupWindow = 'Please describe when the item can be picked up.';
 
     const days = parseInt(claimPickupDays, 10);
@@ -157,7 +158,7 @@ export default function EditItemScreen() {
       }
     }
 
-    if (item.listingType === 'borrow' && allowedBorrowers && allowedBorrowers.length === 0)
+    if (item.listingType !== 'give' && allowedBorrowers && allowedBorrowers.length === 0)
       next.allowedBorrowers = 'Pick at least one friend, or choose All friends.';
 
     if (Object.keys(next).length > 0) {
@@ -231,7 +232,7 @@ export default function EditItemScreen() {
         <Text style={styles.label}>Title <Text style={styles.required}>*</Text></Text>
         <TextInput
           style={[styles.input, errors.title && styles.inputError]}
-          placeholder="e.g. IKEA KALLAX Bookshelf"
+          placeholder={isSkill ? 'e.g. Car maintenance, Leathercraft' : 'e.g. IKEA KALLAX Bookshelf'}
           placeholderTextColor="#a0aec0"
           value={title}
           onChangeText={t => { setTitle(t); clearError('title'); }}
@@ -244,7 +245,9 @@ export default function EditItemScreen() {
         <Text style={styles.label}>Description</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
-          placeholder="Describe the item — dimensions, any wear, what's included…"
+          placeholder={isSkill
+            ? 'What can you help with? Any experience level or limits?'
+            : "Describe the item — dimensions, any wear, what's included…"}
           placeholderTextColor="#a0aec0"
           value={description}
           onChangeText={setDescription}
@@ -267,20 +270,26 @@ export default function EditItemScreen() {
       </View>
 
       {/* Item Location */}
-      <View style={[styles.section, { zIndex: 10 }]} {...trackOffset('pickupLocation')}>
-        <Text style={styles.label}>Item Location <Text style={styles.required}>*</Text></Text>
-        <AddressInput
-          value={pickupLocation}
-          onChangeText={t => { setPickupLocation(t); clearError('pickupLocation'); }}
-          placeholder="e.g. 123 Main St, Springfield"
-          error={!!errors.pickupLocation}
-        />
-        <FieldError message={errors.pickupLocation} />
-      </View>
+      {!isSkill && (
+        <View style={[styles.section, { zIndex: 10 }]} {...trackOffset('pickupLocation')}>
+          <Text style={styles.label}>Item Location <Text style={styles.required}>*</Text></Text>
+          <AddressInput
+            value={pickupLocation}
+            onChangeText={t => { setPickupLocation(t); clearError('pickupLocation'); }}
+            placeholder="e.g. 123 Main St, Springfield"
+            error={!!errors.pickupLocation}
+          />
+          <FieldError message={errors.pickupLocation} />
+        </View>
+      )}
 
-      {/* Pickup Window */}
+      {/* Pickup Window / Skill availability */}
       <View style={styles.section} {...trackOffset('pickupWindow')}>
-        <Text style={styles.label}>Pickup Availability <Text style={styles.required}>*</Text></Text>
+        {isSkill ? (
+          <Text style={styles.label}>When are you usually available? <Text style={styles.optional}>(optional)</Text></Text>
+        ) : (
+          <Text style={styles.label}>Pickup Availability <Text style={styles.required}>*</Text></Text>
+        )}
         <TextInput
           style={[styles.input, errors.pickupWindow && styles.inputError]}
           placeholder="e.g. Weekends 10am–4pm, Evenings after 6pm"
@@ -292,7 +301,7 @@ export default function EditItemScreen() {
       </View>
 
       {/* Give: Disposal Date */}
-      {item.listingType !== 'borrow' && (
+      {item.listingType === 'give' && (
         <View style={[styles.section, { zIndex: 20 }]} {...trackOffset('disposalDate')}>
           <Text style={styles.label}>Disposal Date <Text style={styles.required}>*</Text></Text>
           <Text style={styles.hint}>If no one picks up the item by this date, it will be disposed of.</Text>
@@ -305,7 +314,7 @@ export default function EditItemScreen() {
       )}
 
       {/* Give: Disposal Method */}
-      {item.listingType !== 'borrow' && (
+      {item.listingType === 'give' && (
         <View style={styles.section}>
           <Text style={styles.label}>If unclaimed, goes to… <Text style={styles.required}>*</Text></Text>
           <View style={styles.chipRow}>
@@ -325,7 +334,7 @@ export default function EditItemScreen() {
       )}
 
       {/* Give: Claim Pickup Days */}
-      {item.listingType !== 'borrow' && (
+      {item.listingType === 'give' && (
         <View style={styles.section} {...trackOffset('claimPickupHours')}>
           <Text style={styles.label}>Days to pick up after claiming <Text style={styles.required}>*</Text></Text>
           <Text style={styles.hint}>How long does a donee have to arrange pickup before the next person on the waitlist is asked?</Text>
@@ -354,10 +363,10 @@ export default function EditItemScreen() {
         </View>
       )}
 
-      {/* Borrow: Who can borrow */}
-      {item.listingType === 'borrow' && (
+      {/* Borrow/Skill: Who can see this */}
+      {item.listingType !== 'give' && (
         <View style={styles.section} {...trackOffset('allowedBorrowers')}>
-          <Text style={styles.label}>Who can borrow this?</Text>
+          <Text style={styles.label}>{isSkill ? 'Who can ask for help?' : 'Who can borrow this?'}</Text>
           <AllowedBorrowersInput
             value={allowedBorrowers}
             onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}

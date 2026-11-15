@@ -15,14 +15,16 @@ export default function ItemCard({ item, onPress }: Props) {
   const donor = getUserById(item.donorId);
 
   const isBorrow = item.listingType === 'borrow';
+  const isGive   = item.listingType === 'give';
+  const isSkill  = item.listingType === 'skill';
 
-  const youClaimed = !isBorrow && item.claimedBy === currentUser.id &&
+  const youClaimed = isGive && item.claimedBy === currentUser.id &&
     (item.status === 'claimed' || item.status === 'pending_pickup');
   const youBorrowed = isBorrow && item.borrowedBy === currentUser.id &&
     (item.status === 'borrowed' || item.status === 'pending_return');
-  const showTrustedLock = isBorrow && item.donorId === currentUser.id && !!item.allowedBorrowers?.length;
+  const showTrustedLock = !isGive && item.donorId === currentUser.id && !!item.allowedBorrowers?.length;
 
-  const disposalDate = isBorrow ? null : new Date(item.disposalDate);
+  const disposalDate = isGive ? new Date(item.disposalDate) : null;
   const msLeft = disposalDate ? disposalDate.getTime() - Date.now() : null;
   const hoursLeft = msLeft !== null ? msLeft / 3_600_000 : null;
   const daysLeft = hoursLeft !== null ? Math.ceil(hoursLeft / 24) : null;
@@ -41,7 +43,8 @@ export default function ItemCard({ item, onPress }: Props) {
           </View>
         )}
         <View style={[styles.statusBadge, {
-          backgroundColor: isBorrow
+          backgroundColor: isSkill ? SAGE
+            : isBorrow
             ? (item.status === 'borrowed' || item.status === 'pending_return' ? '#F4C95D' : '#7BA7BC')
             : statusStyle.bg,
         }]}>
@@ -54,11 +57,13 @@ export default function ItemCard({ item, onPress }: Props) {
             />
           )}
           <Text style={[styles.statusText, {
-            color: isBorrow
+            color: isSkill ? CREAM
+              : isBorrow
               ? (item.status === 'borrowed' || item.status === 'pending_return' ? INK : CREAM)
               : statusStyle.text,
           }]}>
-            {youClaimed ? 'You Claimed'
+            {isSkill ? 'Skill'
+              : youClaimed ? 'You Claimed'
               : youBorrowed ? 'You Borrowed'
               : isBorrow
                 ? (item.status === 'borrowed' || item.status === 'pending_return'
@@ -81,12 +86,21 @@ export default function ItemCard({ item, onPress }: Props) {
         ) : null}
 
         <View style={styles.footer}>
-          <View style={styles.footerItem}>
-            <FontAwesome name="map-marker" size={12} color={SKY} style={{ marginRight: 4 }} />
-            <Text style={styles.footerText} numberOfLines={1}>{item.pickupLocation}</Text>
-          </View>
+          {isSkill ? (
+            item.pickupWindow ? (
+              <View style={styles.footerItem}>
+                <FontAwesome name="clock-o" size={12} color={SAGE} style={{ marginRight: 4 }} />
+                <Text style={styles.footerText} numberOfLines={1}>{item.pickupWindow}</Text>
+              </View>
+            ) : <View style={styles.footerItem} />
+          ) : (
+            <View style={styles.footerItem}>
+              <FontAwesome name="map-marker" size={12} color={SKY} style={{ marginRight: 4 }} />
+              <Text style={styles.footerText} numberOfLines={1}>{item.pickupLocation}</Text>
+            </View>
+          )}
           <View style={styles.footerRight}>
-            {!isBorrow && daysLeft !== null && (
+            {isGive && daysLeft !== null && (
               <View style={[styles.timeChip, isUrgent && styles.timeChipUrgent]}>
                 <FontAwesome
                   name="clock-o"
@@ -112,7 +126,7 @@ export default function ItemCard({ item, onPress }: Props) {
           </View>
         </View>
 
-        {!isBorrow && item.waitlist.length > 0 && (
+        {isGive && item.waitlist.length > 0 && (
           <Text style={styles.waitlistText}>
             {item.waitlist.length} {item.waitlist.length === 1 ? 'person' : 'people'} on waitlist
           </Text>

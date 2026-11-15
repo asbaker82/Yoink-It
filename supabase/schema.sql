@@ -151,3 +151,10 @@ $$;
 -- otherwise only the listed user ids can see the item.
 -- ────────────────────────────────────────────────────────────
 alter table public.items add column if not exists allowed_borrowers uuid[];
+
+-- ────────────────────────────────────────────────────────────
+-- Skills: a third listing type for offering help/expertise.
+-- ────────────────────────────────────────────────────────────
+alter table public.items drop constraint if exists items_listing_type_check;
+alter table public.items add constraint items_listing_type_check
+  check (listing_type in ('give','borrow','skill'));

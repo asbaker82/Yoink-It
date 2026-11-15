@@ -9,7 +9,7 @@ export type ItemStatus =
   | 'borrowed'
   | 'pending_return';
 
-export type ListingType = 'give' | 'borrow';
+export type ListingType = 'give' | 'borrow' | 'skill';
 
 export interface BorrowRequest {
   id: string;

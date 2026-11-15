@@ -59,6 +59,7 @@ export default function NewItemScreen() {
   const fieldOffsets = useRef<Partial<Record<FieldKey, number>>>({});
 
   const [listingType, setListingType] = useState<ListingType>('give');
+  const isSkill = listingType === 'skill';
   const [photos, setPhotos] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -115,9 +116,9 @@ export default function NewItemScreen() {
 
     if (!title.trim())
       next.title = 'Please enter a title for this item.';
-    if (!pickupLocation.trim())
+    if (!isSkill && !pickupLocation.trim())
       next.pickupLocation = 'Please enter a pickup location.';
-    if (!pickupWindow.trim())
+    if (!isSkill && !pickupWindow.trim())
       next.pickupWindow = 'Please describe when the item can be picked up.';
 
     if (listingType === 'give') {
@@ -136,7 +137,7 @@ export default function NewItemScreen() {
       }
     }
 
-    if (listingType === 'borrow' && allowedBorrowers && allowedBorrowers.length === 0)
+    if (listingType !== 'give' && allowedBorrowers && allowedBorrowers.length === 0)
       next.allowedBorrowers = 'Pick at least one friend, or choose All friends.';
 
     if (Object.keys(next).length > 0) {
@@ -156,14 +157,14 @@ export default function NewItemScreen() {
       description: description.trim(),
       photos,
       restrictions: restrictions.trim() || undefined,
-      pickupLocation: pickupLocation.trim(),
+      pickupLocation: isSkill ? '' : pickupLocation.trim(),
       pickupWindow: pickupWindow.trim(),
       disposalDate: listingType === 'give' ? new Date(disposalDate).toISOString() : '2099-12-31T00:00:00.000Z',
       disposalMethod: listingType === 'give' ? disposalMethod : 'keep',
       claimPickupHours: listingType === 'give' ? days * 24 : 0,
       listingType,
       blockedPeriods,
-      allowedBorrowers: listingType === 'borrow' ? allowedBorrowers : undefined,
+      allowedBorrowers: listingType !== 'give' ? allowedBorrowers : undefined,
     });
     router.back();
   };
@@ -181,7 +182,7 @@ export default function NewItemScreen() {
     >
       {/* Listing type */}
       <View style={styles.typeToggleSection}>
-        <Text style={styles.typeToggleLabel}>What are you doing with this item?</Text>
+        <Text style={styles.typeToggleLabel}>What would you like to share?</Text>
         <View style={styles.typeToggleRow}>
           <Pressable
             style={[styles.typeBtn, listingType === 'give' && styles.typeBtnActive]}
@@ -198,6 +199,14 @@ export default function NewItemScreen() {
             <FontAwesome name="refresh" size={18} color={listingType === 'borrow' ? CREAM : MUTE} />
             <Text style={[styles.typeBtnText, listingType === 'borrow' && styles.typeBtnTextActive]}>Lend Out</Text>
             <Text style={[styles.typeBtnSub, listingType === 'borrow' && { color: 'rgba(251,246,238,0.75)' }]}>Borrow & return</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.typeBtn, isSkill && styles.typeBtnActiveSkill]}
+            onPress={() => setListingType('skill')}
+          >
+            <FontAwesome name="wrench" size={18} color={isSkill ? CREAM : MUTE} />
+            <Text style={[styles.typeBtnText, isSkill && styles.typeBtnTextActive]}>Offer a Skill</Text>
+            <Text style={[styles.typeBtnSub, isSkill && { color: 'rgba(251,246,238,0.75)' }]}>Lend a hand</Text>
           </Pressable>
         </View>
       </View>
@@ -231,7 +240,7 @@ export default function NewItemScreen() {
         <Text style={styles.label}>Title <Text style={styles.required}>*</Text></Text>
         <TextInput
           style={[styles.input, errors.title && styles.inputError]}
-          placeholder="e.g. IKEA KALLAX Bookshelf"
+          placeholder={isSkill ? 'e.g. Car maintenance, Leathercraft' : 'e.g. IKEA KALLAX Bookshelf'}
           placeholderTextColor="#a0aec0"
           value={title}
           onChangeText={t => { setTitle(t); clearError('title'); }}
@@ -244,7 +253,9 @@ export default function NewItemScreen() {
         <Text style={styles.label}>Description</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
-          placeholder="Describe the item — dimensions, any wear, what's included…"
+          placeholder={isSkill
+            ? 'What can you help with? Any experience level or limits?'
+            : "Describe the item — dimensions, any wear, what's included…"}
           placeholderTextColor="#a0aec0"
           value={description}
           onChangeText={setDescription}
@@ -267,20 +278,26 @@ export default function NewItemScreen() {
       </View>
 
       {/* Item Location */}
-      <View style={[styles.section, { zIndex: 10 }]} {...trackOffset('pickupLocation')}>
-        <Text style={styles.label}>Item Location <Text style={styles.required}>*</Text></Text>
-        <AddressInput
-          value={pickupLocation}
-          onChangeText={t => { setPickupLocation(t); clearError('pickupLocation'); }}
-          placeholder="e.g. 123 Main St, Springfield"
-          error={!!errors.pickupLocation}
-        />
-        <FieldError message={errors.pickupLocation} />
-      </View>
+      {!isSkill && (
+        <View style={[styles.section, { zIndex: 10 }]} {...trackOffset('pickupLocation')}>
+          <Text style={styles.label}>Item Location <Text style={styles.required}>*</Text></Text>
+          <AddressInput
+            value={pickupLocation}
+            onChangeText={t => { setPickupLocation(t); clearError('pickupLocation'); }}
+            placeholder="e.g. 123 Main St, Springfield"
+            error={!!errors.pickupLocation}
+          />
+          <FieldError message={errors.pickupLocation} />
+        </View>
+      )}
 
-      {/* Pickup Window */}
+      {/* Pickup Window / Skill availability */}
       <View style={styles.section} {...trackOffset('pickupWindow')}>
-        <Text style={styles.label}>Pickup Availability <Text style={styles.required}>*</Text></Text>
+        {isSkill ? (
+          <Text style={styles.label}>When are you usually available? <Text style={styles.optional}>(optional)</Text></Text>
+        ) : (
+          <Text style={styles.label}>Pickup Availability <Text style={styles.required}>*</Text></Text>
+        )}
         <TextInput
           style={[styles.input, errors.pickupWindow && styles.inputError]}
           placeholder="e.g. Weekends 10am–4pm, Evenings after 6pm"
@@ -354,10 +371,10 @@ export default function NewItemScreen() {
         </View>
       )}
 
-      {/* Borrow: Who can borrow */}
-      {listingType === 'borrow' && (
+      {/* Borrow/Skill: Who can see this */}
+      {listingType !== 'give' && (
         <View style={styles.section} {...trackOffset('allowedBorrowers')}>
-          <Text style={styles.label}>Who can borrow this?</Text>
+          <Text style={styles.label}>{isSkill ? 'Who can ask for help?' : 'Who can borrow this?'}</Text>
           <AllowedBorrowersInput
             value={allowedBorrowers}
             onChange={ids => { setAllowedBorrowers(ids); clearError('allowedBorrowers'); }}
@@ -413,6 +430,7 @@ const CREAM     = '#FBF6EE';
 const CREAM_2   = '#F4ECDD';
 const INK       = '#1F1A17';
 const MUTE      = '#847A70';
+const SAGE      = '#7FA88A';
 const BORDER    = 'rgba(31,26,23,0.12)';
 
 const styles = StyleSheet.create({
@@ -495,7 +513,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   typeToggleLabel: { fontSize: 14, fontWeight: '700', color: INK, marginBottom: 12 },
-  typeToggleRow: { flexDirection: 'row', gap: 10 },
+  typeToggleRow: { flexDirection: 'row', gap: 8 },
   typeBtn: {
     flex: 1,
     borderRadius: 14,
@@ -504,10 +522,12 @@ const styles = StyleSheet.create({
     backgroundColor: CREAM_2,
     alignItems: 'center',
     paddingVertical: 14,
+    paddingHorizontal: 4,
     gap: 4,
   },
   typeBtnActive: { backgroundColor: TANGERINE, borderColor: TANGERINE },
   typeBtnActiveBorrow: { backgroundColor: '#7BA7BC', borderColor: '#7BA7BC' },
+  typeBtnActiveSkill: { backgroundColor: SAGE, borderColor: SAGE },
   typeBtnText: { fontSize: 14, fontWeight: '700', color: MUTE },
   typeBtnTextActive: { color: CREAM },
   typeBtnSub: { fontSize: 11, color: MUTE },

@@ -171,8 +171,10 @@ export default function ItemDetailScreen() {
   const isClaimedByMe  = item.claimedBy === currentUser.id;
   const isOnWaitlist   = item.waitlist.includes(currentUser.id);
   const isBorrow       = item.listingType === 'borrow';
+  const isGive         = item.listingType === 'give';
+  const isSkill        = item.listingType === 'skill';
 
-  const disposalDate = isBorrow ? null : new Date(item.disposalDate);
+  const disposalDate = isGive ? new Date(item.disposalDate) : null;
   const daysLeft     = disposalDate ? Math.ceil((disposalDate.getTime() - Date.now()) / 86400000) : null;
   const isUrgent     = daysLeft !== null && daysLeft <= 3;
 
@@ -241,7 +243,9 @@ export default function ItemDetailScreen() {
   };
 
   // ── Status badge config ──────────────────────────────────────
-  const statusConfig = (isBorrow ? {
+  const statusConfig = (isSkill ? {
+    available:       { label: 'Skill',               bg: SAGE,      text: CREAM  },
+  } : isBorrow ? {
     available:       { label: 'Available to Borrow', bg: '#7BA7BC', text: CREAM  },
     borrowed:        { label: 'Borrowed',             bg: '#F4C95D', text: INK    },
     pending_return:  { label: 'Return Pending',       bg: SAGE,      text: CREAM  },
@@ -254,6 +258,8 @@ export default function ItemDetailScreen() {
   })[item.status] ?? { label: item.status, bg: CREAM_2, text: INK };
 
   const hasPhotos = item.photos.length > 0;
+
+  const askForHelpMessage = `Hi ${donor?.name.split(' ')[0] ?? 'there'}! I saw you're offering help with "${item.title}" on Yoink It. Would you be up for helping me sometime?`;
 
   return (
     <View style={styles.root}>
@@ -419,7 +425,9 @@ export default function ItemDetailScreen() {
                   style={styles.waveBtn}
                   onPress={() => {
                     setSmsMessage(
-                      !isBorrow && item.status === 'picked_up'
+                      isSkill
+                        ? askForHelpMessage
+                        : isGive && item.status === 'picked_up'
                         ? `Hi ${donor.name.split(' ')[0]}! Just wanted to say thank you so much for the "${item.title}" — I really appreciate it! — ${currentUser.name.split(' ')[0]}`
                         : `Hi ${donor.name}! I'm interested in your "${item.title}". When can I pick this up?`
                     );
@@ -436,8 +444,18 @@ export default function ItemDetailScreen() {
           {/* Description */}
           <Text style={styles.description}>{item.description}</Text>
 
+          {/* Details grid — Skill */}
+          {isSkill && !!item.pickupWindow && (
+            <View style={styles.detailsGrid}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailKey}>Availability</Text>
+                <Text style={styles.detailVal}>{item.pickupWindow}</Text>
+              </View>
+            </View>
+          )}
+
           {/* Details grid — Give Away */}
-          {!isBorrow && item.status !== 'picked_up' && (
+          {isGive && item.status !== 'picked_up' && (
             <View style={styles.detailsGrid}>
               {[
                 { k: 'Location',    v: item.pickupLocation },
@@ -477,7 +495,7 @@ export default function ItemDetailScreen() {
           )}
 
           {/* Pickup / directions card */}
-          {(isBorrow || item.status !== 'picked_up') && (
+          {!isSkill && (isBorrow || item.status !== 'picked_up') && (
             <Pressable style={styles.mapCard} onPress={() => openDirections(item.pickupLocation)}>
               <View style={styles.mapPin}>
                 <FontAwesome name="map-marker" size={20} color={SAGE} />
@@ -491,7 +509,7 @@ export default function ItemDetailScreen() {
           )}
 
           {/* Disposal destination — Give Away only */}
-          {!isBorrow && item.status !== 'picked_up' && (
+          {isGive && item.status !== 'picked_up' && (
             <View style={styles.disposalCard}>
               <FontAwesome name="heart" size={14} color={MUTE} style={{ marginTop: 1 }} />
               <Text style={styles.disposalText}>
@@ -503,8 +521,8 @@ export default function ItemDetailScreen() {
             </View>
           )}
 
-          {/* Trusted borrowers — lender view */}
-          {isBorrow && isMyItem && !!item.allowedBorrowers?.length && (() => {
+          {/* Trusted borrowers — lender/helper view */}
+          {!isGive && isMyItem && !!item.allowedBorrowers?.length && (() => {
             const names = (item.allowedBorrowers ?? []).map(uid => getUserById(uid)?.name.split(' ')[0] ?? 'Unknown');
             const shown = names.slice(0, 3).join(', ');
             const extra = names.length > 3 ? ` +${names.length - 3} more` : '';
@@ -659,7 +677,7 @@ export default function ItemDetailScreen() {
           )}
 
           {/* Claimant + Waitlist — Give Away only */}
-          {!isBorrow && (item.claimedBy || item.waitlist.length > 0) && (
+          {isGive && (item.claimedBy || item.waitlist.length > 0) && (
             <View style={styles.waitlistCard}>
               <View style={styles.waitlistAvatarRow}>
                 {/* Claimant avatar — always first */}
@@ -809,14 +827,30 @@ export default function ItemDetailScreen() {
           </Pressable>
         )}
 
+        {/* Primary action — Skill */}
+        {isSkill && !isMyItem && (
+          donor?.phone ? (
+            <Pressable
+              style={styles.primaryBtn}
+              onPress={() => { setSmsMessage(askForHelpMessage); setSmsVisible(true); }}
+            >
+              <Text style={styles.primaryBtnText}>Ask for Help →</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.skillNoPhoneText}>
+              Reach out to {donor?.name.split(' ')[0] ?? 'them'} to ask for help.
+            </Text>
+          )
+        )}
+
         {/* Primary action — Give Away */}
-        {!isBorrow && !isMyItem && item.status === 'available' && (
+        {isGive && !isMyItem && item.status === 'available' && (
           <Pressable style={styles.primaryBtn} onPress={handleClaim}>
             <Text style={styles.primaryBtnText}>Claim →</Text>
           </Pressable>
         )}
 
-        {!isBorrow && !isMyItem && item.status === 'claimed' && !isClaimedByMe && !isOnWaitlist && (
+        {isGive && !isMyItem && item.status === 'claimed' && !isClaimedByMe && !isOnWaitlist && (
           <Pressable
             style={styles.primaryBtn}
             onPress={() => {
@@ -830,13 +864,13 @@ export default function ItemDetailScreen() {
           </Pressable>
         )}
 
-        {!isBorrow && !isMyItem && isOnWaitlist && (
+        {isGive && !isMyItem && isOnWaitlist && (
           <Pressable style={styles.ghostBtn} onPress={() => setShowLeaveWaitlistSheet(true)}>
             <Text style={styles.ghostBtnText}>Leave Waitlist</Text>
           </Pressable>
         )}
 
-        {!isBorrow && !isMyItem && isClaimedByMe && item.status === 'claimed' && (
+        {isGive && !isMyItem && isClaimedByMe && item.status === 'claimed' && (
           <View style={styles.btnRow}>
             <Pressable style={[styles.primaryBtn, { flex: 1 }]} onPress={handlePickedUp}>
               <Text style={styles.primaryBtnText} numberOfLines={1} adjustsFontSizeToFit>Mark Picked Up ✓</Text>
@@ -847,7 +881,7 @@ export default function ItemDetailScreen() {
           </View>
         )}
 
-        {!isBorrow && !isMyItem && isClaimedByMe && item.status === 'pending_pickup' && (
+        {isGive && !isMyItem && isClaimedByMe && item.status === 'pending_pickup' && (
           <View style={styles.btnRow}>
             <View style={[styles.doneBar, { flex: 1 }]}>
               <FontAwesome name="clock-o" size={14} color={MUTE} style={{ marginRight: 8 }} />
@@ -859,7 +893,7 @@ export default function ItemDetailScreen() {
           </View>
         )}
 
-        {!isBorrow && isMyItem && item.status === 'pending_pickup' && (
+        {isGive && isMyItem && item.status === 'pending_pickup' && (
           <View style={styles.btnRow}>
             <Pressable style={[styles.primaryBtn, { flex: 1 }]} onPress={() => confirmPickup(item.id)}>
               <Text style={styles.primaryBtnText} numberOfLines={1} adjustsFontSizeToFit>Confirm Pickup ✓</Text>
@@ -872,17 +906,17 @@ export default function ItemDetailScreen() {
 
 
         {/* Disposed / picked-up state */}
-        {!isBorrow && item.status === 'disposed' && (
+        {isGive && item.status === 'disposed' && (
           <View style={styles.doneBar}>
             <Text style={styles.doneText}>This item is no longer available</Text>
           </View>
         )}
-        {!isBorrow && item.status === 'picked_up' && (
+        {isGive && item.status === 'picked_up' && (
           <Text style={styles.pickedUpText}>✓ Picked up — enjoy!</Text>
         )}
 
         {/* Donor release for accidentally confirmed pickup */}
-        {!isBorrow && isMyItem && item.status === 'picked_up' && (
+        {isGive && isMyItem && item.status === 'picked_up' && (
           <Pressable style={[styles.ghostBtn, { width: '100%', marginTop: 8 }]} onPress={handleRelease}>
             <Text style={styles.ghostBtnText}>Release Claim</Text>
           </Pressable>
@@ -1207,6 +1241,7 @@ const styles = StyleSheet.create({
   },
   doneText: { fontSize: 14, color: MUTE, fontWeight: '500' },
   pickedUpText: { fontSize: 15, color: SAGE, fontWeight: '600', textAlign: 'center', paddingVertical: 8 },
+  skillNoPhoneText: { fontSize: 14, color: MUTE, textAlign: 'center', paddingVertical: 8 },
 
   // Borrow
   blockedCard: {

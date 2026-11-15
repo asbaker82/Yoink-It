@@ -84,6 +84,8 @@ Path alias `@/` maps to the repo root.
 - **Give lifecycle**: `available → claimed → pending_pickup → picked_up` (happy path) or any state `→ disposed`. The `pending_pickup` step is a two-party confirmation: donee calls `markPickedUp` (sets `pending_pickup`), donor calls `confirmPickup` (sets `picked_up`). Either party can call `releaseClaim` to revert.
 - **Borrow lifecycle**: Donee selects a date range via `DateRangePicker` → `createBorrowRequest` → donor approves (auto-rejects overlapping pending requests via `datesOverlap`) → item status `borrowed` with `borrowedBy`/`borrowedUntil`. Return is two-party: donee calls `markBorrowReturned` (sets `pending_return`), donor calls `confirmBorrowReturn` (clears borrow fields, resets to `available`). Donors can block periods via `addBlockedPeriod`/`removeBlockedPeriod`. Borrow items use `disposalDate: '2099-12-31'` and `claimPickupHours: 0` as sentinels — do not show disposal UI for them.
 - **Cancel borrow request**: `cancelBorrowRequest` removes the request from the array entirely. This differs from `rejectBorrowRequest` (donor action) which marks status as `'rejected'` and keeps it in the array.
+- **Skill listings** (`listingType: 'skill'`): offers of help/expertise (car maintenance, woodworking). Reuse the borrow sentinels (`disposalDate: '2099-12-31'`, `claimPickupHours: 0`), store `pickupLocation: ''`, and use `pickupWindow` as optional availability. No status lifecycle — always `available`. "Ask for Help" opens the existing SMS sheet with a prefilled message; there is no in-app request flow. Use explicit `isGive` / `isBorrow` / `isSkill` checks — never `!isBorrow` to mean "give".
+- **Trusted borrowers**: `allowedBorrowers` (DB `allowed_borrowers uuid[]`, null = all friends) restricts borrow and skill listings to chosen friends. `canSeeRestricted()` in `AppContext` enforces it in `getFriendItems`, item detail, and `createBorrowRequest`; active requesters/borrowers keep access if later removed.
 - **Swipe-to-dismiss**: `SwipeableCard` wraps each `ItemCard` in Browse. Swiping left past 100 px (or fast flick) calls `dismissItem` from AppContext. Dismissed items are filtered out of `sortedFiltered` before the FlatList. The trash icon in `CustomTabBar` opens a restore sheet; it only appears when `dismissed.size > 0`.
 - **Validation**: When creating or editing a listing, `claimPickupHours` must be less than the hours remaining until `disposalDate` — enforced in both `new.tsx` and `edit/[id].tsx`.
 - **Item detail countdown**: `app/item/[id].tsx` ticks a `now` state every 30 s. The "Pick Up Within" row shows `"Xd Xh Xm remaining"` while the claim is live, or `"Xd Xh window"` when unclaimed. When `claimDeadline` has passed and the item is still `claimed`, a donor-only expiry banner renders with an "Extend 1 Day" button (`updateItem` adds 24 h to `claimDeadline`). Auto-release is handled by `processExpiredClaims` in `AppContext`.
@@ -101,7 +103,8 @@ Path alias `@/` maps to the repo root.
     ADD COLUMN IF NOT EXISTS borrowed_by text,
     ADD COLUMN IF NOT EXISTS borrowed_until timestamptz;
   ALTER TABLE public.items DROP CONSTRAINT IF EXISTS items_listing_type_check;
-  ALTER TABLE public.items ADD CONSTRAINT items_listing_type_check CHECK (listing_type IN ('give','borrow'));
+  ALTER TABLE public.items ADD CONSTRAINT items_listing_type_check CHECK (listing_type IN ('give','borrow','skill'));
+  ALTER TABLE public.items ADD COLUMN IF NOT EXISTS allowed_borrowers uuid[];
   ```
 
 ### Notifications — `utils/notifications.ts`
