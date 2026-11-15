@@ -4,6 +4,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import { useAuth } from '@/store/AuthContext';
+import ConfirmSheet from '@/components/ConfirmSheet';
 
 const TANGERINE      = '#F26B3A';
 const TANG_DEEP      = '#D8531F';
@@ -24,6 +25,7 @@ export default function ProfileScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const [friendsExpanded, setFriendsExpanded] = useState(false);
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
 
   const handleLogout = () => {
     const doLogout = () => logout();
@@ -92,18 +94,15 @@ export default function ProfileScreen() {
       return;
     }
 
-    const doRemove = async () => {
-      await updateAuthUser({ friends: currentUser.friends.filter(id => id !== friendId) });
-    };
-    if (Platform.OS === 'web') {
-      doRemove();
-    } else {
-      Alert.alert('Remove Friend', 'Remove this person from your friends?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: doRemove },
-      ]);
-    }
+    setPendingRemoveId(friendId);
   };
+
+  const confirmRemoveFriend = async () => {
+    const id = pendingRemoveId;
+    setPendingRemoveId(null);
+    if (id) await updateAuthUser({ friends: currentUser.friends.filter(f => f !== id) });
+  };
+  const pendingRemoveName = pendingRemoveId ? (users.find(u => u.id === pendingRemoveId)?.name ?? 'this person') : '';
 
   const stats = [
     { label: 'Listed',         value: myItems.length,                                                                    icon: 'gift'        as const, color: TANGERINE, filter: 'listed'  as const },
@@ -112,6 +111,7 @@ export default function ProfileScreen() {
   ];
 
   return (
+    <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.avatarSection}>
         <Pressable onPress={() => router.push('/edit-profile')} style={styles.avatarWrap}>
@@ -342,6 +342,18 @@ export default function ProfileScreen() {
         <Text style={styles.deleteAccountText}>Delete Account</Text>
       </Pressable>
     </ScrollView>
+
+    <ConfirmSheet
+      visible={!!pendingRemoveId}
+      title="Remove Friend"
+      message={`Remove ${pendingRemoveName} from your friends? You'll stop seeing their listings.`}
+      confirmLabel="Remove"
+      cancelLabel="Cancel"
+      destructive
+      onConfirm={confirmRemoveFriend}
+      onCancel={() => setPendingRemoveId(null)}
+    />
+    </View>
   );
 }
 
