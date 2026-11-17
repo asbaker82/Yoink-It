@@ -931,6 +931,11 @@ export default function ItemDetailScreen() {
         visible={showClaimToast}
         deadlineDate={claimDeadlineDate}
         onComplete={() => setShowClaimToast(false)}
+        ownerFirstName={donor?.name.split(' ')[0]}
+        onTextOwner={donor?.phone ? () => {
+          setSmsMessage(`Hi ${donor.name.split(' ')[0]}! I just claimed your "${item.title}" on Yoink It. When and where can I pick it up?`);
+          setSmsVisible(true);
+        } : undefined}
       />
       <WaitlistToast
         visible={showWaitlistToast}
