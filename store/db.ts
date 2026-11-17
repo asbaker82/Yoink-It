@@ -89,7 +89,6 @@ export function rowToUser(row: ProfileRow): User {
     friends:         row.friends ?? [],
     profilePhoto:    row.profile_photo ?? undefined,
     defaultAddress:  row.default_address ?? undefined,
-    itemVisibility:  (row.item_visibility as User['itemVisibility']) ?? 'added',
   };
 }
 
@@ -198,9 +197,7 @@ export async function upsertProfile(user: Partial<User> & { id: string }): Promi
       email:           user.email ?? null,
       phone:           user.phone ?? null,
       default_address: user.defaultAddress ?? null,
-      item_visibility: user.itemVisibility ?? 'added',
       profile_photo:   user.profilePhoto ?? null,
-      friends:         user.friends ?? [],
     })
     .select()
     .single();
@@ -267,18 +264,57 @@ export async function deleteNotification(notificationId: string): Promise<void> 
   if (error) throw error;
 }
 
-/** Remembers that I invited this phone number, so we're auto-friended when they sign up. */
+// ── Friend requests ──────────────────────────────────────────────────────────
+
+export interface FriendRequests {
+  incoming: string[]; // user ids who asked to be my friend
+  outgoing: string[]; // user ids I've asked
+}
+
+export async function fetchFriendRequests(myId: string): Promise<FriendRequests> {
+  const { data, error } = await supabase
+    .from('friend_requests')
+    .select('from_id, to_id, created_at')
+    .or(`from_id.eq.${myId},to_id.eq.${myId}`)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  const rows = (data ?? []) as { from_id: string; to_id: string }[];
+  return {
+    incoming: rows.filter(r => r.to_id === myId).map(r => r.from_id),
+    outgoing: rows.filter(r => r.from_id === myId).map(r => r.to_id),
+  };
+}
+
+/** Returns 'requested', or 'friends' if they had already asked me. */
+export async function sendFriendRequest(targetId: string): Promise<'requested' | 'friends' | 'invalid'> {
+  const { data, error } = await supabase.rpc('send_friend_request', { target_id: targetId });
+  if (error) throw error;
+  return data as 'requested' | 'friends' | 'invalid';
+}
+
+export async function respondFriendRequest(requesterId: string, accept: boolean): Promise<void> {
+  const { error } = await supabase.rpc('respond_friend_request', { requester_id: requesterId, accept });
+  if (error) throw error;
+}
+
+export async function cancelFriendRequest(myId: string, targetId: string): Promise<void> {
+  const { error } = await supabase
+    .from('friend_requests')
+    .delete()
+    .eq('from_id', myId)
+    .eq('to_id', targetId);
+  if (error) throw error;
+}
+
+export async function removeFriendBothWays(friendId: string): Promise<void> {
+  const { error } = await supabase.rpc('remove_friend', { friend_id: friendId });
+  if (error) throw error;
+}
+
+/** Remembers that I invited this phone number; they'll get my friend request when they sign up. */
 export async function recordInvite(inviterId: string, phone: string): Promise<void> {
   const { error } = await supabase
     .from('invites')
     .upsert({ inviter_id: inviterId, phone }, { onConflict: 'inviter_id,phone', ignoreDuplicates: true });
   if (error) console.warn('recordInvite failed:', error.message);
-}
-
-export async function addFriendMutual(targetUserId: string, myUserId: string): Promise<void> {
-  const { error } = await supabase.rpc('add_friend_mutual', {
-    target_id: targetUserId,
-    my_id: myUserId,
-  });
-  if (error) console.warn('addFriendMutual failed:', error.message);
 }

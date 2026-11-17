@@ -13,6 +13,11 @@ import {
   insertNotification,
   deleteNotification as dbDeleteNotification,
   updateProfile,
+  fetchFriendRequests,
+  sendFriendRequest as dbSendFriendRequest,
+  respondFriendRequest,
+  cancelFriendRequest as dbCancelFriendRequest,
+  removeFriendBothWays,
 } from './db';
 import type { Item, User, SearchNotification, BorrowRequest, BlockedPeriod } from './types';
 import { requestNotificationPermission, sendNotification } from '@/utils/notifications';
@@ -27,6 +32,14 @@ interface AppContextType {
   getFriendItems: () => Item[];
   getMyItems: () => Item[];
   canSeeRestricted: (item: Item, userId: string) => boolean;
+  // Friends (requests the other person approves)
+  incomingRequests: string[];
+  outgoingRequests: string[];
+  sendFriendRequest: (userId: string) => Promise<void>;
+  acceptFriendRequest: (userId: string) => Promise<void>;
+  declineFriendRequest: (userId: string) => Promise<void>;
+  cancelFriendRequest: (userId: string) => Promise<void>;
+  removeFriend: (userId: string) => Promise<void>;
   createItem: (data: Omit<Item, 'id' | 'donorId' | 'status' | 'waitlist' | 'createdAt' | 'borrowRequests' | 'borrowedBy' | 'borrowedUntil'>) => Promise<void>;
   updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
@@ -113,7 +126,7 @@ function datesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const { authUser } = useAuth();
+  const { authUser, refreshAuthUser } = useAuth();
   const qc = useQueryClient();
 
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
@@ -167,6 +180,57 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     queryFn:  fetchAllProfiles,
     enabled:  !!authUser,
   });
+
+  const { data: friendRequests } = useQuery({
+    queryKey: QUERY_KEYS.friendRequests(currentUser.id),
+    queryFn:  () => fetchFriendRequests(currentUser.id),
+    enabled:  !!authUser?.id,
+    refetchInterval: 30_000,
+  });
+  const incomingRequests = friendRequests?.incoming ?? [];
+  const outgoingRequests = friendRequests?.outgoing ?? [];
+
+  // Friend changes happen server-side; refresh my requests, my profile, and everyone's friends lists.
+  const afterFriendChange = async () => {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.friendRequests(currentUser.id) }),
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.profiles }),
+      refreshAuthUser(),
+    ]);
+  };
+
+  // A friend request I received may have been accepted by them (or a new one arrived);
+  // when the incoming/outgoing lists change, re-read my friends list too.
+  const requestsSignature = `${incomingRequests.join(',')}|${outgoingRequests.join(',')}`;
+  const prevRequestsSignature = useRef(requestsSignature);
+  useEffect(() => {
+    if (prevRequestsSignature.current !== requestsSignature) {
+      prevRequestsSignature.current = requestsSignature;
+      refreshAuthUser();
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.profiles });
+    }
+  }, [requestsSignature]);
+
+  const sendFriendRequest = async (userId: string) => {
+    await dbSendFriendRequest(userId);
+    await afterFriendChange();
+  };
+  const acceptFriendRequest = async (userId: string) => {
+    await respondFriendRequest(userId, true);
+    await afterFriendChange();
+  };
+  const declineFriendRequest = async (userId: string) => {
+    await respondFriendRequest(userId, false);
+    await afterFriendChange();
+  };
+  const cancelFriendRequest = async (userId: string) => {
+    await dbCancelFriendRequest(currentUser.id, userId);
+    await afterFriendChange();
+  };
+  const removeFriend = async (userId: string) => {
+    await removeFriendBothWays(userId);
+    await afterFriendChange();
+  };
 
   const { data: searchNotifications = [] } = useQuery({
     queryKey: QUERY_KEYS.myNotifications(currentUser.id),
@@ -515,12 +579,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (item.listingType === 'give' && (item.status === 'picked_up' || item.status === 'disposed')) return false;
       if (item.listingType === 'borrow' && item.status === 'picked_up') return false;
       if (!myFriendIds.has(item.donorId)) return false;
-      if (!canSeeRestricted(item, currentUser.id)) return false;
-      const donor = getUserById(item.donorId);
-      if (!donor) return false;
-      const visibility = donor.itemVisibility ?? 'added';
-      if (visibility === 'both') return true;
-      return (donor.friends ?? []).includes(currentUser.id);
+      // Friendships are mutual (approved requests), so being in my list is enough.
+      return canSeeRestricted(item, currentUser.id);
     });
   };
 
@@ -595,6 +655,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getFriendItems,
         getMyItems,
         canSeeRestricted,
+        incomingRequests,
+        outgoingRequests,
+        sendFriendRequest,
+        acceptFriendRequest,
+        declineFriendRequest,
+        cancelFriendRequest,
+        removeFriend,
         createItem:  async (data) => { await createItemMutation.mutateAsync(data as Parameters<typeof createItemMutation.mutateAsync>[0]); },
         updateItem:  async (id, updates) => { await updateItemMutation.mutateAsync({ id, updates }); },
         deleteItem:  async (id) => { await deleteItemMutation.mutateAsync(id); },

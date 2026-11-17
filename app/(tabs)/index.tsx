@@ -43,6 +43,7 @@ export default function BrowseScreen() {
     approveBorrowRequest,
     rejectBorrowRequest,
     confirmBorrowReturn,
+    incomingRequests,
     markPickedUp,
   } = useApp();
   const router = useRouter();
@@ -114,7 +115,14 @@ export default function BrowseScreen() {
   );
 
   const actionBanners = [
-    currentUser.friends.length === 0 && {
+    incomingRequests.length > 0 && {
+      key: 'friend-requests',
+      icon: 'user-plus' as const,
+      color: TANGERINE,
+      label: `${incomingRequests.length} friend request${incomingRequests.length > 1 ? 's' : ''} waiting for you`,
+      dest: '/add-friends',
+    },
+    currentUser.friends.length === 0 && incomingRequests.length === 0 && {
       key: 'add-friends',
       icon: 'user-plus' as const,
       color: TANGERINE,

@@ -28,6 +28,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   deleteAccount: () => Promise<void>;
   updateAuthUser: (updates: Partial<User>) => Promise<void>;
+  refreshAuthUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -147,6 +148,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setPendingPhone(null);
   };
 
+  /** Re-reads my profile (e.g. after the server changed my friends list). */
+  const refreshAuthUser = async (): Promise<void> => {
+    if (!authUser) return;
+    const profile = await fetchProfile(authUser.id);
+    if (profile) setAuthUser(profile);
+  };
+
   const updateAuthUser = async (updates: Partial<User>): Promise<void> => {
     if (!authUser) return;
 
@@ -156,9 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (updates.name           !== undefined) fieldMap.name            = updates.name;
     if (updates.email          !== undefined) fieldMap.email           = updates.email;
     if (updates.defaultAddress !== undefined) fieldMap.default_address = updates.defaultAddress || null;
-    if (updates.itemVisibility !== undefined) fieldMap.item_visibility = updates.itemVisibility;
     if (updates.profilePhoto   !== undefined) fieldMap.profile_photo   = updates.profilePhoto ?? null;
-    if (updates.friends        !== undefined) fieldMap.friends         = updates.friends;
 
     const updated = await updateProfile(authUser.id, fieldMap as Parameters<typeof updateProfile>[1]);
     setAuthUser(updated);
@@ -176,6 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       deleteAccount,
       updateAuthUser,
+      refreshAuthUser,
     }}>
       {children}
     </AuthContext.Provider>

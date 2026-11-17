@@ -34,18 +34,18 @@ The mock users (phones `+15555550101`–`0104`) bypass OTP and log in directly. 
 ### App state — `store/AppContext.tsx`
 All non-auth state in a single React Context accessed via `useApp()`. No Redux/Zustand.
 
-- `store/types.ts` — canonical types. Read `Item`, `User`, `ItemVisibility`, `SearchNotification` before touching any feature.
-- `store/mockData.ts` — 4 seed users, 5 give items, 10 borrow items. Mock users all have `itemVisibility: 'both'` so any user who adds them as a friend can see their listings.
+- `store/types.ts` — canonical types. Read `Item`, `User`, `SearchNotification` before touching any feature. Test data lives in `supabase/seed.sql`.
 - Key mutations — give flow: `claimItem`, `joinWaitlist`, `leaveWaitlist`, `releaseClaim`, `markPickedUp`, `confirmPickup`, `createItem`, `updateItem`, `deleteItem`; borrow flow: `createBorrowRequest`, `cancelBorrowRequest`, `approveBorrowRequest`, `rejectBorrowRequest`, `markBorrowReturned`, `confirmBorrowReturn`, `addBlockedPeriod`, `removeBlockedPeriod`
 - `processExpiredClaims` runs on a 30-second `setInterval` — promotes `waitlist[0]` to claimant when `claimDeadline` passes, or resets to `available`.
 - **Dismissed items**: `dismissed` (Set<string>), `dismissItem`, `restoreItem`, `restoreAll` — per-user, persisted to AsyncStorage at `@yoink_it/dismissed/<userId>`. These must be declared **after** `currentUser` in the provider body since `dismissedKey` depends on `currentUser.id`.
 
-### Item visibility
-`getFriendItems()` in `AppContext` enforces two-layer filtering:
-1. Current user must have added the donor as a friend (`currentUser.friends` includes `donorId`)
-2. Donor's `itemVisibility` setting: `'added'` (default) = donor must have added the viewer too; `'both'` = anyone who added the donor can see their items.
-
-Mock users are set to `'both'` so newly registered users can see listings immediately after adding friends.
+### Friends — requests the other person approves
+- `profiles.friends uuid[]` holds **accepted, mutual** friendships only. Clients can't write it (trigger `profiles_guard_friends` resets client edits); only security-definer RPCs do, always on both sides.
+- Table `friend_requests(from_id, to_id)`. RPCs: `send_friend_request(target_id)` (auto-accepts if they already asked me), `respond_friend_request(requester_id, accept)`, `remove_friend(friend_id)`; cancel = delete own row. `add_friend_mutual` was dropped (it used jsonb ops on a uuid[] column).
+- `AppContext` exposes `incomingRequests` / `outgoingRequests` (user ids, refetched every 30 s) and `sendFriendRequest`, `acceptFriendRequest`, `declineFriendRequest`, `cancelFriendRequest`, `removeFriend`; each re-reads my profile via `refreshAuthUser()`.
+- **One screen**: `components/FriendFinder.tsx` (search; Friend requests → Accept/Decline; On Yoink It → Add/Requested; Invite to Yoink It; "Invite someone by text"), used by `app/add-friends.tsx` and the sign-up step `app/(auth)/contacts.tsx`.
+- Entry points: Profile friends card **Add** (orange badge = incoming requests) and a Browse banner when requests are waiting.
+- `getFriendItems()` shows items from people in `currentUser.friends` (mutual by construction), minus Friend-access restrictions. There is no per-user "item visibility" setting anymore (`profiles.item_visibility` is unused).
 
 ### Routing — Expo Router (file-based)
 ```
@@ -56,7 +56,7 @@ app/
     phone.tsx              Phone entry → sends OTP
     verify.tsx             OTP entry (always "1234") → existing user → tabs, new user → name
     name.tsx               Name entry for new users
-    contacts.tsx           Friend discovery from device contacts
+    contacts.tsx           Sign-up friends step (FriendFinder)
   (tabs)/
     _layout.tsx            Tab bar + headerRight profile icon on Browse and My Items
     index.tsx              Browse — fuzzy search, listing type + status filters, swipe-to-dismiss, search alerts
@@ -68,8 +68,8 @@ app/
     edit/[id].tsx          Edit listing form (modal)
   items-list.tsx           Sectioned listing view — ?filter=listed|active|claimed
   friend/[id].tsx          A friend's open listings (Free / Borrow / Skills), reached by tapping a friend in Profile. Uses getFriendItems() so visibility rules apply.
-  add-friends.tsx          Friend discovery — contacts section + others section
-  edit-profile.tsx         Edit name, email, photo, area (city/state/ZIP), item visibility
+  add-friends.tsx          Friends: requests, add, invite (FriendFinder)
+  edit-profile.tsx         Edit name, email, photo, area (city/state/ZIP)
 ```
 
 Path alias `@/` maps to the repo root.
@@ -111,8 +111,8 @@ Path alias `@/` maps to the repo root.
 
 ### Texting & invites
 - **Person-to-person texts always go through the device's own Messages app** via `openSms(phone, body?)` in `utils/sms.ts` (empty `phone` lets the user pick the recipient). The app never sends SMS itself, except future real login codes.
-- **Invites** (`app/add-friends.tsx`): an "Invite a friend" card (no recipient) plus, on native, an "Invite to Yoink It" list of phone contacts not on the app. Tapping Invite calls `recordInvite` (table `invites(inviter_id, phone)`) and opens Messages with `inviteMessage()` from `utils/invite.ts`. Set `INVITE_LINK` there once the App Store link exists.
-- **Auto-friend on signup**: trigger `profiles_befriend_inviters` (after insert on `profiles`) calls `add_friend_mutual` both ways for every inviter of the new user's phone, then deletes those invites. `completeRegistration` re-reads the profile so those friends aren't overwritten. Phones are normalized `+1XXXXXXXXXX` (`normalizeUsPhone`).
+- **Invites** (in `FriendFinder`): contacts not on the app get an **Invite** button → `recordInvite` (table `invites(inviter_id, phone)`) + Messages with `inviteMessage()` from `utils/invite.ts`; a last row invites anyone by text (no recipient). Set `INVITE_LINK` there once the App Store link exists.
+- **Invite → request on signup**: trigger `profiles_befriend_inviters` (after insert on `profiles`) turns each invite for the new user's phone into a `friend_requests` row (inviter → new user), which they accept on the sign-up friends step. Phones are normalized `+1XXXXXXXXXX` (`normalizeUsPhone`).
 - **Reminders/alerts** (pickup deadlines, requests, returns) are meant to be **push notifications**, not SMS.
 
 ### Notifications — `utils/notifications.ts`
@@ -163,6 +163,7 @@ Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in 
 | `ItemCard` | Card used in Browse, My Items, items-list, and friend pages. Shows the pickup city/state. Borrow items show a single left badge: "Borrow" (sky-blue) when available, "Borrowed" (yellow/dark text) when out. |
 | `SwipeableCard` | Wraps `ItemCard` in Browse. `PanResponder`-based swipe-left-to-dismiss. Shows an `eye-slash` hint icon as the card slides. Calls `onDismiss` after animation completes. |
 | `LocationInput` | ZIP · City · State fields for item pickup and profile; ZIP auto-fills city/state via `lookupZip`. |
+| `FriendFinder` | The single friends screen body (search, requests, add, invite). Props `doneLabel`, `onDone`. |
 | `FriendAccessInput` | Everyone / Only these / All except picker for listing visibility. |
 | `DatePickerInput` | Custom calendar for single date selection. Displays and accepts **MM-DD-YYYY** format. On web: absolute dropdown (no `dropUp`); with `dropUp` prop: Modal overlay (bypasses overflow clipping). Fixed width 276 px — never stretch. Past dates disabled. |
 | `DateRangePicker` | Calendar for selecting a start+end date range (used in borrow request form). Always uses Modal overlay. First tap sets start, second tap (later date) sets end and closes. Highlights the range between selected dates. |

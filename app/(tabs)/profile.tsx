@@ -6,8 +6,6 @@ import { useApp } from '@/store/AppContext';
 import { useAuth } from '@/store/AuthContext';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import { useUserSheet } from '@/components/UserSheet';
-import { openSms } from '@/utils/sms';
-import { inviteMessage } from '@/utils/invite';
 import { BUTTER, CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TANGERINE_TINT } from '@/constants/theme';
 
 const DIVIDER        = 'rgba(31,26,23,0.06)';
@@ -16,8 +14,8 @@ const BORDER         = 'rgba(31,26,23,0.10)';
 export default function ProfileScreen() {
   const router = useRouter();
   const { openUser } = useUserSheet();
-  const { logout, deleteAccount, updateAuthUser } = useAuth();
-  const { currentUser, users, getMyItems, getFriendItems, items, searchNotifications, updateSearchNotification, deleteSearchNotification } = useApp();
+  const { logout, deleteAccount } = useAuth();
+  const { currentUser, users, getMyItems, getFriendItems, items, searchNotifications, updateSearchNotification, deleteSearchNotification, removeFriend: removeFriendBothWays, incomingRequests } = useApp();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const [friendsExpanded, setFriendsExpanded] = useState(false);
@@ -96,7 +94,7 @@ export default function ProfileScreen() {
   const confirmRemoveFriend = async () => {
     const id = pendingRemoveId;
     setPendingRemoveId(null);
-    if (id) await updateAuthUser({ friends: currentUser.friends.filter(f => f !== id) });
+    if (id) await removeFriendBothWays(id);
   };
   const pendingRemoveName = pendingRemoveId ? (users.find(u => u.id === pendingRemoveId)?.name ?? 'this person') : '';
 
@@ -182,20 +180,17 @@ export default function ProfileScreen() {
           />
           <View style={{ flex: 1 }} />
           <Pressable
-            style={({ pressed }) => [styles.addFriendsBtn, { marginRight: 8 }, pressed && { opacity: 0.7 }]}
-            onPress={() => openSms('', inviteMessage(currentUser.name))}
-            accessibilityRole="button"
-            accessibilityLabel="Invite a friend by text"
-          >
-            <FontAwesome name="comment" size={12} color={TANGERINE} style={{ marginRight: 5 }} />
-            <Text style={styles.addFriendsBtnText}>Invite</Text>
-          </Pressable>
-          <Pressable
             style={({ pressed }) => [styles.addFriendsBtn, pressed && { opacity: 0.7 }]}
             onPress={() => router.push('/add-friends')}
+            accessibilityLabel={incomingRequests.length ? `Add friends, ${incomingRequests.length} requests waiting` : 'Add friends'}
           >
             <FontAwesome name="user-plus" size={12} color={TANGERINE} style={{ marginRight: 5 }} />
             <Text style={styles.addFriendsBtnText}>Add</Text>
+            {incomingRequests.length > 0 && (
+              <View style={styles.requestBadge}>
+                <Text style={styles.requestBadgeText}>{incomingRequests.length}</Text>
+              </View>
+            )}
           </Pressable>
         </Pressable>
 
@@ -485,6 +480,17 @@ const styles = StyleSheet.create({
     borderColor: TANGERINE,
   },
   addFriendsBtnText: { fontSize: 12, color: TANGERINE, fontWeight: '600' },
+  requestBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 5,
+    marginLeft: 6,
+    backgroundColor: TANGERINE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  requestBadgeText: { fontSize: 11, fontWeight: '800', color: CREAM },
   addFriendsCTA: {
     flexDirection: 'row',
     alignItems: 'center',

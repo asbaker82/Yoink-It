@@ -18,8 +18,7 @@ import { useApp } from '@/store/AppContext';
 import LocationInput from '@/components/LocationInput';
 import { Location, parseLocation, formatLocation, locationError } from '@/utils/location';
 import ImageCropModal from '@/components/ImageCropModal';
-import { ItemVisibility } from '@/store/types';
-import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TANGERINE_TINT, WHITE } from '@/constants/theme';
+import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, WHITE } from '@/constants/theme';
 
 async function pickImage(): Promise<string | null> {
   // On web, use a file input directly — expo-image-picker permissions are unreliable in browsers.
@@ -71,7 +70,6 @@ export default function EditProfileScreen() {
   const [location, setLocation] = useState<Location>(parseLocation(user.defaultAddress));
   const [zipError, setZipError] = useState('');
   const [profilePhoto, setProfilePhoto] = useState(user.profilePhoto ?? '');
-  const [itemVisibility, setItemVisibility] = useState<ItemVisibility>(user.itemVisibility ?? 'added');
   const [nameError, setNameError] = useState('');
   const [saving, setSaving] = useState(false);
   const [pickingPhoto, setPickingPhoto] = useState(false);
@@ -118,7 +116,6 @@ export default function EditProfileScreen() {
       // '' clears it (mapped to null in AuthContext)
       defaultAddress: formatLocation(location),
       profilePhoto: profilePhoto || undefined,
-      itemVisibility,
     });
     setSaving(false);
     router.back();
@@ -204,47 +201,6 @@ export default function EditProfileScreen() {
         </Text>
         <LocationInput value={location} onChange={loc => { setLocation(loc); setZipError(''); }} error={!!zipError} />
         {zipError ? <Text style={styles.zipError}>{zipError}</Text> : null}
-      </View>
-
-      {/* Listing visibility */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Who Can See My Listings</Text>
-        <Text style={styles.sectionSubtitle}>
-          Control which friends can browse items you post.
-        </Text>
-
-        {([
-          {
-            value: 'added' as ItemVisibility,
-            label: 'Friends I\'ve added',
-            desc: 'Only people you have personally added as friends.',
-          },
-          {
-            value: 'both' as ItemVisibility,
-            label: 'Friends I\'ve added + people who\'ve added me',
-            desc: 'Anyone with a mutual connection — you added them, or they added you.',
-          },
-        ] as { value: ItemVisibility; label: string; desc: string }[]).map(opt => (
-          <Pressable
-            key={opt.value}
-            style={({ pressed }) => [
-              styles.visibilityOption,
-              itemVisibility === opt.value && styles.visibilityOptionSelected,
-              pressed && { opacity: 0.8 },
-            ]}
-            onPress={() => setItemVisibility(opt.value)}
-          >
-            <View style={[styles.radio, itemVisibility === opt.value && styles.radioSelected]}>
-              {itemVisibility === opt.value && <View style={styles.radioDot} />}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.visibilityLabel, itemVisibility === opt.value && styles.visibilityLabelSelected]}>
-                {opt.label}
-              </Text>
-              <Text style={styles.visibilityDesc}>{opt.desc}</Text>
-            </View>
-          </Pressable>
-        ))}
       </View>
 
       {/* Save button */}
@@ -368,42 +324,6 @@ const styles = StyleSheet.create({
   readonlyText: { fontSize: 15, color: MUTE },
   readonlyHint: { fontSize: 12, color: MUTE, marginTop: 5, opacity: 0.7 },
 
-  visibilityOption: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: DIVIDER,
-    marginBottom: 10,
-    backgroundColor: CREAM,
-  },
-  visibilityOptionSelected: {
-    borderColor: TANGERINE,
-    backgroundColor: TANGERINE_TINT,
-  },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: DIVIDER,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 1,
-    flexShrink: 0,
-  },
-  radioSelected: { borderColor: TANGERINE },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: TANGERINE,
-  },
-  visibilityLabel: { fontSize: 14, fontWeight: '600', color: INK_2 },
-  visibilityLabelSelected: { color: TANGERINE },
-  visibilityDesc: { fontSize: 12, color: MUTE, marginTop: 3, lineHeight: 17 },
   zipError: { fontSize: 13, color: TANG_DEEP, marginTop: 6 },
 
   saveBtn: {
