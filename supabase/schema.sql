@@ -261,3 +261,48 @@ update public.profiles p
 set default_address = z.city_state || ' ' || z.zip
 from zip_city z
 where p.default_address = z.zip;
+
+-- ────────────────────────────────────────────────────────────
+-- Invites: when you text a contact an invite, the app records
+-- their phone number. When someone signs up with that number,
+-- they and everyone who invited them become friends automatically.
+-- Phone numbers use the app's normalized "+1XXXXXXXXXX" form.
+-- ────────────────────────────────────────────────────────────
+create table if not exists public.invites (
+  inviter_id  uuid        not null references public.profiles(id) on delete cascade,
+  phone       text        not null,
+  created_at  timestamptz not null default now(),
+  primary key (inviter_id, phone)
+);
+
+alter table public.invites enable row level security;
+
+drop policy if exists "invites: owner insert" on public.invites;
+create policy "invites: owner insert"
+  on public.invites for insert with check (auth.uid() = inviter_id);
+
+drop policy if exists "invites: owner read" on public.invites;
+create policy "invites: owner read"
+  on public.invites for select using (auth.uid() = inviter_id);
+
+create or replace function public.befriend_inviters()
+returns trigger language plpgsql security definer as $$
+declare
+  inv record;
+begin
+  if new.phone is null or new.phone = '' then
+    return new;
+  end if;
+  for inv in select inviter_id from public.invites where phone = new.phone loop
+    perform public.add_friend_mutual(inv.inviter_id, new.id);
+    perform public.add_friend_mutual(new.id, inv.inviter_id);
+  end loop;
+  delete from public.invites where phone = new.phone;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_befriend_inviters on public.profiles;
+create trigger profiles_befriend_inviters
+  after insert on public.profiles
+  for each row execute procedure public.befriend_inviters();

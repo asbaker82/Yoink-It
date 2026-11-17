@@ -8,12 +8,15 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useAuth } from '@/store/AuthContext';
 import { useApp } from '@/store/AppContext';
 import { User } from '@/store/types';
-import { addFriendMutual } from '@/store/db';
-import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE, WHITE } from '@/constants/theme';
+import { addFriendMutual, recordInvite } from '@/store/db';
+import { normalizeUsPhone, openSms } from '@/utils/sms';
+import { inviteMessage } from '@/utils/invite';
+import { CREAM, CREAM_2, INK, INK_2, MUTE, PEACH, TANGERINE, TANGERINE_TINT, WHITE } from '@/constants/theme';
 
 const DIVIDER   = 'rgba(31,26,23,0.06)';
 
 type Section = { title: string; subtitle?: string; data: User[]; showPhone?: boolean };
+type InviteContact = { name: string; phone: string };
 
 export default function AddFriendsScreen() {
   const router = useRouter();
@@ -23,6 +26,8 @@ export default function AddFriendsScreen() {
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [contactsPermission, setContactsPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  const [inviteContacts, setInviteContacts] = useState<InviteContact[]>([]);
+  const [invited, setInvited] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     buildSections();
@@ -66,13 +71,19 @@ export default function AddFriendsScreen() {
       });
 
       const contactPhones = new Set<string>();
+      const appPhones = new Set(users.map(u => u.phone).filter(Boolean));
+      const notOnApp = new Map<string, InviteContact>();
       for (const c of data) {
         for (const p of c.phoneNumbers ?? []) {
-          const digits = (p.number ?? '').replace(/\D/g, '');
-          if (digits.length === 10) contactPhones.add(`+1${digits}`);
-          if (digits.length === 11 && digits.startsWith('1')) contactPhones.add(`+${digits}`);
+          const phone = normalizeUsPhone(p.number ?? '');
+          if (!phone) continue;
+          contactPhones.add(phone);
+          if (!appPhones.has(phone) && phone !== authUser.phone && c.name && !notOnApp.has(phone)) {
+            notOnApp.set(phone, { name: c.name, phone });
+          }
         }
       }
+      setInviteContacts([...notOnApp.values()].sort((a, b) => a.name.localeCompare(b.name)));
 
       const fromContacts = allCandidates.filter(u => u.phone && contactPhones.has(u.phone));
       const others       = allCandidates.filter(u => !u.phone || !contactPhones.has(u.phone));
@@ -126,6 +137,68 @@ export default function AddFriendsScreen() {
 
   const allUsers = sections.flatMap(s => s.data);
 
+  // Opens the native Messages app with an invite. With a contact, the number is
+  // remembered so we're auto-friended when they sign up with it.
+  const sendInvite = (contact?: InviteContact) => {
+    if (!authUser) return;
+    if (contact) {
+      recordInvite(authUser.id, contact.phone);
+      setInvited(prev => new Set(prev).add(contact.phone));
+    }
+    openSms(contact?.phone ?? '', inviteMessage(authUser.name, contact?.name));
+  };
+
+  const inviteHeader = (
+    <View style={styles.inviteCard}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.inviteTitle}>Invite a friend</Text>
+        <Text style={styles.inviteSub}>Send a text from your phone. Pick who in Messages.</Text>
+      </View>
+      <Pressable
+        style={({ pressed }) => [styles.inviteBtn, pressed && styles.btnPressed]}
+        onPress={() => sendInvite()}
+        accessibilityRole="button"
+      >
+        <FontAwesome name="comment" size={14} color={CREAM} />
+        <Text style={styles.inviteBtnText}>Invite</Text>
+      </Pressable>
+    </View>
+  );
+
+  const inviteList = inviteContacts.length > 0 ? (
+    <View>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Invite to Yoink It</Text>
+        <Text style={styles.sectionSubtitle}>
+          Contacts who aren't here yet. When they sign up with this number, you'll be friends automatically.
+        </Text>
+      </View>
+      {inviteContacts.map(c => {
+        const done = invited.has(c.phone);
+        return (
+          <View key={c.phone} style={styles.row}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {c.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.info}>
+              <Text style={styles.name}>{c.name}</Text>
+              <Text style={styles.phone}>{c.phone.replace(/(\+1)(\d{3})(\d{3})(\d{4})/, '($2) $3-$4')}</Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [styles.addBtn, done && styles.addBtnAdded, pressed && styles.addBtnPressed]}
+              onPress={() => sendInvite(c)}
+            >
+              <FontAwesome name={done ? 'check' : 'comment'} size={13} color={done ? CREAM : TANGERINE} />
+              <Text style={[styles.addBtnText, done && styles.addBtnTextAdded]}>{done ? 'Invited' : 'Invite'}</Text>
+            </Pressable>
+          </View>
+        );
+      })}
+    </View>
+  ) : null;
+
   return (
     <View style={styles.container}>
       {loading ? (
@@ -135,7 +208,7 @@ export default function AddFriendsScreen() {
             {Platform.OS !== 'web' ? 'Reading your contacts…' : 'Loading…'}
           </Text>
         </View>
-      ) : allUsers.length === 0 ? (
+      ) : allUsers.length === 0 && inviteContacts.length === 0 ? (
         <View style={styles.emptyState}>
           <FontAwesome name="users" size={40} color={CREAM_2} />
           <Text style={styles.emptyTitle}>No new friends to add</Text>
@@ -149,10 +222,13 @@ export default function AddFriendsScreen() {
               <Text style={styles.settingsBtnText}>Open Settings</Text>
             </Pressable>
           )}
+          <View style={{ alignSelf: 'stretch', marginTop: 24 }}>{inviteHeader}</View>
         </View>
       ) : (
         <SectionList
-          sections={sections}
+          sections={sections.filter(s => s.data.length > 0)}
+          ListHeaderComponent={inviteHeader}
+          ListFooterComponent={inviteList}
           keyExtractor={item => item.id}
           extraData={added}
           contentContainerStyle={styles.list}
@@ -299,6 +375,29 @@ const styles = StyleSheet.create({
     backgroundColor: TANGERINE,
   },
   settingsBtnText: { fontSize: 14, fontWeight: '700', color: CREAM },
+  inviteCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: TANGERINE_TINT,
+    borderWidth: 1,
+    borderColor: PEACH,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 8,
+  },
+  inviteTitle: { fontSize: 15, fontWeight: '800', color: INK },
+  inviteSub: { fontSize: 12, color: MUTE, marginTop: 2, lineHeight: 16 },
+  inviteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: TANGERINE,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  inviteBtnText: { fontSize: 14, fontWeight: '700', color: CREAM },
   settingsLink: { marginTop: 6 },
   settingsLinkText: { fontSize: 12, fontWeight: '700', color: TANGERINE },
 });

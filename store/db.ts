@@ -267,6 +267,14 @@ export async function deleteNotification(notificationId: string): Promise<void> 
   if (error) throw error;
 }
 
+/** Remembers that I invited this phone number, so we're auto-friended when they sign up. */
+export async function recordInvite(inviterId: string, phone: string): Promise<void> {
+  const { error } = await supabase
+    .from('invites')
+    .upsert({ inviter_id: inviterId, phone }, { onConflict: 'inviter_id,phone', ignoreDuplicates: true });
+  if (error) console.warn('recordInvite failed:', error.message);
+}
+
 export async function addFriendMutual(targetUserId: string, myUserId: string): Promise<void> {
   const { error } = await supabase.rpc('add_friend_mutual', {
     target_id: targetUserId,

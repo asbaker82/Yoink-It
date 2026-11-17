@@ -109,6 +109,12 @@ Path alias `@/` maps to the repo root.
   ALTER TABLE public.items ADD COLUMN IF NOT EXISTS excluded_friends uuid[];
   ```
 
+### Texting & invites
+- **Person-to-person texts always go through the device's own Messages app** via `openSms(phone, body?)` in `utils/sms.ts` (empty `phone` lets the user pick the recipient). The app never sends SMS itself, except future real login codes.
+- **Invites** (`app/add-friends.tsx`): an "Invite a friend" card (no recipient) plus, on native, an "Invite to Yoink It" list of phone contacts not on the app. Tapping Invite calls `recordInvite` (table `invites(inviter_id, phone)`) and opens Messages with `inviteMessage()` from `utils/invite.ts`. Set `INVITE_LINK` there once the App Store link exists.
+- **Auto-friend on signup**: trigger `profiles_befriend_inviters` (after insert on `profiles`) calls `add_friend_mutual` both ways for every inviter of the new user's phone, then deletes those invites. `completeRegistration` re-reads the profile so those friends aren't overwritten. Phones are normalized `+1XXXXXXXXXX` (`normalizeUsPhone`).
+- **Reminders/alerts** (pickup deadlines, requests, returns) are meant to be **push notifications**, not SMS.
+
 ### Notifications — `utils/notifications.ts`
 - `requestNotificationPermission()` — requests browser `Notification` permission; called on login in `AppContext`. Web-only; returns `false` on native.
 - `sendNotification(title, body)` — fires a browser notification if permission is granted.

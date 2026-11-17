@@ -127,7 +127,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: session.user.email ?? '',
       phone: pendingPhone ?? session.user.phone ?? '',
     });
-    setAuthUser(profile);
+    // A database trigger may have just added friends who invited this number;
+    // re-read so they aren't overwritten by a stale local friends list.
+    const { fetchProfile } = await import('./db');
+    setAuthUser((await fetchProfile(session.user.id)) ?? profile);
   };
 
   const logout = async (): Promise<void> => {
