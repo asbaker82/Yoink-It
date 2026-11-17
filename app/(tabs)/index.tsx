@@ -18,6 +18,7 @@ import ItemCard from '@/components/ItemCard';
 import SwipeableCard from '@/components/SwipeableCard';
 import { fuzzyScore } from '@/utils/search';
 import ConfirmSheet from '@/components/ConfirmSheet';
+import { PLUM } from '@/constants/theme';
 
 type ListingFilter = 'all' | 'free' | 'borrow' | 'skill';
 type FreeStatusFilter = 'all' | 'available' | 'claimed';
@@ -701,10 +702,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentActiveAll: {
-    backgroundColor: '#3A332E',
-    shadowColor: '#1F1A17',
+    backgroundColor: PLUM,
+    shadowColor: PLUM,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 2,
   },

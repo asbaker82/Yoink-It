@@ -228,6 +228,7 @@ Brand tokens (exported from `constants/theme.ts`; some files still have inline h
 | Sage | `#7FA88A` | Pickup pin, "picked up" badge |
 | Butter | `#F4C95D` | "Claimed" / "Borrowed" badge background |
 | Sky | `#7BA7BC` | Borrow accent color, "Borrow" badge |
+| Plum | `#7A5C8C` | Selected "All" filter (Browse and My Items) |
 
 **All screen backgrounds** use Cream (`#FBF6EE`) — auth screens, tab screens, and stack screens alike. Do not use `#fff` as a screen background.
 

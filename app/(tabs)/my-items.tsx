@@ -15,7 +15,7 @@ import { Item } from '@/store/types';
 import ItemCard from '@/components/ItemCard';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import { formatCalendarDate } from '@/utils/dates';
-import { CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
+import { CREAM, CREAM_2, INK, MUTE, PLUM, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 type ViewKey = 'listings' | 'friends';
 type ListingFilter = 'all' | 'free' | 'lending' | 'skills';
@@ -30,7 +30,7 @@ type PendingConfirm = {
 };
 
 const LISTING_FILTERS: { key: ListingFilter; label: string; color: string }[] = [
-  { key: 'all',     label: 'All',     color: INK_2 },
+  { key: 'all',     label: 'All',     color: PLUM },
   { key: 'free',    label: 'Free',    color: TANGERINE },
   { key: 'lending', label: 'Lending', color: SKY },
   { key: 'skills',  label: 'Skills',  color: SAGE },
@@ -517,9 +517,16 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 9,
   },
-  segmentBtnActive: { backgroundColor: INK },
+  segmentBtnActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: INK,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   segmentText: { fontSize: 14, fontWeight: '700', color: MUTE },
-  segmentTextActive: { color: CREAM },
+  segmentTextActive: { color: INK },
   segmentBadge: {
     minWidth: 18,
     height: 18,
