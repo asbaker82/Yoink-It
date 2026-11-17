@@ -25,6 +25,7 @@ import { requestNotificationPermission, sendNotification } from '@/utils/notific
 import { useAuth } from './AuthContext';
 import { activeBorrowRequest, isListingExpired, upcomingReservations } from '@/utils/itemState';
 import { todayDateOnly } from '@/utils/dates';
+import { fuzzyScore } from '@/utils/search';
 
 interface AppContextType {
   currentUser: User;
@@ -77,6 +78,9 @@ interface AppContextType {
   addSearchNotification: (keyword: string) => Promise<boolean>;
   updateSearchNotification: (id: string, keyword: string) => Promise<void>;
   deleteSearchNotification: (id: string) => Promise<void>;
+  /** Friends' items listed after one of my search alerts was saved that match it and that I haven't opened yet. */
+  alertMatches: { item: Item; keyword: string }[];
+  markAlertSeen: (itemId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -174,6 +178,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setDismissed(new Set());
     if (dismissedKey) AsyncStorage.removeItem(dismissedKey);
   }, [dismissedKey]);
+
+  // Search-alert matches I've already opened (per user, like `dismissed`). null = not loaded yet.
+  const alertSeenKey = currentUser.id ? `@yoink_it/alert_seen/${currentUser.id}` : null;
+  const [alertSeen, setAlertSeen] = useState<Set<string> | null>(null);
+
+  useEffect(() => {
+    setAlertSeen(null);
+    if (!alertSeenKey) return;
+    AsyncStorage.getItem(alertSeenKey)
+      .then(raw => setAlertSeen(new Set(raw ? JSON.parse(raw) : [])))
+      .catch(() => setAlertSeen(new Set()));
+  }, [alertSeenKey]);
+
+  const markAlertSeen = useCallback((itemId: string) => {
+    setAlertSeen(prev => {
+      const next = new Set(prev ?? []);
+      next.add(itemId);
+      if (alertSeenKey) AsyncStorage.setItem(alertSeenKey, JSON.stringify([...next]));
+      return next;
+    });
+  }, [alertSeenKey]);
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
@@ -641,6 +666,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const getMyItems = (): Item[] => items.filter(item => item.donorId === currentUser.id);
 
+  // ── Search-alert matches ───────────────────────────────────────────────────
+  // A match is a friend's available item listed after the alert was saved.
+
+  const alertMatches: { item: Item; keyword: string }[] = [];
+  if (alertSeen && searchNotifications.length > 0) {
+    for (const item of getFriendItems()) {
+      if (item.status !== 'available' || alertSeen.has(item.id) || dismissed.has(item.id)) continue;
+      const listedAt = new Date(item.createdAt).getTime();
+      const hit = searchNotifications.find(n =>
+        listedAt > new Date(n.createdAt).getTime() && fuzzyScore(n.keyword, item) > 0);
+      if (hit) alertMatches.push({ item, keyword: hit.keyword });
+    }
+  }
+
+  // Browser notification for each new match (web only); matches present at load don't fire.
+  const alertMatchKey = alertMatches.map(m => m.item.id).join(',');
+  const notifiedAlertIdsRef = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!itemsLoaded || !alertSeen) return;
+    if (notifiedAlertIdsRef.current === null) {
+      notifiedAlertIdsRef.current = new Set(alertMatches.map(m => m.item.id));
+      return;
+    }
+    for (const m of alertMatches) {
+      if (notifiedAlertIdsRef.current.has(m.item.id)) continue;
+      notifiedAlertIdsRef.current.add(m.item.id);
+      sendNotification(`New match for "${m.keyword}"`, m.item.title);
+    }
+  }, [alertMatchKey, itemsLoaded, !!alertSeen]);
+
   // ── Search history ─────────────────────────────────────────────────────────
 
   const addToSearchHistory = (term: string) => {
@@ -852,6 +907,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addSearchNotification,
         updateSearchNotification,
         deleteSearchNotification,
+        alertMatches,
+        markAlertSeen,
       }}
     >
       {children}

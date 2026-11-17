@@ -46,6 +46,8 @@ export default function BrowseScreen() {
     confirmBorrowReturn,
     incomingRequests,
     markPickedUp,
+    alertMatches,
+    markAlertSeen,
   } = useApp();
   const router = useRouter();
 
@@ -130,6 +132,14 @@ export default function BrowseScreen() {
       label: 'Add friends to see their listings',
       dest: '/add-friends',
     },
+    // Search alerts: one banner per new match (at most 3); tapping opens the item and clears it.
+    ...alertMatches.slice(0, 3).map(m => ({
+      key: `alert-${m.item.id}`,
+      icon: 'bell' as const,
+      color: TANGERINE,
+      label: `New match for "${m.keyword}": ${m.item.title}`,
+      onPress: () => { markAlertSeen(m.item.id); router.push(`/item/${m.item.id}`); },
+    })),
     myTurn.length > 0 && {
       key: 'pickup',
       icon: 'clock-o' as const,
@@ -154,7 +164,7 @@ export default function BrowseScreen() {
       color: SKY,
       label: `${needReturnConfirm.length} return${needReturnConfirm.length > 1 ? 's' : ''} waiting for your confirmation`,
     },
-  ].filter(Boolean) as { key: string; icon: React.ComponentProps<typeof FontAwesome>['name']; color: string; label: string; dest?: string }[];
+  ].filter(Boolean) as { key: string; icon: React.ComponentProps<typeof FontAwesome>['name']; color: string; label: string; dest?: string; onPress?: () => void }[];
 
   // Auto-close action sheet when its items run out (e.g. last confirm tapped)
   useEffect(() => {
@@ -216,7 +226,7 @@ export default function BrowseScreen() {
       if (Platform.OS === 'web') {
         window.alert('Type a keyword in the search bar first, then tap the bell to set an alert.');
       } else {
-        Alert.alert('Set an Alert', 'Type a keyword in the search bar first, then tap the bell to get notified when a match is posted.');
+        Alert.alert('Set an Alert', 'Type a keyword in the search bar first, then tap the bell to set an alert.');
       }
       return;
     }
@@ -235,9 +245,9 @@ export default function BrowseScreen() {
       ? `\n\n${matches.length} matching item${matches.length > 1 ? 's' : ''} already listed — check the results below.`
       : '';
     if (Platform.OS === 'web') {
-      window.alert(`Alert saved for "${keyword}".\n\nYou'll be notified when a matching item is posted.${matchMsg}`);
+      window.alert(`Alert saved for "${keyword}".\n\nWhen a friend lists a match, you'll see a banner at the top of Browse.${matchMsg}`);
     } else {
-      Alert.alert('Alert Saved', `You'll be notified when a matching item is posted for "${keyword}".${matchMsg}`);
+      Alert.alert('Alert Saved', `When a friend lists a match for "${keyword}", you'll see a banner at the top of Browse.${matchMsg}`);
     }
   };
 
@@ -246,9 +256,9 @@ export default function BrowseScreen() {
   return (
     <View style={styles.container}>
       {actionBanners.map(b => (
-        <Pressable key={b.key} style={[styles.banner, { backgroundColor: b.color }]} onPress={() => b.dest ? router.push(b.dest as any) : setActiveSheet(b.key)}>
+        <Pressable key={b.key} style={[styles.banner, { backgroundColor: b.color }]} onPress={() => b.onPress ? b.onPress() : b.dest ? router.push(b.dest as any) : setActiveSheet(b.key)}>
           <FontAwesome name={b.icon} size={14} color={CREAM} style={{ marginRight: 8 }} />
-          <Text style={styles.bannerText}>{b.label}</Text>
+          <Text style={styles.bannerText} numberOfLines={1}>{b.label}</Text>
           <FontAwesome name="chevron-right" size={12} color={CREAM} />
         </Pressable>
       ))}
@@ -412,7 +422,7 @@ export default function BrowseScreen() {
           </Text>
           <Text style={styles.emptySubtitle}>
             {search.trim()
-              ? 'Try different words, or set an alert to be notified when one is posted.'
+              ? 'Try different words, or set an alert to see a banner here when a friend lists one.'
               : currentUser.friends.length === 0
                 ? 'Add friends to see what they\'re giving away.'
                 : 'Try adjusting your filter'}
