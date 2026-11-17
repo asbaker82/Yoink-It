@@ -15,7 +15,7 @@ import { Item } from '@/store/types';
 import ItemCard from '@/components/ItemCard';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import { formatCalendarDate } from '@/utils/dates';
-import { CREAM, CREAM_2, INK, MUTE, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
+import { CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 type ViewKey = 'listings' | 'friends';
 type ListingFilter = 'all' | 'free' | 'lending' | 'skills';
@@ -30,7 +30,7 @@ type PendingConfirm = {
 };
 
 const LISTING_FILTERS: { key: ListingFilter; label: string; color: string }[] = [
-  { key: 'all',     label: 'All',     color: INK },
+  { key: 'all',     label: 'All',     color: INK_2 },
   { key: 'free',    label: 'Free',    color: TANGERINE },
   { key: 'lending', label: 'Lending', color: SKY },
   { key: 'skills',  label: 'Skills',  color: SAGE },
@@ -401,7 +401,7 @@ export default function MyItemsScreen() {
               return (
                 <Pressable
                   key={f.key}
-                  style={[styles.filterBtn, active && { backgroundColor: f.color }]}
+                  style={[styles.filterBtn, active && [styles.filterBtnActive, { backgroundColor: f.color, shadowColor: f.color }]]}
                   onPress={() => setListingFilter(f.key)}
                 >
                   <Text style={[styles.filterBtnText, active && { color: CREAM }]}>{f.label}</Text>
@@ -532,14 +532,27 @@ const styles = StyleSheet.create({
   segmentBadgeText: { fontSize: 11, fontWeight: '800', color: CREAM },
   statusLine: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
   statusText: { fontSize: 12, color: MUTE, fontWeight: '600', flexShrink: 1 },
-  filterRow: { flexDirection: 'row', gap: 8 },
-  filterBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: '#F4ECDD',
+  // Matches the Browse listing-type bar (app/(tabs)/index.tsx segmentedBar).
+  filterRow: {
+    flexDirection: 'row',
+    backgroundColor: '#EDE6D8',
+    borderRadius: 10,
+    padding: 3,
   },
-  filterBtnText: { fontSize: 13, color: '#847A70', fontWeight: '600' },
+  filterBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  filterBtnActive: {
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  filterBtnText: { fontSize: 14, color: MUTE, fontWeight: '700' },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
