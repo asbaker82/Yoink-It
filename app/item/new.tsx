@@ -113,7 +113,7 @@ export default function NewItemScreen() {
   const removePhoto = (index: number) =>
     setPhotos(prev => prev.filter((_, i) => i !== index));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const next: Errors = {};
 
     if (!title.trim())
@@ -154,22 +154,29 @@ export default function NewItemScreen() {
 
     const days = parseInt(claimPickupDays, 10);
     setSubmitting(true);
-    createItem({
-      title: title.trim(),
-      description: description.trim(),
-      photos,
-      restrictions: restrictions.trim() || undefined,
-      pickupLocation: isSkill ? '' : formatLocation(pickupLoc),
-      pickupWindow: pickupWindow.trim(),
-      disposalDate: listingType === 'give' ? new Date(disposalDate).toISOString() : '2099-12-31T00:00:00.000Z',
-      disposalMethod: listingType === 'give' ? disposalMethod : 'keep',
-      claimPickupHours: listingType === 'give' ? days * 24 : 0,
-      listingType,
-      blockedPeriods,
-      allowedBorrowers: access.allowed,
-      excludedFriends: access.excluded,
-    });
-    router.back();
+    try {
+      await createItem({
+        title: title.trim(),
+        description: description.trim(),
+        photos,
+        restrictions: restrictions.trim() || undefined,
+        pickupLocation: isSkill ? '' : formatLocation(pickupLoc),
+        pickupWindow: pickupWindow.trim(),
+        disposalDate: listingType === 'give' ? new Date(disposalDate).toISOString() : '2099-12-31T00:00:00.000Z',
+        disposalMethod: listingType === 'give' ? disposalMethod : 'keep',
+        claimPickupHours: listingType === 'give' ? days * 24 : 0,
+        listingType,
+        blockedPeriods,
+        allowedBorrowers: access.allowed,
+        excludedFriends: access.excluded,
+      });
+      router.back();
+    } catch (e: any) {
+      setSubmitting(false);
+      const msg = `Your listing wasn't saved: ${e?.message ?? 'unknown error'}`;
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Couldn\'t save', msg);
+    }
   };
 
   const trackOffset = (field: FieldKey) => ({

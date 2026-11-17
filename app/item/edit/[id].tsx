@@ -129,7 +129,7 @@ export default function EditItemScreen() {
   const removePhoto = (index: number) =>
     setPhotos(prev => prev.filter((_, i) => i !== index));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const next: Errors = {};
 
     if (!title.trim())
@@ -169,25 +169,32 @@ export default function EditItemScreen() {
     }
 
     setSubmitting(true);
-    updateItem(item.id, {
-      title: title.trim(),
-      description: description.trim(),
-      photos,
-      restrictions: restrictions.trim() || undefined,
-      pickupLocation: isSkill ? '' : formatLocation(pickupLoc),
-      pickupWindow: pickupWindow.trim(),
-      // [] clears a list (mapped to null in AppContext)
-      allowedBorrowers: access.allowed ?? [],
-      excludedFriends: access.excluded ?? [],
-      ...(item.listingType === 'give' ? {
-        disposalDate: new Date(disposalDate).toISOString(),
-        disposalMethod,
-        claimPickupHours: days * 24,
-      } : {
-        blockedPeriods,
-      }),
-    });
-    router.back();
+    try {
+      await updateItem(item.id, {
+        title: title.trim(),
+        description: description.trim(),
+        photos,
+        restrictions: restrictions.trim() || undefined,
+        pickupLocation: isSkill ? '' : formatLocation(pickupLoc),
+        pickupWindow: pickupWindow.trim(),
+        // [] clears a list (mapped to null in AppContext)
+        allowedBorrowers: access.allowed ?? [],
+        excludedFriends: access.excluded ?? [],
+        ...(item.listingType === 'give' ? {
+          disposalDate: new Date(disposalDate).toISOString(),
+          disposalMethod,
+          claimPickupHours: days * 24,
+        } : {
+          blockedPeriods,
+        }),
+      });
+      router.back();
+    } catch (e: any) {
+      setSubmitting(false);
+      const msg = `Your listing wasn't saved: ${e?.message ?? 'unknown error'}`;
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Couldn\'t save', msg);
+    }
   };
 
   const trackOffset = (field: FieldKey) => ({
