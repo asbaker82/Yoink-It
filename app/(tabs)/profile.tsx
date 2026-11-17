@@ -5,16 +5,8 @@ import { useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import { useAuth } from '@/store/AuthContext';
 import ConfirmSheet from '@/components/ConfirmSheet';
+import { BUTTER, CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
-const TANGERINE      = '#F26B3A';
-const TANG_DEEP      = '#D8531F';
-const CREAM          = '#FBF6EE';
-const CREAM_2        = '#F4ECDD';
-const INK            = '#1F1A17';
-const INK_2          = '#3A332E';
-const MUTE           = '#847A70';
-const SAGE           = '#7FA88A';
-const BUTTER         = '#F4C95D';
 const DIVIDER        = 'rgba(31,26,23,0.06)';
 const BORDER         = 'rgba(31,26,23,0.10)';
 

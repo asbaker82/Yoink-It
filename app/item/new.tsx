@@ -19,6 +19,7 @@ import { Location, parseLocation, formatLocation, locationError } from '@/utils/
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
 import FriendAccessInput, { FriendAccess, friendAccessError } from '@/components/FriendAccessInput';
+import { CREAM, CREAM_2, INK, MUTE, SAGE, TANGERINE } from '@/constants/theme';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -427,12 +428,6 @@ export default function NewItemScreen() {
   );
 }
 
-const TANGERINE = '#F26B3A';
-const CREAM     = '#FBF6EE';
-const CREAM_2   = '#F4ECDD';
-const INK       = '#1F1A17';
-const MUTE      = '#847A70';
-const SAGE      = '#7FA88A';
 const BORDER    = 'rgba(31,26,23,0.12)';
 
 const styles = StyleSheet.create({

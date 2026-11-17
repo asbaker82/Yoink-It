@@ -1,12 +1,10 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { INK, TANGERINE } from '@/constants/theme';
 
 interface Props {
   size?: number;
 }
-
-const TANGERINE = '#F26B3A';
-const INK = '#1F1A17';
 
 // Three horizontal speed lines (short/long/medium) stacked in a column,
 // each offset from the left to create the staggered speed-line look.

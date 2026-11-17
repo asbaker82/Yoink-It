@@ -1,12 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { Location, isValidZip, lookupZip } from '@/utils/location';
-
-const CREAM     = '#FBF6EE';
-const INK       = '#1F1A17';
-const MUTE      = '#847A70';
-const TANG_DEEP = '#D8531F';
-const BORDER    = '#E8DDD0';
+import { BORDER, CREAM, INK, MUTE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 interface Props {
   value: Location;

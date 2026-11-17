@@ -6,14 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/store/AuthContext';
 import HeaderLogo from '@/components/HeaderLogo';
-
-const TANGERINE = '#F26B3A';
-const TANG_DEEP = '#D8531F';
-const CREAM     = '#FBF6EE';
-const CREAM_2   = '#F4ECDD';
-const INK       = '#1F1A17';
-const MUTE      = '#847A70';
-const BORDER    = '#E8DDD0';
+import { BORDER, CREAM, CREAM_2, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 function formatPhoneDisplay(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 10);

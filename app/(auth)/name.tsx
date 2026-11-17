@@ -5,14 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/store/AuthContext';
-
-const TANGERINE = '#F26B3A';
-const TANG_DEEP = '#D8531F';
-const CREAM     = '#FBF6EE';
-const CREAM_2   = '#F4ECDD';
-const INK       = '#1F1A17';
-const MUTE      = '#847A70';
-const BORDER    = '#E8DDD0';
+import { BORDER, CREAM, CREAM_2, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 export default function NameScreen() {
   const router = useRouter();

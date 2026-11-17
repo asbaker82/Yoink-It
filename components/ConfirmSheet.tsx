@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { CREAM, CREAM_2, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 interface Props {
   visible: boolean;
@@ -90,13 +91,6 @@ export default function ConfirmSheet({
     </View>
   );
 }
-
-const TANGERINE = '#F26B3A';
-const TANG_DEEP = '#D8531F';
-const CREAM     = '#FBF6EE';
-const CREAM_2   = '#F4ECDD';
-const INK       = '#1F1A17';
-const MUTE      = '#847A70';
 
 const styles = StyleSheet.create({
   root: {

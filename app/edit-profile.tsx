@@ -19,8 +19,7 @@ import LocationInput from '@/components/LocationInput';
 import { Location, parseLocation, formatLocation, locationError } from '@/utils/location';
 import ImageCropModal from '@/components/ImageCropModal';
 import { ItemVisibility } from '@/store/types';
-
-
+import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 async function pickImage(): Promise<string | null> {
   // On web, use a file input directly — expo-image-picker permissions are unreliable in browsers.
@@ -276,13 +275,6 @@ export default function EditProfileScreen() {
   );
 }
 
-const TANGERINE  = '#F26B3A';
-const TANG_DEEP  = '#D8531F';
-const CREAM      = '#FBF6EE';
-const CREAM_2    = '#F4ECDD';
-const INK        = '#1F1A17';
-const INK_2      = '#3A332E';
-const MUTE       = '#847A70';
 const DIVIDER    = 'rgba(31,26,23,0.08)';
 
 const styles = StyleSheet.create({

@@ -9,12 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-
-const TANGERINE = '#F26B3A';
-const TANG_DEEP = '#D8531F';
-const CREAM     = '#FBF6EE';
-const INK       = '#1F1A17';
-const MUTE      = '#847A70';
+import { CREAM, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 const STICKER_W = 252;
 const STICKER_H = 196;

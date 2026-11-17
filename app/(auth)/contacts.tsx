@@ -10,14 +10,7 @@ import { useApp } from '@/store/AppContext';
 import { User } from '@/store/types';
 import { MOCK_USERS } from '@/store/mockData';
 import { addFriendMutual } from '@/store/db';
-
-const TANGERINE = '#F26B3A';
-const CREAM     = '#FBF6EE';
-const CREAM_2   = '#F4ECDD';
-const INK       = '#1F1A17';
-const INK_2     = '#3A332E';
-const MUTE      = '#847A70';
-const BORDER    = '#E8DDD0';
+import { BORDER, CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE } from '@/constants/theme';
 
 export default function ContactsScreen() {
   const router = useRouter();

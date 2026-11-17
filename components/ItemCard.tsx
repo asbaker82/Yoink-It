@@ -5,6 +5,7 @@ import { Item } from '@/store/types';
 import { useApp } from '@/store/AppContext';
 import { formatCalendarDate } from '@/utils/dates';
 import { shortLocation } from '@/utils/location';
+import { CREAM, CREAM_2, INK, MUTE, ROSE, SAGE, STEEL_BLUE as SKY, TANGERINE, TANGERINE_DEEP } from '@/constants/theme';
 
 interface Props {
   item: Item;
@@ -33,6 +34,10 @@ export default function ItemCard({ item, onPress }: Props) {
   const hoursLeft = msLeft !== null ? msLeft / 3_600_000 : null;
   const daysLeft = hoursLeft !== null ? Math.ceil(hoursLeft / 24) : null;
   const isUrgent = daysLeft !== null && daysLeft <= 3;
+
+  const pickupName = isGive && item.status === 'pending_pickup' && item.donorId === currentUser.id && item.claimedBy
+    ? getUserById(item.claimedBy)?.name
+    : undefined;
 
   const statusStyle = STATUS_STYLES[item.status] ?? STATUS_STYLES.available;
   const badgeTextColor = isSkill ? CREAM
@@ -67,6 +72,7 @@ export default function ItemCard({ item, onPress }: Props) {
                 ? (item.status === 'borrowed' || item.status === 'pending_return'
                     ? 'Borrowed'
                     : item.donorId === currentUser.id ? 'Available to Borrow' : 'Borrow')
+                : pickupName ? `${STATUS_LABELS[item.status]} · ${pickupName}`
                 : STATUS_LABELS[item.status]}
           </Text>
         </View>
@@ -139,17 +145,6 @@ export default function ItemCard({ item, onPress }: Props) {
   );
 }
 
-// Brand tokens
-const TANGERINE      = '#F26B3A';
-const TANGERINE_DEEP = '#D8531F';
-const CREAM          = '#FBF6EE';
-const CREAM_2        = '#F4ECDD';
-const INK            = '#1F1A17';
-const MUTE           = '#847A70';
-const SAGE           = '#7FA88A';
-const SKY            = '#9DB7C9';
-const ROSE           = '#E89A8D';
-
 const STATUS_LABELS: Record<string, string> = {
   available:       'Free',
   claimed:         'Claimed',
@@ -165,7 +160,6 @@ const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
   picked_up:       { bg: SAGE,       text: CREAM },
   disposed:        { bg: '#B0A89E',  text: CREAM },
 };
-
 
 const styles = StyleSheet.create({
   card: {

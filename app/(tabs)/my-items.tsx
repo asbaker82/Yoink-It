@@ -11,20 +11,11 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
-import { Item, DISPOSAL_METHOD_LABELS } from '@/store/types';
+import { Item } from '@/store/types';
 import ItemCard from '@/components/ItemCard';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import { formatCalendarDate } from '@/utils/dates';
-
-const TANGERINE  = '#F26B3A';
-const TANG_DEEP  = '#D8531F';
-const CREAM_2    = '#F4ECDD';
-const CREAM      = '#FBF6EE';
-const INK        = '#1F1A17';
-const MUTE       = '#847A70';
-const STEEL_BLUE = '#9DB7C9';
-const SKY        = '#7BA7BC';
-const SAGE       = '#7FA88A';
+import { CREAM, CREAM_2, INK, MUTE, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 type ViewKey = 'listings' | 'friends';
 type ListingFilter = 'all' | 'free' | 'lending' | 'skills';
@@ -68,7 +59,7 @@ function formatTimeLeft(deadline: Date, now: Date): string {
 
 export default function MyItemsScreen() {
   const {
-    items, getMyItems, deleteItem, markDisposed, confirmPickup, releaseClaim,
+    items, getMyItems, deleteItem, confirmPickup, releaseClaim,
     getUserById, currentUser,
     approveBorrowRequest, rejectBorrowRequest, confirmBorrowReturn,
     markPickedUp, markBorrowReturned, cancelBorrowRequest, leaveWaitlist,
@@ -130,21 +121,6 @@ export default function MyItemsScreen() {
     ]);
   };
 
-  const handleDispose = (item: Item) => {
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Mark "${item.title}" as disposed (${DISPOSAL_METHOD_LABELS[item.disposalMethod]})?`)) markDisposed(item.id);
-      return;
-    }
-    Alert.alert(
-      'Mark as Disposed',
-      `Mark "${item.title}" as disposed (${DISPOSAL_METHOD_LABELS[item.disposalMethod]})?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Yes, Dispose', onPress: () => markDisposed(item.id) },
-      ]
-    );
-  };
-
   const renderDonorCard = ({ item }: { item: Item }) => {
     const isBorrow = item.listingType === 'borrow';
     const isGive   = item.listingType === 'give';
@@ -156,13 +132,11 @@ export default function MyItemsScreen() {
         <View style={styles.actionRow}>
 
           {/* ── Give item: claimed/waitlist chips ── */}
-          {isGive && item.claimedBy && item.status !== 'picked_up' && item.status !== 'disposed' && (
+          {isGive && item.claimedBy && item.status === 'claimed' && (
             <View style={styles.claimedByChip}>
               <FontAwesome name="user" size={11} color="#7A5C00" style={{ marginRight: 4 }} />
               <Text style={styles.claimedByText}>
-                {item.status === 'pending_pickup'
-                  ? `Pickup pending — ${getUserById(item.claimedBy)?.name ?? 'claimant'}`
-                  : `Claimed by ${getUserById(item.claimedBy)?.name ?? 'someone'}`}
+                Claimed by {getUserById(item.claimedBy)?.name ?? 'someone'}
               </Text>
             </View>
           )}
@@ -246,16 +220,10 @@ export default function MyItemsScreen() {
             </Pressable>
           )}
           {isGive && item.status !== 'picked_up' && item.status !== 'disposed' && item.status !== 'pending_pickup' && (
-            <>
-              <Pressable style={styles.actionBtn} onPress={() => handleDispose(item)}>
-                <FontAwesome name="check-circle" size={14} color="#718096" />
-                <Text style={styles.actionBtnText}>Dispose</Text>
-              </Pressable>
-              <Pressable style={[styles.actionBtn, styles.actionBtnDanger]} onPress={() => handleDelete(item)}>
-                <FontAwesome name="trash" size={14} color={TANG_DEEP} />
-                <Text style={[styles.actionBtnText, { color: TANG_DEEP }]}>Remove</Text>
-              </Pressable>
-            </>
+            <Pressable style={[styles.actionBtn, styles.actionBtnDanger]} onPress={() => handleDelete(item)}>
+              <FontAwesome name="trash" size={14} color={TANG_DEEP} />
+              <Text style={[styles.actionBtnText, { color: TANG_DEEP }]}>Remove</Text>
+            </Pressable>
           )}
 
           {/* ── Skill: remove only ── */}

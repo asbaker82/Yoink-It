@@ -9,13 +9,8 @@ import { useAuth } from '@/store/AuthContext';
 import { useApp } from '@/store/AppContext';
 import { User } from '@/store/types';
 import { addFriendMutual } from '@/store/db';
+import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE } from '@/constants/theme';
 
-const TANGERINE = '#F26B3A';
-const CREAM     = '#FBF6EE';
-const CREAM_2   = '#F4ECDD';
-const INK       = '#1F1A17';
-const INK_2     = '#3A332E';
-const MUTE      = '#847A70';
 const DIVIDER   = 'rgba(31,26,23,0.06)';
 
 type Section = { title: string; subtitle?: string; data: User[]; showPhone?: boolean };

@@ -34,16 +34,9 @@ import ImageLightbox from '@/components/ImageLightbox';
 import ClaimToast from '@/components/ClaimToast';
 import WaitlistToast from '@/components/WaitlistToast';
 import ConfirmSheet from '@/components/ConfirmSheet';
+import { CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, TANGERINE, TANGERINE_DEEP } from '@/constants/theme';
 
 // ── Brand tokens ─────────────────────────────────────────────
-const TANGERINE      = '#F26B3A';
-const TANGERINE_DEEP = '#D8531F';
-const CREAM          = '#FBF6EE';
-const CREAM_2        = '#F4ECDD';
-const INK            = '#1F1A17';
-const INK_2          = '#3A332E';
-const MUTE           = '#847A70';
-const SAGE           = '#7FA88A';
 
 // Avatar accent colors cycled by donor initial
 const AVATAR_COLORS = [TANGERINE, SAGE, '#F4C95D', '#9DB7C9', '#E89A8D'];
@@ -799,7 +792,6 @@ export default function ItemDetailScreen() {
       {/* ── Sticky bottom CTA ────────────────────────────────── */}
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
 
-
         {isBorrow && !isMyItem && isBorrowedByMe && item.status === 'borrowed' && (
           <Pressable style={styles.primaryBtn} onPress={() => {
             if (Platform.OS === 'web') {
@@ -904,7 +896,6 @@ export default function ItemDetailScreen() {
             </Pressable>
           </View>
         )}
-
 
         {/* Disposed / picked-up state */}
         {isGive && item.status === 'disposed' && (

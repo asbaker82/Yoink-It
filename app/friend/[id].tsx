@@ -5,12 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
 import { Item, ListingType } from '@/store/types';
-
-const CREAM   = '#FBF6EE';
-const CREAM_2 = '#F4ECDD';
-const INK     = '#1F1A17';
-const INK_2   = '#3A332E';
-const MUTE    = '#847A70';
+import { CREAM, CREAM_2, INK, INK_2, MUTE } from '@/constants/theme';
 
 const SECTIONS: { type: ListingType; title: string; color: string }[] = [
   { type: 'give',   title: 'Free',   color: '#F26B3A' },

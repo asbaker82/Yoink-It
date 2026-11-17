@@ -19,6 +19,7 @@ import { Location, parseLocation, formatLocation, locationError } from '@/utils/
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
 import FriendAccessInput, { FriendAccess, friendAccessError } from '@/components/FriendAccessInput';
+import { BORDER, CREAM, CREAM_2, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -35,14 +36,6 @@ async function pickImageWeb(): Promise<string | null> {
     input.click();
   });
 }
-
-const TANGERINE  = '#F26B3A';
-const TANG_DEEP  = '#D8531F';
-const CREAM      = '#FBF6EE';
-const CREAM_2    = '#F4ECDD';
-const INK        = '#1F1A17';
-const MUTE       = '#847A70';
-const BORDER     = '#E8DDD0';
 
 const DISPOSAL_METHODS: DisposalMethod[] = ['charity', 'keep', 'trash'];
 

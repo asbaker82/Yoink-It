@@ -2,15 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { User } from '@/store/types';
-
-const SKY       = '#7BA7BC';
-const TANG_DEEP = '#D8531F';
-const CREAM     = '#FBF6EE';
-const CREAM_2   = '#F4ECDD';
-const INK       = '#1F1A17';
-const INK_2     = '#3A332E';
-const MUTE      = '#847A70';
-const BORDER    = '#E8DDD0';
+import { BORDER, CREAM, CREAM_2, INK, INK_2, MUTE, SKY, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 export type FriendAccess = { allowed?: string[]; excluded?: string[] };
 type Mode = 'all' | 'only' | 'except';
