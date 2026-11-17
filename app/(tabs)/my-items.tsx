@@ -17,7 +17,7 @@ import ListEnd from '@/components/ListEnd';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import UserName from '@/components/UserName';
 import { formatCalendarDate } from '@/utils/dates';
-import { BORDER, BUTTER_INK, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, PLUM, ROSE_INK, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TRACK, WHITE } from '@/constants/theme';
+import { BORDER, BUTTER_INK, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, ROSE_INK, SLATE, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TRACK, WHITE } from '@/constants/theme';
 
 type ViewKey = 'listings' | 'friends';
 type ListingFilter = 'all' | 'free' | 'lending' | 'skills';
@@ -32,7 +32,7 @@ type PendingConfirm = {
 };
 
 const LISTING_FILTERS: { key: ListingFilter; label: string; color: string }[] = [
-  { key: 'all',     label: 'All',     color: PLUM },
+  { key: 'all',     label: 'All',     color: SLATE },
   { key: 'free',    label: 'Free',    color: TANGERINE },
   { key: 'lending', label: 'Lending', color: SKY },
   { key: 'skills',  label: 'Skills',  color: SAGE },

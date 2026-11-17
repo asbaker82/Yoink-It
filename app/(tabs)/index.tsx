@@ -20,7 +20,7 @@ import SwipeableCard from '@/components/SwipeableCard';
 import { fuzzyScore } from '@/utils/search';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import UserName from '@/components/UserName';
-import { CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, PLUM, SAGE, SKY, SKY_TINT, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT, TRACK, WHITE } from '@/constants/theme';
+import { CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, SAGE, SKY, SKY_TINT, SLATE, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT, TRACK, WHITE } from '@/constants/theme';
 
 type ListingFilter = 'all' | 'free' | 'borrow' | 'skill';
 type FreeStatusFilter = 'all' | 'available' | 'claimed';
@@ -711,8 +711,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentActiveAll: {
-    backgroundColor: PLUM,
-    shadowColor: PLUM,
+    backgroundColor: SLATE,
+    shadowColor: SLATE,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 3,

@@ -242,7 +242,7 @@ Core brand tokens:
 | Sage | `#7FA88A` | Pickup pin, "picked up" badge |
 | Butter | `#F4C95D` | "Claimed" / "Borrowed" badge background |
 | Sky | `#7BA7BC` | Borrow accent color, "Borrow" badge |
-| Plum | `#7A5C8C` | Selected "All" filter (Browse and My Items) |
+| Slate | `#5B6670` | Selected "All" filter (Browse and My Items) |
 
 Supporting tokens: `WHITE` (item cards, sheets, modals), `BORDER` `#E8DDD0`, `TRACK` (segmented-control track), `MUTE_LIGHT` (disabled / past dates / empty states / "Gone"), `FAINT` (very faint text/icons), `STEEL_BLUE` (pending-pickup badge), `ROSE`, and tints with matching text colours: `TANGERINE_TINT` + `PEACH` (alerts, errors, calendar "today"/range), `SKY_TINT` (borrow panels), `BUTTER_TINT` + `BUTTER_INK`, `ROSE_INK` (waitlist text). Calendars (`DatePickerInput`, `DateRangePicker`) and `ImageCropModal` use Tangerine for selection — not green.
 

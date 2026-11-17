@@ -17,7 +17,7 @@ export const BUTTER = '#F4C95D';         // "Claimed" / "Borrowed" badge backgro
 export const SKY = '#7BA7BC';            // Borrow accent
 export const STEEL_BLUE = '#9DB7C9';     // Lighter borrow tint (ItemCard badge, My Items)
 export const ROSE = '#E89A8D';           // ItemCard accent
-export const PLUM = '#7A5C8C';           // "All" filter (Browse, My Items)
+export const SLATE = '#5B6670';          // "All" filter (Browse, My Items)
 
 // Surfaces & neutrals
 export const WHITE = '#FFFFFF';          // Item cards, sheets, modals, inputs on cream
