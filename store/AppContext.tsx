@@ -279,6 +279,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // ── Expired-claim processor ────────────────────────────────────────────────
   // Runs locally every 30 s, writes to Supabase so Realtime propagates to all clients.
+  // An expired claim passes to the next person on the waitlist. With nobody waiting it
+  // stays claimed, and the owner chooses to extend or release it (see claimNeedsOwner).
 
   const processExpiredClaims = useCallback(async () => {
     const snapshot: Item[] = qc.getQueryData(QUERY_KEYS.items) ?? [];
@@ -287,20 +289,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (item.status !== 'claimed' || !item.claimDeadline) continue;
       if (new Date(item.claimDeadline).getTime() > now) continue;
 
-      if (item.waitlist.length > 0) {
-        const [nextUp, ...rest] = item.waitlist;
-        await updateItemFields(item.id, {
-          claimed_by:     nextUp,
-          claim_deadline: new Date(now + item.claimPickupHours * 3600000).toISOString(),
-          waitlist:       rest,
-        });
-      } else {
-        await updateItemFields(item.id, {
-          status:        'available',
-          claimed_by:    null,
-          claim_deadline: null,
-        });
-      }
+      if (item.waitlist.length === 0) continue;
+
+      const [nextUp, ...rest] = item.waitlist;
+      await updateItemFields(item.id, {
+        claimed_by:     nextUp,
+        claim_deadline: new Date(now + item.claimPickupHours * 3600000).toISOString(),
+        waitlist:       rest,
+      });
     }
   }, [qc]);
 
@@ -502,6 +498,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     mutationFn: (vars: ReleaseVars) => {
       if (vars.hasWaiter) {
         return updateItemFields(vars.itemId, {
+          status:         'claimed',
           claimed_by:     vars.nextUp,
           claim_deadline: vars.claimDeadline,
           waitlist:       vars.rest,
@@ -518,6 +515,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const snapshot = qc.getQueryData<Item[]>(QUERY_KEYS.items);
       if (vars.hasWaiter) {
         optimisticItemUpdate(vars.itemId, {
+          status:        'claimed',
           claimedBy:     vars.nextUp,
           claimDeadline: vars.claimDeadline,
           waitlist:      vars.rest,

@@ -23,6 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { playClaimSound, playWaitlistSound } from '@/utils/sounds';
 import { formatCalendarDate } from '@/utils/dates';
 import { shortLocation } from '@/utils/location';
+import { claimNeedsOwner } from '@/utils/itemState';
 import { useApp } from '@/store/AppContext';
 import {
   DISPOSAL_METHOD_LABELS,
@@ -169,7 +170,6 @@ export default function ItemDetailScreen() {
     !periodsConflict(borrowStart, borrowEnd, item.blockedPeriods, item.borrowRequests);
 
   const claimDeadline  = item.claimDeadline ? new Date(item.claimDeadline) : null;
-  const claimExpired   = claimDeadline !== null && claimDeadline <= now;
   const hoursToPickup  = claimDeadline
     ? Math.max(0, Math.ceil((claimDeadline.getTime() - now.getTime()) / 3600000))
     : null;
@@ -374,23 +374,23 @@ export default function ItemDetailScreen() {
           )}
 
           {/* Donor expiry notification */}
-          {isMyItem && item.status === 'claimed' && claimExpired && (
+          {isMyItem && claimNeedsOwner(item, now.getTime()) && (
             <View style={styles.expiryBanner}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.expiryTitle}>Pickup window expired</Text>
-                <Text style={styles.expiryBody}>
-                  <UserName userId={item.claimedBy} fallback="The claimant" /> didn't pick up in time. Extend their window by 1 day, or the item will be released automatically.
-                </Text>
+              <Text style={styles.expiryTitle}>Pickup window expired</Text>
+              <Text style={styles.expiryBody}>
+                <UserName userId={item.claimedBy} fallback="Your friend" /> didn't pick up in time. Give them another day, or release it so someone else can claim it.
+              </Text>
+              <View style={styles.expiryActions}>
+                <Pressable
+                  style={styles.extendBtn}
+                  onPress={() => updateItem(item.id, { claimDeadline: new Date(Date.now() + 24 * 3600000).toISOString() })}
+                >
+                  <Text style={styles.extendBtnText}>Extend 1 Day</Text>
+                </Pressable>
+                <Pressable style={styles.expiryReleaseBtn} onPress={handleRelease}>
+                  <Text style={styles.expiryReleaseBtnText}>Release</Text>
+                </Pressable>
               </View>
-              <Pressable
-                style={styles.extendBtn}
-                onPress={() => {
-                  const newDeadline = new Date(claimDeadline!.getTime() + 24 * 3600000).toISOString();
-                  updateItem(item.id, { claimDeadline: newDeadline });
-                }}
-              >
-                <Text style={styles.extendBtnText}>Extend 1 Day</Text>
-              </Pressable>
             </View>
           )}
 
@@ -1350,16 +1350,21 @@ const styles = StyleSheet.create({
 
   // Expiry banner
   expiryBanner: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
     backgroundColor: TANGERINE_TINT, borderRadius: 14, padding: 14,
     marginBottom: 12, borderWidth: 1.5, borderColor: PEACH,
   },
   expiryTitle: { fontSize: 14, fontWeight: '800', color: TANGERINE_DEEP, marginBottom: 4 },
   expiryBody:  { fontSize: 13, color: INK_2, lineHeight: 18 },
+  expiryActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
   extendBtn: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12,
-    backgroundColor: TANGERINE, alignSelf: 'flex-start', marginTop: 2,
+    backgroundColor: TANGERINE,
   },
+  expiryReleaseBtn: {
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12,
+    backgroundColor: CREAM, borderWidth: 1, borderColor: PEACH,
+  },
+  expiryReleaseBtnText: { fontSize: 13, fontWeight: '700', color: TANGERINE_DEEP },
   extendBtnText: { fontSize: 13, fontWeight: '700', color: CREAM },
 
   // SMS modal

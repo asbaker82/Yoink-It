@@ -17,6 +17,7 @@ import ListEnd from '@/components/ListEnd';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import UserName from '@/components/UserName';
 import { formatCalendarDate } from '@/utils/dates';
+import { claimNeedsOwner } from '@/utils/itemState';
 import { BORDER, BUTTER_INK, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, ROSE_INK, SLATE, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TRACK, WHITE } from '@/constants/theme';
 
 type ViewKey = 'listings' | 'friends';
@@ -43,6 +44,7 @@ const isDone = (i: Item) => i.status === 'picked_up' || i.status === 'disposed';
 // Something on my own listing is waiting on me.
 const needsMyAction = (i: Item) =>
   (i.listingType === 'give' && i.status === 'pending_pickup') ||
+  claimNeedsOwner(i) ||
   (i.listingType === 'borrow' && (i.status === 'pending_return' || i.borrowRequests.some(r => r.status === 'pending')));
 
 function formatTimeLeft(deadline: Date, now: Date): string {
@@ -61,7 +63,7 @@ function formatTimeLeft(deadline: Date, now: Date): string {
 
 export default function MyItemsScreen() {
   const {
-    items, getMyItems, deleteItem, confirmPickup, releaseClaim,
+    items, getMyItems, deleteItem, updateItem, confirmPickup, releaseClaim,
     getUserById, currentUser,
     approveBorrowRequest, rejectBorrowRequest, confirmBorrowReturn,
     markPickedUp, markBorrowReturned, cancelBorrowRequest, leaveWaitlist,
@@ -138,6 +140,7 @@ export default function MyItemsScreen() {
               <FontAwesome name="user" size={11} color={BUTTER_INK} style={{ marginRight: 4 }} />
               <Text style={styles.claimedByText}>
                 Claimed by <UserName userId={item.claimedBy} />
+                {claimNeedsOwner(item, now.getTime()) ? ' · pickup window expired' : ''}
               </Text>
             </View>
           )}
@@ -210,6 +213,21 @@ export default function MyItemsScreen() {
               <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
                 <FontAwesome name="undo" size={13} color={MUTE} />
                 <Text style={styles.actionBtnText}>Not Picked Up</Text>
+              </Pressable>
+            </>
+          )}
+          {claimNeedsOwner(item, now.getTime()) && (
+            <>
+              <Pressable
+                style={[styles.actionBtn, styles.actionBtnConfirm]}
+                onPress={() => updateItem(item.id, { claimDeadline: new Date(Date.now() + 24 * 3600000).toISOString() })}
+              >
+                <FontAwesome name="clock-o" size={13} color={TANGERINE} />
+                <Text style={[styles.actionBtnText, { color: TANGERINE }]}>Extend 1 Day</Text>
+              </Pressable>
+              <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
+                <FontAwesome name="undo" size={13} color={MUTE} />
+                <Text style={styles.actionBtnText}>Release</Text>
               </Pressable>
             </>
           )}
