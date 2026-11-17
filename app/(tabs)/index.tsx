@@ -18,6 +18,7 @@ import ItemCard from '@/components/ItemCard';
 import SwipeableCard from '@/components/SwipeableCard';
 import { fuzzyScore } from '@/utils/search';
 import ConfirmSheet from '@/components/ConfirmSheet';
+import UserName from '@/components/UserName';
 import { CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, PLUM, SAGE, SKY, SKY_TINT, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT, TRACK, WHITE } from '@/constants/theme';
 
 type ListingFilter = 'all' | 'free' | 'borrow' | 'skill';
@@ -42,7 +43,6 @@ export default function BrowseScreen() {
     approveBorrowRequest,
     rejectBorrowRequest,
     confirmBorrowReturn,
-    getUserById,
     markPickedUp,
   } = useApp();
   const router = useRouter();
@@ -489,11 +489,10 @@ export default function BrowseScreen() {
 
                     {/* Donor: approve/reject borrow requests */}
                     {activeSheet === 'borrow-requests' && item.borrowRequests.filter(r => r.status === 'pending').map(req => {
-                      const requester = getUserById(req.requesterId);
                       return (
                         <View key={req.id} style={styles.sheetBorrowReqRow}>
                           <View style={{ flex: 1 }}>
-                            <Text style={styles.sheetBorrowName}>{requester?.name ?? 'Someone'}</Text>
+                            <Text style={styles.sheetBorrowName}><UserName userId={req.requesterId} fallback="Someone" /></Text>
                             <Text style={styles.sheetBorrowDates}>
                               {new Date(req.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                               {' – '}

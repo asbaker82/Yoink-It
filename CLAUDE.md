@@ -163,6 +163,8 @@ Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in 
 | `ImageLightbox` | Full-screen photo modal with keyboard nav on web. Sibling of `ScrollView`, never nested. |
 | `ClaimToast` | Slide-up toast after claiming — shows pickup deadline. |
 | `WaitlistToast` | Slide-up toast after joining waitlist. |
+| `UserName` | Another person's name, tappable (bold + underline). Opens `UserSheet`. Nest it inside sentences: `<Text>Claimed by <UserName userId={id} /></Text>`. **Always use it to show another user's name** (not on add-friends/contacts rows). Plain text for the current user. |
+| `UserSheet` | `UserSheetProvider` (in `app/_layout.tsx`) + `useUserSheet().openUser(id, { hideListings? })`: Modal with "Text {First}" (via `openSms` in `utils/sms.ts`) and "See {First}'s listings" (`/friend/[id]`). Profile friend rows open it too. |
 | `ConfirmSheet` | Slide-up confirmation sheet (replaces `Alert` for release-claim flow). |
 | `ImageCropModal` | **Web-only** circular crop modal. Injects a `<canvas>` imperatively into a `View` DOM node. Drag to pan, scroll/buttons to zoom. Used in `edit-profile.tsx` after image pick. |
 

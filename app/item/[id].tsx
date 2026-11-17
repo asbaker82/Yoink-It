@@ -34,6 +34,8 @@ import ImageLightbox from '@/components/ImageLightbox';
 import ClaimToast from '@/components/ClaimToast';
 import WaitlistToast from '@/components/WaitlistToast';
 import ConfirmSheet from '@/components/ConfirmSheet';
+import UserName from '@/components/UserName';
+import { openSms } from '@/utils/sms';
 import { BUTTER, CREAM, CREAM_2, FAINT, INK, INK_2, MUTE, MUTE_LIGHT, PEACH, ROSE, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT } from '@/constants/theme';
 
 // ── Brand tokens ─────────────────────────────────────────────
@@ -48,14 +50,6 @@ function avatarColor(name: string) {
 function confirm(message: string): boolean {
   if (Platform.OS === 'web') return window.confirm(message);
   return false;
-}
-
-function openSms(phone: string, body: string) {
-  const encoded = encodeURIComponent(body);
-  const url = Platform.OS === 'ios'
-    ? `sms:${phone}&body=${encoded}`
-    : `sms:${phone}?body=${encoded}`;
-  Linking.openURL(url);
 }
 
 function formatTimeLeft(deadline: Date, now: Date): string {
@@ -356,13 +350,13 @@ export default function ItemDetailScreen() {
               <Text style={styles.claimNoticeText}>
                 {item.status === 'pending_pickup'
                   ? isMyItem
-                    ? `Pickup submitted by ${claimedByUser?.name ?? 'the claimant'} — tap below to confirm`
+                    ? <>Pickup submitted by <UserName userId={item.claimedBy} fallback="the claimant" /> — tap below to confirm</>
                     : isClaimedByMe
                       ? 'Pickup submitted — waiting for donor to confirm'
-                      : `Pickup pending confirmation by ${donor?.name ?? 'donor'}`
+                      : <>Pickup pending confirmation by <UserName userId={item.donorId} fallback="donor" /></>
                   : isClaimedByMe
                     ? `You claimed this · ${timeLeftLabel ? timeLeftLabel + ' remaining' : 'window expired'}`
-                    : `Claimed by ${claimedByUser?.name ?? 'someone'} · ${timeLeftLabel || 'window expired'}`}
+                    : <>Claimed by <UserName userId={item.claimedBy} /> · {timeLeftLabel || 'window expired'}</>}
               </Text>
             </View>
           )}
@@ -373,7 +367,7 @@ export default function ItemDetailScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.expiryTitle}>Pickup window expired</Text>
                 <Text style={styles.expiryBody}>
-                  {claimedByUser?.name ?? 'The claimant'} didn't pick up in time. Extend their window by 1 day, or the item will be released automatically.
+                  <UserName userId={item.claimedBy} fallback="The claimant" /> didn't pick up in time. Extend their window by 1 day, or the item will be released automatically.
                 </Text>
               </View>
               <Pressable
@@ -403,7 +397,7 @@ export default function ItemDetailScreen() {
                 <Text style={styles.giverInitial}>{donor.name.charAt(0).toUpperCase()}</Text>
               </View>
               <View style={styles.giverInfo}>
-                <Text style={styles.giverName}>{donor.name}</Text>
+                <Text style={styles.giverName}><UserName userId={donor.id} /></Text>
                 <Text style={styles.giverSub}>
                   {isMyItem ? 'Your listing' : 'Friend'}
                 </Text>
@@ -590,11 +584,10 @@ export default function ItemDetailScreen() {
                 {pendingRequests.length} Pending {pendingRequests.length === 1 ? 'Request' : 'Requests'}
               </Text>
               {pendingRequests.map(req => {
-                const requester = getUserById(req.requesterId);
                 return (
                   <View key={req.id} style={styles.borrowRequestRow}>
                     <View style={styles.borrowRequestInfo}>
-                      <Text style={styles.borrowRequestName}>{requester?.name ?? 'Someone'}</Text>
+                      <Text style={styles.borrowRequestName}><UserName userId={req.requesterId} fallback="Someone" /></Text>
                       <Text style={styles.borrowRequestDates}>
                         {new Date(req.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         {' – '}
@@ -662,7 +655,7 @@ export default function ItemDetailScreen() {
               <FontAwesome name="calendar-check-o" size={14} color={SKY} style={{ marginTop: 1 }} />
               <Text style={styles.borrowedText}>
                 {isMyItem
-                  ? `Borrowed by ${borrowedByUser?.name ?? 'someone'}`
+                  ? <>Borrowed by <UserName userId={item.borrowedBy} /></>
                   : isBorrowedByMe ? 'You have this borrowed'
                   : `Currently borrowed`}
                 {item.borrowedUntil ? ` until ${formatCalendarDate(item.borrowedUntil)}` : ''}
@@ -702,7 +695,7 @@ export default function ItemDetailScreen() {
                 {item.claimedBy && (
                   <>
                     <Text style={{ color: INK, fontWeight: '700' }}>
-                      {item.claimedBy === currentUser.id ? 'You' : (getUserById(item.claimedBy)?.name ?? 'Someone')}
+                      {item.claimedBy === currentUser.id ? 'You' : <UserName userId={item.claimedBy} fallback="Someone" />}
                     </Text>
                     {' claimed it'}
                     {item.waitlist.length > 0 && (

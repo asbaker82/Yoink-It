@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import { useAuth } from '@/store/AuthContext';
 import ConfirmSheet from '@/components/ConfirmSheet';
+import { useUserSheet } from '@/components/UserSheet';
 import { BUTTER, CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TANGERINE_TINT } from '@/constants/theme';
 
 const DIVIDER        = 'rgba(31,26,23,0.06)';
@@ -12,6 +13,7 @@ const BORDER         = 'rgba(31,26,23,0.10)';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { openUser } = useUserSheet();
   const { logout, deleteAccount, updateAuthUser } = useAuth();
   const { currentUser, users, getMyItems, getFriendItems, items, searchNotifications, updateSearchNotification, deleteSearchNotification } = useApp();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -209,9 +211,9 @@ export default function ProfileScreen() {
                 <View key={friend.id} style={styles.friendRow}>
                   <Pressable
                     style={({ pressed }) => [styles.friendRowMain, pressed && { opacity: 0.6 }]}
-                    onPress={() => router.push(`/friend/${friend.id}`)}
+                    onPress={() => openUser(friend.id)}
                     accessibilityRole="button"
-                    accessibilityLabel={`See ${friend.name}'s listings`}
+                    accessibilityLabel={`Text ${friend.name} or see their listings`}
                   >
                     <View style={styles.friendAvatar}>
                       <Text style={styles.friendAvatarText}>

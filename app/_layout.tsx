@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from '@/store/AuthContext';
 import { AppProvider } from '@/store/AppContext';
 import { queryClient, asyncStoragePersister } from '@/lib/queryClient';
 import HeaderLogo from '@/components/HeaderLogo';
+import { UserSheetProvider } from '@/components/UserSheet';
 import { CREAM, INK, TANGERINE, WHITE } from '@/constants/theme';
 
 export { ErrorBoundary } from 'expo-router';
@@ -52,7 +53,9 @@ export default function RootLayout() {
     >
       <AuthProvider>
         <AppProvider>
-          <RootLayoutNav />
+          <UserSheetProvider>
+            <RootLayoutNav />
+          </UserSheetProvider>
         </AppProvider>
       </AuthProvider>
     </PersistQueryClientProvider>

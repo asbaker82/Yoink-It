@@ -14,6 +14,7 @@ import { useApp } from '@/store/AppContext';
 import { Item } from '@/store/types';
 import ItemCard from '@/components/ItemCard';
 import ConfirmSheet from '@/components/ConfirmSheet';
+import UserName from '@/components/UserName';
 import { formatCalendarDate } from '@/utils/dates';
 import { BORDER, BUTTER_INK, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, PLUM, ROSE_INK, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TRACK, WHITE } from '@/constants/theme';
 
@@ -135,7 +136,7 @@ export default function MyItemsScreen() {
             <View style={styles.claimedByChip}>
               <FontAwesome name="user" size={11} color={BUTTER_INK} style={{ marginRight: 4 }} />
               <Text style={styles.claimedByText}>
-                Claimed by {getUserById(item.claimedBy)?.name ?? 'someone'}
+                Claimed by <UserName userId={item.claimedBy} />
               </Text>
             </View>
           )}
@@ -148,11 +149,10 @@ export default function MyItemsScreen() {
 
           {/* ── Borrow item: pending requests ── */}
           {isBorrow && pendingReqs.map(req => {
-            const requester = getUserById(req.requesterId);
             return (
               <View key={req.id} style={styles.borrowReqRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.borrowReqName}>{requester?.name ?? 'Someone'}</Text>
+                  <Text style={styles.borrowReqName}><UserName userId={req.requesterId} fallback="Someone" /></Text>
                   <Text style={styles.borrowReqDates}>
                     {new Date(req.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     {' – '}
@@ -176,7 +176,7 @@ export default function MyItemsScreen() {
             <View style={styles.claimedByChip}>
               <FontAwesome name="refresh" size={11} color={BUTTER_INK} style={{ marginRight: 4 }} />
               <Text style={styles.claimedByText}>
-                Borrowed by {getUserById(item.borrowedBy ?? '')?.name ?? 'someone'}
+                Borrowed by <UserName userId={item.borrowedBy} />
                 {item.borrowedUntil ? ` until ${formatCalendarDate(item.borrowedUntil)}` : ''}
               </Text>
             </View>

@@ -4,6 +4,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
+import UserName from '@/components/UserName';
 import { Item, ListingType } from '@/store/types';
 import { CREAM, CREAM_2, FAINT, INK, INK_2, MUTE, SAGE, SKY, TANGERINE } from '@/constants/theme';
 
@@ -42,7 +43,7 @@ export default function FriendListingsScreen() {
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{initials}</Text>
       </View>
-      <Text style={styles.name}>{friend.name}</Text>
+      <Text style={styles.name}><UserName userId={friend.id} hideListings /></Text>
       <Text style={styles.subtitle}>
         {listings.length === 0
           ? 'No open listings'

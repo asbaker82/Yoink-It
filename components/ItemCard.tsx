@@ -5,6 +5,7 @@ import { Item } from '@/store/types';
 import { useApp } from '@/store/AppContext';
 import { formatCalendarDate } from '@/utils/dates';
 import { shortLocation } from '@/utils/location';
+import UserName from './UserName';
 import { BORDER, BUTTER, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, ROSE_INK, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT, WHITE } from '@/constants/theme';
 
 interface Props {
@@ -16,7 +17,6 @@ interface Props {
 
 export default function ItemCard({ item, onPress, footer }: Props) {
   const { getUserById, currentUser } = useApp();
-  const donor = getUserById(item.donorId);
 
   const isBorrow = item.listingType === 'borrow';
   const isGive   = item.listingType === 'give';
@@ -83,7 +83,7 @@ export default function ItemCard({ item, onPress, footer }: Props) {
 
       <View style={styles.body}>
         <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.donor}>from {donor?.name ?? 'Unknown'}</Text>
+        <Text style={styles.donor}>from <UserName userId={item.donorId} fallback="Unknown" /></Text>
 
         {item.restrictions ? (
           <View style={styles.restrictionRow}>
