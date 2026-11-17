@@ -160,7 +160,7 @@ export default function NewItemScreen() {
         title: title.trim(),
         description: description.trim(),
         photos,
-        restrictions: restrictions.trim() || undefined,
+        restrictions: isSkill ? undefined : restrictions.trim() || undefined,
         pickupLocation: isSkill ? '' : formatLocation(pickupLoc),
         pickupWindow: pickupWindow.trim(),
         disposalDate: listingType === 'give' ? new Date(disposalDate).toISOString() : '2099-12-31T00:00:00.000Z',
@@ -276,17 +276,19 @@ export default function NewItemScreen() {
         />
       </View>
 
-      {/* Restrictions */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Restrictions <Text style={styles.optional}>(optional)</Text></Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Foster care placements only, pregnant friends only"
-          placeholderTextColor={MUTE_LIGHT}
-          value={restrictions}
-          onChangeText={setRestrictions}
-        />
-      </View>
+      {/* Restrictions — not for skills */}
+      {!isSkill && (
+        <View style={styles.section}>
+          <Text style={styles.label}>Restrictions <Text style={styles.optional}>(optional)</Text></Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Foster care placements only, pregnant friends only"
+            placeholderTextColor={MUTE_LIGHT}
+            value={restrictions}
+            onChangeText={setRestrictions}
+          />
+        </View>
+      )}
 
       {/* Pickup area — city, state, ZIP */}
       {!isSkill && (

@@ -175,7 +175,7 @@ export default function EditItemScreen() {
         title: title.trim(),
         description: description.trim(),
         photos,
-        restrictions: restrictions.trim() || undefined,
+        restrictions: isSkill ? undefined : restrictions.trim() || undefined,
         pickupLocation: isSkill ? '' : formatLocation(pickupLoc),
         pickupWindow: pickupWindow.trim(),
         // [] clears a list (mapped to null in AppContext)
@@ -263,17 +263,19 @@ export default function EditItemScreen() {
         />
       </View>
 
-      {/* Restrictions */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Restrictions <Text style={styles.optional}>(optional)</Text></Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Foster care placements only, pregnant friends only"
-          placeholderTextColor={MUTE_LIGHT}
-          value={restrictions}
-          onChangeText={setRestrictions}
-        />
-      </View>
+      {/* Restrictions — not for skills */}
+      {!isSkill && (
+        <View style={styles.section}>
+          <Text style={styles.label}>Restrictions <Text style={styles.optional}>(optional)</Text></Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Foster care placements only, pregnant friends only"
+            placeholderTextColor={MUTE_LIGHT}
+            value={restrictions}
+            onChangeText={setRestrictions}
+          />
+        </View>
+      )}
 
       {/* Pickup area — city, state, ZIP */}
       {!isSkill && (
