@@ -240,6 +240,17 @@ export default function ItemDetailScreen() {
 
   const hasPhotos = item.photos.length > 0;
 
+  const claimantFirst = claimedByUser?.name.split(' ')[0];
+
+  // The bottom bar is hidden when there's nothing to put in it (e.g. the owner's own available item).
+  const hasBottomAction =
+    (isBorrow && !isMyItem && isBorrowedByMe && (item.status === 'borrowed' || item.status === 'pending_return')) ||
+    (isBorrow && isMyItem && item.status === 'pending_return') ||
+    (isSkill && !isMyItem) ||
+    (isGive && !isMyItem && (item.status === 'available' || item.status === 'claimed' || isOnWaitlist || isClaimedByMe)) ||
+    (isGive && isMyItem && item.status === 'pending_pickup') ||
+    (isGive && (item.status === 'disposed' || item.status === 'picked_up'));
+
   const askForHelpMessage = `Hi ${donor?.name.split(' ')[0] ?? 'there'}! I saw you're offering help with "${item.title}" on Yoink It. Would you be up for helping me sometime?`;
 
   return (
@@ -784,6 +795,7 @@ export default function ItemDetailScreen() {
       </ScrollView>
 
       {/* ── Sticky bottom CTA ────────────────────────────────── */}
+      {hasBottomAction && (
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
 
         {isBorrow && !isMyItem && isBorrowedByMe && item.status === 'borrowed' && (
@@ -898,16 +910,21 @@ export default function ItemDetailScreen() {
           </View>
         )}
         {isGive && item.status === 'picked_up' && (
-          <Text style={styles.pickedUpText}>✓ Picked up — enjoy!</Text>
+          <Text style={styles.pickedUpText}>
+            {isMyItem
+              ? <>✓ Picked up by <UserName userId={item.claimedBy} fallback="your friend" /></>
+              : isClaimedByMe ? '✓ Picked up — enjoy!' : '✓ Picked up'}
+          </Text>
         )}
 
         {/* Donor release for accidentally confirmed pickup */}
         {isGive && isMyItem && item.status === 'picked_up' && (
           <Pressable style={[styles.ghostBtn, { width: '100%', marginTop: 8 }]} onPress={handleRelease}>
-            <Text style={styles.ghostBtnText}>Release Claim</Text>
+            <Text style={styles.ghostBtnText}>Not picked up after all</Text>
           </Pressable>
         )}
       </View>
+      )}
 
       {/* ── Overlays (siblings of ScrollView, not nested) ─── */}
       <ClaimToast
@@ -949,14 +966,17 @@ export default function ItemDetailScreen() {
       />
       <ConfirmSheet
         visible={showReleaseSheet}
-        title="Release Your Claim?"
+        title={isMyItem ? 'Put this back up for grabs?' : 'Release Your Claim?'}
         message={
-          item.waitlist.length > 0
+          (isMyItem ? `${claimantFirst ? `${claimantFirst}'s` : 'The current'} claim will be removed. ` : '') +
+          (item.waitlist.length > 0
             ? 'The next person on the waitlist will be offered the item.'
-            : 'The item will go back to available for anyone to claim.'
+            : isMyItem
+              ? 'The item will go back to available for your friends to claim.'
+              : 'The item will go back to available for anyone to claim.')
         }
-        confirmLabel="Release Claim"
-        cancelLabel="Keep Claim"
+        confirmLabel={isMyItem ? 'Remove Claim' : 'Release Claim'}
+        cancelLabel={isMyItem ? 'Never Mind' : 'Keep Claim'}
         destructive
         onConfirm={() => { setShowReleaseSheet(false); releaseClaim(item.id); }}
         onCancel={() => setShowReleaseSheet(false)}

@@ -216,7 +216,7 @@ export default function MyItemsScreen() {
           {isGive && item.status === 'picked_up' && (
             <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
               <FontAwesome name="undo" size={13} color={MUTE} />
-              <Text style={styles.actionBtnText}>Release Claim</Text>
+              <Text style={styles.actionBtnText}>Not picked up after all</Text>
             </Pressable>
           )}
           {isGive && item.status !== 'picked_up' && item.status !== 'disposed' && item.status !== 'pending_pickup' && (
