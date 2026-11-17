@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { withTimeout } from '@/utils/withTimeout';
 import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
@@ -155,7 +156,7 @@ export default function NewItemScreen() {
     const days = parseInt(claimPickupDays, 10);
     setSubmitting(true);
     try {
-      await createItem({
+      await withTimeout(createItem({
         title: title.trim(),
         description: description.trim(),
         photos,
@@ -169,7 +170,7 @@ export default function NewItemScreen() {
         blockedPeriods,
         allowedBorrowers: access.allowed,
         excludedFriends: access.excluded,
-      });
+      }), 20_000, 'Saving');
       router.back();
     } catch (e: any) {
       setSubmitting(false);

@@ -31,6 +31,8 @@ Wraps `AppProvider` in `app/_layout.tsx`. Persists to `AsyncStorage` (web = loca
 
 The mock users (phones `+15555550101`–`0104`) bypass OTP and log in directly. All other numbers go through phone → OTP (`1234` always works) → name → contacts flow. The routing guard in `app/_layout.tsx` uses `useSegments` + `useEffect` to redirect unauthenticated users to `/(auth)/welcome` and authenticated users away from auth screens. During the one-frame gap while auth resolves, `AppContext` uses a stub user `{ id: '', name: '', ... }` to prevent a `useApp must be within AppProvider` crash.
 
+**Never `await` a Supabase call inside `supabase.auth.onAuthStateChange`.** supabase-js runs that callback while holding its auth lock; a query there deadlocks every later request (saves spin forever). Defer with `setTimeout(..., 0)` as `AuthContext` does. Listing saves are wrapped in `withTimeout` (`utils/withTimeout.ts`) so a hang surfaces as an error.
+
 ### App state — `store/AppContext.tsx`
 All non-auth state in a single React Context accessed via `useApp()`. No Redux/Zustand.
 

@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { withTimeout } from '@/utils/withTimeout';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
 import { DisposalMethod, DISPOSAL_METHOD_LABELS, BlockedPeriod } from '@/store/types';
@@ -170,7 +171,7 @@ export default function EditItemScreen() {
 
     setSubmitting(true);
     try {
-      await updateItem(item.id, {
+      await withTimeout(updateItem(item.id, {
         title: title.trim(),
         description: description.trim(),
         photos,
@@ -187,7 +188,7 @@ export default function EditItemScreen() {
         } : {
           blockedPeriods,
         }),
-      });
+      }), 20_000, 'Saving');
       router.back();
     } catch (e: any) {
       setSubmitting(false);
