@@ -44,7 +44,7 @@ export default function PhoneScreen() {
     } catch (e: any) {
       const msg = e?.message ?? JSON.stringify(e);
       console.error('sendOTP error:', msg);
-      setError(`Error: ${msg}`);
+      setError(`We couldn't send a code to that number. ${msg}`);
     } finally {
       setLoading(false);
     }

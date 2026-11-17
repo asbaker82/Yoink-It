@@ -36,7 +36,14 @@ export default function VerifyScreen() {
   const handleVerify = async (c = code) => {
     if (c.length !== 4) return;
     setLoading(true);
-    const ok = await verifyOTP(c);
+    let ok = false;
+    try {
+      ok = await verifyOTP(c);
+    } catch {
+      setLoading(false);
+      setError("We couldn't check that code. Check your connection and try again.");
+      return;
+    }
     setLoading(false);
     if (!ok) {
       setError('Incorrect code. Please check your messages and try again.');
@@ -111,8 +118,12 @@ export default function VerifyScreen() {
               style={[styles.hintLink, resendCooldown > 0 && styles.hintLinkDisabled]}
               onPress={async () => {
                 if (resendCooldown > 0 || !pendingPhone) return;
-                await sendOTP(pendingPhone);
-                setResendCooldown(30);
+                try {
+                  await sendOTP(pendingPhone);
+                  setResendCooldown(30);
+                } catch {
+                  setError("We couldn't send a new code. Check your connection and try again.");
+                }
               }}
             >
               {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}

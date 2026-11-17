@@ -18,6 +18,7 @@ import { useApp } from '@/store/AppContext';
 import LocationInput from '@/components/LocationInput';
 import { Location, parseLocation, formatLocation, locationError } from '@/utils/location';
 import ImageCropModal from '@/components/ImageCropModal';
+import { withTimeout } from '@/utils/withTimeout';
 import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, WHITE } from '@/constants/theme';
 
 async function pickImage(): Promise<string | null> {
@@ -110,15 +111,21 @@ export default function EditProfileScreen() {
     }
     setZipError('');
     setSaving(true);
-    await updateAuthUser({
-      name: trimmedName,
-      email: email.trim(),
-      // '' clears it (mapped to null in AuthContext)
-      defaultAddress: formatLocation(location),
-      profilePhoto: profilePhoto || undefined,
-    });
-    setSaving(false);
-    router.back();
+    try {
+      await withTimeout(updateAuthUser({
+        name: trimmedName,
+        email: email.trim(),
+        // '' clears it (mapped to null in AuthContext)
+        defaultAddress: formatLocation(location),
+        profilePhoto: profilePhoto || undefined,
+      }), 20_000, 'Saving');
+      router.back();
+    } catch (e) {
+      const msg = `Your profile wasn't saved: ${e instanceof Error ? e.message : 'please try again'}`;
+      if (Platform.OS === 'web') window.alert(msg); else Alert.alert('Not saved', msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

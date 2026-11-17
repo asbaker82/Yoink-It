@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/store/AuthContext';
+import { withTimeout } from '@/utils/withTimeout';
 import { BORDER, CREAM, CREAM_2, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
 
 export default function NameScreen() {
@@ -22,9 +23,14 @@ export default function NameScreen() {
       return;
     }
     setLoading(true);
-    await completeRegistration(name);
-    setLoading(false);
-    router.push('/(auth)/contacts');
+    try {
+      await withTimeout(completeRegistration(name), 20_000, 'Saving your name');
+      router.push('/(auth)/contacts');
+    } catch (e) {
+      setError(`We couldn't save your name. ${e instanceof Error ? e.message : 'Please try again.'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
