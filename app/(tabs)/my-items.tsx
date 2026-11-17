@@ -126,9 +126,8 @@ export default function MyItemsScreen() {
     const isGive   = item.listingType === 'give';
     const pendingReqs = isBorrow ? item.borrowRequests.filter(r => r.status === 'pending') : [];
 
-    return (
-      <View>
-        <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
+    // Disposed give items have nothing to show or do.
+    const footer = isGive && item.status === 'disposed' ? null : (
         <View style={styles.actionRow}>
 
           {/* ── Give item: claimed/waitlist chips ── */}
@@ -234,8 +233,9 @@ export default function MyItemsScreen() {
             </Pressable>
           )}
         </View>
-      </View>
     );
+
+    return <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} footer={footer} />;
   };
 
   const renderFriendCard = (item: Item, section: FriendSectionKey) => {
@@ -334,9 +334,7 @@ export default function MyItemsScreen() {
         break;
     }
 
-    return (
-      <View>
-        <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
+    const footer = (
         <View style={styles.actionRow}>
           <View style={styles.statusLine}>
             <FontAwesome name={icon} size={12} color={urgent ? TANG_DEEP : MUTE} style={{ marginRight: 6 }} />
@@ -354,8 +352,9 @@ export default function MyItemsScreen() {
             </Pressable>
           ))}
         </View>
-      </View>
     );
+
+    return <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} footer={footer} />;
   };
 
   const renderSectionHeader = (title: string, count: number, highlight: boolean) => (
@@ -566,8 +565,6 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 12,
     gap: 8,
     flexWrap: 'wrap',
   },
@@ -592,7 +589,7 @@ const styles = StyleSheet.create({
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#edf2f7',
+    backgroundColor: CREAM_2,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 5,

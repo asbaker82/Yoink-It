@@ -5,14 +5,16 @@ import { Item } from '@/store/types';
 import { useApp } from '@/store/AppContext';
 import { formatCalendarDate } from '@/utils/dates';
 import { shortLocation } from '@/utils/location';
-import { CREAM, CREAM_2, INK, MUTE, ROSE, SAGE, STEEL_BLUE as SKY, TANGERINE, TANGERINE_DEEP } from '@/constants/theme';
+import { BORDER, CREAM, CREAM_2, INK, MUTE, SAGE, STEEL_BLUE as SKY, TANGERINE, TANGERINE_DEEP } from '@/constants/theme';
 
 interface Props {
   item: Item;
   onPress: () => void;
+  /** Rendered inside the card below the body, outside the tappable area. */
+  footer?: React.ReactNode;
 }
 
-export default function ItemCard({ item, onPress }: Props) {
+export default function ItemCard({ item, onPress, footer }: Props) {
   const { getUserById, currentUser } = useApp();
   const donor = getUserById(item.donorId);
 
@@ -46,7 +48,8 @@ export default function ItemCard({ item, onPress }: Props) {
     : statusStyle.text;
 
   return (
-    <Pressable style={({ pressed }) => [styles.card, pressed && styles.cardPressed]} onPress={onPress}>
+    <View style={styles.card}>
+    <Pressable style={({ pressed }) => pressed && styles.cardPressed} onPress={onPress}>
       <View style={styles.photoArea}>
         {item.photos.length > 0 ? (
           <Image source={{ uri: item.photos[0] }} style={styles.photo} resizeMode="contain" />
@@ -142,6 +145,8 @@ export default function ItemCard({ item, onPress }: Props) {
         )}
       </View>
     </Pressable>
+    {footer ? <View style={styles.cardFooter}>{footer}</View> : null}
+    </View>
   );
 }
 
@@ -163,20 +168,26 @@ const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: CREAM,
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     marginHorizontal: 16,
-    marginVertical: 7,
+    marginVertical: 10,
     shadowColor: INK,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
+    elevation: 4,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(31,26,23,0.07)',
+    borderColor: BORDER,
   },
   cardPressed: { opacity: 0.90 },
+  cardFooter: {
+    borderTopWidth: 1,
+    borderTopColor: BORDER,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
   photoArea: {
     height: 160,
     position: 'relative',

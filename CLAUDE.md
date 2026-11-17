@@ -213,9 +213,9 @@ These files are unused template artifacts — do not reference or import from th
 `app/(tabs)/two.tsx`, `app/modal.tsx`, `components/EditScreenInfo.tsx`, `components/ExternalLink.tsx`, `components/StyledText.tsx`, `components/Themed.tsx`
 
 ### Styling
-No shared theme file. All styles use `StyleSheet.create` inline per file. The RN-web `boxShadow` deprecation warning is harmless.
+Colours come from `constants/theme.ts` (not the unused boilerplate `constants/Colors.ts`). All styles use `StyleSheet.create` inline per file. The RN-web `boxShadow` deprecation warning is harmless.
 
-Brand tokens (defined as file-level consts in each file that needs them — no shared theme import):
+Brand tokens (exported from `constants/theme.ts`; some files still have inline hex values left to migrate):
 | Token | Hex | Role |
 |---|---|---|
 | Tangerine | `#F26B3A` | Primary CTAs, active chips, badges |
@@ -233,4 +233,4 @@ Brand tokens (defined as file-level consts in each file that needs them — no s
 
 **Tab headers** (Browse, My Items, Profile) use `backgroundColor: '#FBF6EE'` (Cream) with `headerShadowVisible: false` so the header blends into the page. **Stack headers** (item detail, modals, edit screens) keep the default white (`#fff`) from React Navigation. All headers use `HeaderLogo` as `headerTitle` — do not use plain string titles. All headers use `headerTitleAlign: 'center'`.
 
-**Cards and surfaces** within a screen use Cream 2 (`#F4ECDD`) to lift above the Cream background. Destructive actions use Tangerine Deep (`#D8531F`), never `#e53e3e` or other reds.
+**Item cards** (`ItemCard`) are white (`#FFFFFF`) with a `BORDER` (`#E8DDD0`) edge and soft shadow so they stand apart from the Cream background. Per-card actions (My Items) go inside the card via `ItemCard`'s `footer` prop, never as a loose row below it. **Other surfaces** (panels, chips, secondary buttons) use Cream 2 (`#F4ECDD`). Colours live in `constants/theme.ts` — import from there rather than redefining hex values. Destructive actions use Tangerine Deep (`#D8531F`), never `#e53e3e` or other reds.
