@@ -23,6 +23,7 @@ import {
 import type { Item, User, SearchNotification, BorrowRequest, BlockedPeriod } from './types';
 import { requestNotificationPermission, sendNotification } from '@/utils/notifications';
 import { useAuth } from './AuthContext';
+import { isListingExpired } from '@/utils/itemState';
 
 interface AppContextType {
   currentUser: User;
@@ -609,6 +610,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Give items: hide once picked up / disposed. Borrow items: hide only when returned (picked_up maps to returned)
       if (item.listingType === 'give' && (item.status === 'picked_up' || item.status === 'disposed')) return false;
       if (item.listingType === 'borrow' && item.status === 'picked_up') return false;
+      // Unclaimed free items drop out of friends' feeds once their "available until" date passes.
+      if (isListingExpired(item)) return false;
       if (!myFriendIds.has(item.donorId)) return false;
       // Friendships are mutual (approved requests), so being in my list is enough.
       return canSeeRestricted(item, currentUser.id);
@@ -700,7 +703,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         claimItem: async (id) => {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === id);
-          if (!item || !canSeeItem(item)) return;
+          if (!item || !canSeeItem(item) || isListingExpired(item)) return;
           const claimDeadline = new Date(Date.now() + item.claimPickupHours * 3600000).toISOString();
           await claimItemMutation.mutateAsync({ itemId: id, claimDeadline });
         },

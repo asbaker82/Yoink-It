@@ -10,3 +10,9 @@ export function isClaimExpired(item: Item, now = Date.now()): boolean {
 export function claimNeedsOwner(item: Item, now = Date.now()): boolean {
   return isClaimExpired(item, now) && item.waitlist.length === 0;
 }
+
+/** A free item nobody has claimed whose "available until" date has passed. */
+export function isListingExpired(item: Item, now = Date.now()): boolean {
+  return item.listingType === 'give' && item.status === 'available' &&
+    new Date(item.disposalDate).getTime() <= now;
+}

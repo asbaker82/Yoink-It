@@ -23,7 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { playClaimSound, playWaitlistSound } from '@/utils/sounds';
 import { formatCalendarDate } from '@/utils/dates';
 import { shortLocation } from '@/utils/location';
-import { claimNeedsOwner } from '@/utils/itemState';
+import { claimNeedsOwner, isListingExpired } from '@/utils/itemState';
 import { useApp } from '@/store/AppContext';
 import {
   DISPOSAL_METHOD_LABELS,
@@ -241,6 +241,7 @@ export default function ItemDetailScreen() {
   const hasPhotos = item.photos.length > 0;
 
   const claimantFirst = claimedByUser?.name.split(' ')[0];
+  const listingExpired = isListingExpired(item, now.getTime());
 
   // The bottom bar is hidden when there's nothing to put in it (e.g. the owner's own available item).
   const hasBottomAction =
@@ -389,6 +390,27 @@ export default function ItemDetailScreen() {
                 </Pressable>
                 <Pressable style={styles.expiryReleaseBtn} onPress={handleRelease}>
                   <Text style={styles.expiryReleaseBtnText}>Release</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {/* Owner: listing passed its date with no claim */}
+          {isMyItem && listingExpired && (
+            <View style={styles.expiryBanner}>
+              <Text style={styles.expiryTitle}>This listing has expired</Text>
+              <Text style={styles.expiryBody}>
+                Your friends can't see it anymore. Keep it up for another week, or remove it.
+              </Text>
+              <View style={styles.expiryActions}>
+                <Pressable
+                  style={styles.extendBtn}
+                  onPress={() => updateItem(item.id, { disposalDate: new Date(Date.now() + 7 * 86400000).toISOString() })}
+                >
+                  <Text style={styles.extendBtnText}>Extend 1 Week</Text>
+                </Pressable>
+                <Pressable style={styles.expiryReleaseBtn} onPress={handleDeleteItem}>
+                  <Text style={styles.expiryReleaseBtnText}>Remove</Text>
                 </Pressable>
               </View>
             </View>
@@ -843,10 +865,15 @@ export default function ItemDetailScreen() {
         )}
 
         {/* Primary action — Give Away */}
-        {isGive && !isMyItem && item.status === 'available' && (
+        {isGive && !isMyItem && item.status === 'available' && !listingExpired && (
           <Pressable style={styles.primaryBtn} onPress={handleClaim}>
             <Text style={styles.primaryBtnText}>Claim →</Text>
           </Pressable>
+        )}
+        {isGive && !isMyItem && listingExpired && (
+          <View style={[styles.doneBar, { width: '100%' }]}>
+            <Text style={styles.doneText}>This item is no longer available</Text>
+          </View>
         )}
 
         {isGive && !isMyItem && item.status === 'claimed' && !isClaimedByMe && !isOnWaitlist && (

@@ -17,7 +17,7 @@ import ListEnd from '@/components/ListEnd';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import UserName from '@/components/UserName';
 import { formatCalendarDate } from '@/utils/dates';
-import { claimNeedsOwner } from '@/utils/itemState';
+import { claimNeedsOwner, isListingExpired } from '@/utils/itemState';
 import { BORDER, BUTTER_INK, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, ROSE_INK, SLATE, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TRACK, WHITE } from '@/constants/theme';
 
 type ViewKey = 'listings' | 'friends';
@@ -45,6 +45,7 @@ const isDone = (i: Item) => i.status === 'picked_up' || i.status === 'disposed';
 const needsMyAction = (i: Item) =>
   (i.listingType === 'give' && i.status === 'pending_pickup') ||
   claimNeedsOwner(i) ||
+  isListingExpired(i) ||
   (i.listingType === 'borrow' && (i.status === 'pending_return' || i.borrowRequests.some(r => r.status === 'pending')));
 
 function formatTimeLeft(deadline: Date, now: Date): string {
@@ -144,6 +145,12 @@ export default function MyItemsScreen() {
               </Text>
             </View>
           )}
+          {isListingExpired(item, now.getTime()) && (
+            <View style={styles.waitlistChip}>
+              <FontAwesome name="clock-o" size={11} color={ROSE_INK} style={{ marginRight: 4 }} />
+              <Text style={styles.waitlistChipText}>Expired — hidden from friends</Text>
+            </View>
+          )}
           {isGive && item.waitlist.length > 0 && item.status !== 'pending_pickup' && (
             <View style={styles.waitlistChip}>
               <FontAwesome name="list" size={11} color={ROSE_INK} style={{ marginRight: 4 }} />
@@ -230,6 +237,15 @@ export default function MyItemsScreen() {
                 <Text style={styles.actionBtnText}>Release</Text>
               </Pressable>
             </>
+          )}
+          {isListingExpired(item, now.getTime()) && (
+            <Pressable
+              style={[styles.actionBtn, styles.actionBtnConfirm]}
+              onPress={() => updateItem(item.id, { disposalDate: new Date(Date.now() + 7 * 86400000).toISOString() })}
+            >
+              <FontAwesome name="clock-o" size={13} color={TANGERINE} />
+              <Text style={[styles.actionBtnText, { color: TANGERINE }]}>Extend 1 Week</Text>
+            </Pressable>
           )}
           {isGive && item.status === 'picked_up' && (
             <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
