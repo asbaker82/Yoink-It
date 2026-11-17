@@ -318,3 +318,27 @@ export async function recordInvite(inviterId: string, phone: string): Promise<vo
     .upsert({ inviter_id: inviterId, phone }, { onConflict: 'inviter_id,phone', ignoreDuplicates: true });
   if (error) console.warn('recordInvite failed:', error.message);
 }
+
+// ─── Finding people (no user directory) ──────────────────────────────────────
+
+type MatchRow = { id: string; name: string; phone: string | null; profile_photo: string | null };
+const matchToUser = (r: MatchRow): User => ({
+  id: r.id, name: r.name, email: '', phone: r.phone ?? undefined,
+  profilePhoto: r.profile_photo ?? undefined, friends: [],
+});
+
+/** Which of these normalized phone numbers belong to Yoink It users (server-side; numbers aren't stored). */
+export async function matchContacts(phones: string[]): Promise<User[]> {
+  if (phones.length === 0) return [];
+  const { data, error } = await supabase.rpc('match_contacts', { phones });
+  if (error) throw error;
+  return ((data ?? []) as MatchRow[]).map(matchToUser);
+}
+
+/** The Yoink It user with exactly this normalized phone number, if any. */
+export async function findUserByPhone(phone: string): Promise<User | null> {
+  const { data, error } = await supabase.rpc('find_user_by_phone', { phone });
+  if (error) throw error;
+  const row = ((data ?? []) as MatchRow[])[0];
+  return row ? matchToUser(row) : null;
+}

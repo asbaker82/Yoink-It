@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
-import { recordInvite } from '@/store/db';
+import { recordInvite, matchContacts, findUserByPhone } from '@/store/db';
 import type { User } from '@/store/types';
 import { normalizeUsPhone, openSms } from '@/utils/sms';
 import { inviteMessage } from '@/utils/invite';
@@ -12,12 +12,14 @@ import {
   BORDER, CREAM, CREAM_2, FAINT, INK, INK_2, MUTE, TANGERINE, TANGERINE_TINT, WHITE,
 } from '@/constants/theme';
 
-type Contact = { name: string; phone: string };
+/** `typed`: a number typed into search, not a saved contact (so no name to greet). */
+type Contact = { name: string; phone: string; typed?: boolean };
 type Row =
   | { kind: 'request'; user: User }
   | { kind: 'user'; user: User; inContacts: boolean }
   | { kind: 'invite'; contact: Contact }
-  | { kind: 'inviteAny' };
+  | { kind: 'inviteAny' }
+  | { kind: 'note'; text: string };
 type Section = { key: string; title: string; subtitle?: string; data: Row[] };
 
 interface Props {
@@ -37,8 +39,11 @@ export default function FriendFinder({ doneLabel, onDone }: Props) {
   } = useApp();
 
   const [query, setQuery] = useState('');
-  const [contactPhones, setContactPhones] = useState<Set<string>>(new Set());
-  const [inviteContacts, setInviteContacts] = useState<Contact[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  // Contacts who are on Yoink It, matched on the server (there's no list of all users).
+  const [matched, setMatched] = useState<User[]>([]);
+  // Result of typing a full phone number into the search box.
+  const [phoneHit, setPhoneHit] = useState<{ phone: string; user: User | null; loading: boolean } | null>(null);
   const [invited, setInvited] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [loadingContacts, setLoadingContacts] = useState(Platform.OS !== 'web');
@@ -55,21 +60,20 @@ export default function FriendFinder({ doneLabel, onDone }: Props) {
         const { data } = await Contacts.getContactsAsync({
           fields: [Contacts.Fields.PhoneNumbers, Contacts.Fields.Name],
         });
-        const phones = new Set<string>();
         const byPhone = new Map<string, Contact>();
         for (const c of data) {
           for (const p of c.phoneNumbers ?? []) {
             const phone = normalizeUsPhone(p.number ?? '');
-            if (!phone) continue;
-            phones.add(phone);
-            if (c.name && !byPhone.has(phone)) byPhone.set(phone, { name: c.name, phone });
+            if (!phone || phone === currentUser.phone) continue;
+            if (!byPhone.has(phone)) byPhone.set(phone, { name: c.name || phone, phone });
           }
         }
+        const found = await matchContacts([...byPhone.keys()]);
         if (cancelled) return;
-        setContactPhones(phones);
-        setInviteContacts([...byPhone.values()].sort((a, b) => a.name.localeCompare(b.name)));
+        setContacts([...byPhone.values()].sort((a, b) => a.name.localeCompare(b.name)));
+        setMatched(found);
       } catch {
-        // Contacts unavailable — the list still shows everyone on Yoink It
+        // Contacts unavailable — phone-number search and invite-by-text still work
       } finally {
         if (!cancelled) setLoadingContacts(false);
       }
@@ -77,41 +81,73 @@ export default function FriendFinder({ doneLabel, onDone }: Props) {
     return () => { cancelled = true; };
   }, []);
 
+  // A full phone number in the search box → look that one person up on the server.
+  const searchedPhone = normalizeUsPhone(query);
+  useEffect(() => {
+    if (!searchedPhone || searchedPhone === currentUser.phone) { setPhoneHit(null); return; }
+    let cancelled = false;
+    setPhoneHit({ phone: searchedPhone, user: null, loading: true });
+    findUserByPhone(searchedPhone)
+      .then(user => { if (!cancelled) setPhoneHit({ phone: searchedPhone, user, loading: false }); })
+      .catch(() => { if (!cancelled) setPhoneHit({ phone: searchedPhone, user: null, loading: false }); });
+    return () => { cancelled = true; };
+  }, [searchedPhone]);
+
   const sections = useMemo<Section[]>(() => {
-    const q = query.trim().toLowerCase();
-    const matches = (name: string) => !q || name.toLowerCase().includes(q);
     const friendIds = new Set(currentUser.friends);
     const incoming = new Set(incomingRequests);
-    const appPhones = new Set(users.map(u => u.phone).filter(Boolean) as string[]);
-
+    const byId = new Map<string, User>();
+    for (const u of [...users, ...matched]) byId.set(u.id, u);
     const requestRows: Row[] = incomingRequests
-      .map(id => users.find(u => u.id === id))
-      .filter((u): u is User => !!u && matches(u.name))
+      .map(id => byId.get(id))
+      .filter((u): u is User => !!u)
       .map(user => ({ kind: 'request', user }));
 
-    const candidates = users
-      .filter(u => u.id !== currentUser.id && !friendIds.has(u.id) && !incoming.has(u.id) && matches(u.name))
-      .map(u => ({ user: u, inContacts: !!u.phone && contactPhones.has(u.phone) }))
-      .sort((a, b) => Number(b.inContacts) - Number(a.inContacts) || a.user.name.localeCompare(b.user.name));
-    const userRows: Row[] = candidates.map(c => ({ kind: 'user', ...c }));
+    // Typed a phone number: show just that person (or an invite for that number).
+    if (searchedPhone && searchedPhone !== currentUser.phone) {
+      const pretty = searchedPhone.replace(/(\+1)(\d{3})(\d{3})(\d{4})/, '($2) $3-$4');
+      let row: Row;
+      if (!phoneHit || phoneHit.loading) row = { kind: 'note', text: 'Looking up that number…' };
+      else if (!phoneHit.user) row = { kind: 'invite', contact: { name: pretty, phone: searchedPhone, typed: true } };
+      else if (friendIds.has(phoneHit.user.id)) row = { kind: 'note', text: `${phoneHit.user.name} is already your friend.` };
+      else if (incoming.has(phoneHit.user.id)) row = { kind: 'request', user: phoneHit.user };
+      else row = { kind: 'user', user: phoneHit.user, inContacts: false };
+      const title = phoneHit?.user ? 'On Yoink It' : phoneHit && !phoneHit.loading ? 'Not on Yoink It yet' : 'Phone number';
+      return [{ key: 'phone', title, data: [row] }];
+    }
 
-    const inviteRows: Row[] = inviteContacts
-      .filter(c => !appPhones.has(c.phone) && c.phone !== currentUser.phone && matches(c.name))
+    const q = query.trim().toLowerCase();
+    const matches = (name: string) => !q || name.toLowerCase().includes(q);
+
+    // My contacts on the app, plus anyone I've already sent a request to (so I can cancel it).
+    const onApp = new Map<string, User>();
+    for (const u of matched) onApp.set(u.id, u);
+    for (const id of outgoingRequests) { const u = byId.get(id); if (u) onApp.set(id, u); }
+    const userRows: Row[] = [...onApp.values()]
+      .filter(u => !friendIds.has(u.id) && !incoming.has(u.id) && matches(u.name))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(user => ({ kind: 'user', user, inContacts: matched.some(m => m.id === user.id) }));
+
+    const appPhones = new Set(matched.map(u => u.phone).filter(Boolean) as string[]);
+    const inviteRows: Row[] = contacts
+      .filter(c => !appPhones.has(c.phone) && matches(c.name))
       .map(contact => ({ kind: 'invite', contact }));
 
     const out: Section[] = [];
-    if (requestRows.length) out.push({ key: 'requests', title: 'Friend requests', data: requestRows });
+    if (requestRows.length) out.push({ key: 'requests', title: 'Friend requests', data: requestRows.filter(r => r.kind === 'request' && matches(r.user.name)) });
     if (userRows.length) out.push({
       key: 'users', title: 'On Yoink It',
       subtitle: 'They’ll get a request to approve.', data: userRows,
     });
     out.push({
       key: 'invite', title: 'Invite to Yoink It',
-      subtitle: inviteRows.length ? 'Contacts who aren’t here yet. Your request will be waiting when they sign up.' : undefined,
+      subtitle: inviteRows.length
+        ? 'Contacts who aren’t here yet. Your request will be waiting when they sign up.'
+        : Platform.OS === 'web' ? 'Enter a friend’s phone number above to find them.' : undefined,
       data: [...inviteRows, { kind: 'inviteAny' }],
     });
-    return out;
-  }, [query, users, currentUser, incomingRequests, contactPhones, inviteContacts]);
+    return out.filter(s => s.data.length > 0);
+  }, [query, searchedPhone, phoneHit, users, matched, contacts, currentUser, incomingRequests, outgoingRequests]);
 
   const run = async (key: string, action: () => Promise<void>) => {
     if (busy.has(key)) return;
@@ -126,7 +162,7 @@ export default function FriendFinder({ doneLabel, onDone }: Props) {
       recordInvite(currentUser.id, contact.phone);
       setInvited(prev => new Set(prev).add(contact.phone));
     }
-    openSms(contact?.phone ?? '', inviteMessage(currentUser.name, contact?.name));
+    openSms(contact?.phone ?? '', inviteMessage(currentUser.name, contact?.typed ? undefined : contact?.name));
   };
 
   const initials = (name: string) => name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -142,9 +178,13 @@ export default function FriendFinder({ doneLabel, onDone }: Props) {
       );
     }
 
+    if (row.kind === 'note') {
+      return <Text style={styles.note}>{row.text}</Text>;
+    }
+
     const name = row.kind === 'invite' ? row.contact.name : row.user.name;
     const sub = row.kind === 'invite'
-      ? row.contact.phone.replace(/(\+1)(\d{3})(\d{3})(\d{4})/, '($2) $3-$4')
+      ? (row.contact.typed ? 'Text them an invite' : row.contact.phone.replace(/(\+1)(\d{3})(\d{3})(\d{4})/, '($2) $3-$4'))
       : row.kind === 'request' ? 'Wants to be friends'
       : row.inContacts ? 'In your contacts' : undefined;
 
@@ -209,6 +249,7 @@ export default function FriendFinder({ doneLabel, onDone }: Props) {
   const keyFor = (row: Row) =>
     row.kind === 'invite' ? `invite-${row.contact.phone}`
       : row.kind === 'inviteAny' ? 'invite-any'
+      : row.kind === 'note' ? 'note'
       : `${row.kind}-${row.user.id}`;
 
   return (
@@ -219,7 +260,7 @@ export default function FriendFinder({ doneLabel, onDone }: Props) {
           style={styles.search}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search by name"
+          placeholder="Search contacts or enter a phone number"
           placeholderTextColor={FAINT}
           autoCorrect={false}
           clearButtonMode="while-editing"
@@ -298,6 +339,7 @@ const styles = StyleSheet.create({
   info: { flex: 1, minWidth: 0 },
   name: { fontSize: 15, fontWeight: '600', color: INK },
   sub: { fontSize: 12, color: MUTE, marginTop: 2 },
+  note: { fontSize: 14, color: MUTE, paddingVertical: 12, paddingHorizontal: 4 },
   actions: { flexDirection: 'row', gap: 6 },
   btn: {
     minWidth: 76,

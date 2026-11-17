@@ -41,9 +41,8 @@ create trigger profiles_updated_at
 -- RLS
 alter table public.profiles enable row level security;
 
--- Anyone can read any profile (needed for friend discovery & donor display)
-create policy "profiles: anyone can read"
-  on public.profiles for select using (true);
+-- Who can read profiles: see "PROFILE PRIVACY" at the end of this file
+-- (the old "profiles: anyone can read" policy exposed every name and phone).
 
 -- Users can only insert/update their own profile
 create policy "profiles: owner insert"
@@ -449,3 +448,55 @@ create policy "items: friends read"
       and (excluded_friends is null or not (auth.uid() = any(excluded_friends)))
     )
   );
+
+-- ────────────────────────────────────────────────────────────
+-- PROFILE PRIVACY: there is no directory of users. You can read
+-- your own profile, your friends', and anyone with a pending
+-- friend request to or from you. Everyone else is found only by
+-- phone number: match_contacts (your phone's contacts) or
+-- find_user_by_phone (one exact number). Uploaded numbers are
+-- not stored.
+-- ────────────────────────────────────────────────────────────
+
+-- Reading my friends list inside a profiles policy would recurse, so use a definer helper.
+create or replace function public.my_friend_ids()
+returns uuid[] language sql stable security definer set search_path = public as $$
+  select coalesce((select friends from public.profiles where id = auth.uid()), '{}');
+$$;
+
+drop policy if exists "profiles: anyone can read" on public.profiles;
+drop policy if exists "profiles: me, friends, requests" on public.profiles;
+create policy "profiles: me, friends, requests"
+  on public.profiles for select using (
+    id = auth.uid()
+    or id = any(public.my_friend_ids())
+    or exists (
+      select 1 from public.friend_requests r
+      where (r.from_id = auth.uid() and r.to_id = profiles.id)
+         or (r.to_id = auth.uid() and r.from_id = profiles.id)
+    )
+  );
+
+create or replace function public.match_contacts(phones text[])
+returns table (id uuid, name text, phone text, profile_photo text)
+language sql stable security definer set search_path = public as $$
+  select p.id, p.name, p.phone, p.profile_photo
+  from public.profiles p
+  where auth.uid() is not null
+    and p.id <> auth.uid()
+    and p.phone = any(phones[1:5000]);
+$$;
+
+create or replace function public.find_user_by_phone(phone text)
+returns table (id uuid, name text, phone text, profile_photo text)
+language sql stable security definer set search_path = public as $$
+  select p.id, p.name, p.phone, p.profile_photo
+  from public.profiles p
+  where auth.uid() is not null
+    and p.id <> auth.uid()
+    and p.phone = find_user_by_phone.phone
+  limit 1;
+$$;
+
+revoke execute on function public.match_contacts(text[]) from anon;
+revoke execute on function public.find_user_by_phone(text) from anon;
