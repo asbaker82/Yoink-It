@@ -17,12 +17,12 @@ import ListEnd from '@/components/ListEnd';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import UserName from '@/components/UserName';
 import { formatCalendarDate } from '@/utils/dates';
-import { claimNeedsOwner, isListingExpired } from '@/utils/itemState';
+import { claimNeedsOwner, isListingExpired, upcomingReservations } from '@/utils/itemState';
 import { BORDER, BUTTER_INK, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, ROSE_INK, SLATE, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TRACK, WHITE } from '@/constants/theme';
 
 type ViewKey = 'listings' | 'friends';
 type ListingFilter = 'all' | 'free' | 'lending' | 'skills';
-type FriendSectionKey = 'pickup' | 'waiting' | 'borrowing' | 'returning' | 'requested' | 'waitlisted';
+type FriendSectionKey = 'pickup' | 'waiting' | 'borrowing' | 'returning' | 'reserved' | 'requested' | 'waitlisted';
 
 type PendingConfirm = {
   title: string;
@@ -107,6 +107,7 @@ export default function MyItemsScreen() {
     { key: 'waiting',    title: 'Waiting on donor', data: fromOthers.filter(i => i.listingType === 'give' && i.claimedBy === me && i.status === 'pending_pickup') },
     { key: 'borrowing',  title: 'Borrowing',        data: fromOthers.filter(i => i.listingType === 'borrow' && i.borrowedBy === me && i.status === 'borrowed') },
     { key: 'returning',  title: 'Returning',        data: fromOthers.filter(i => i.listingType === 'borrow' && i.borrowedBy === me && i.status === 'pending_return') },
+    { key: 'reserved',   title: 'Reserved',         data: fromOthers.filter(i => upcomingReservations(i).some(r => r.requesterId === me)) },
     { key: 'requested',  title: 'Requested',        data: fromOthers.filter(i => i.listingType === 'borrow' && i.borrowRequests.some(r => r.requesterId === me && r.status === 'pending')) },
     { key: 'waitlisted', title: 'Waitlisted',       data: fromOthers.filter(i => i.listingType === 'give' && i.waitlist.includes(me)) },
   ];
@@ -181,6 +182,16 @@ export default function MyItemsScreen() {
               </View>
             );
           })}
+
+          {/* ── Borrow item: approved for later dates ── */}
+          {isBorrow && upcomingReservations(item).map(req => (
+            <View key={req.id} style={styles.claimedByChip}>
+              <FontAwesome name="calendar" size={11} color={BUTTER_INK} style={{ marginRight: 4 }} />
+              <Text style={styles.claimedByText}>
+                Reserved by <UserName userId={req.requesterId} fallback="someone" /> · {formatCalendarDate(req.startDate)} – {formatCalendarDate(req.endDate)}
+              </Text>
+            </View>
+          ))}
 
           {/* ── Borrow item: currently borrowed ── */}
           {isBorrow && item.status === 'borrowed' && (
@@ -333,6 +344,26 @@ export default function MyItemsScreen() {
         icon = 'calendar';
         status = `Waiting for ${donorFirst} to confirm the return`;
         break;
+      case 'reserved': {
+        icon = 'calendar';
+        const res = upcomingReservations(item).find(r => r.requesterId === me);
+        status = res
+          ? `Reserved ${formatCalendarDate(res.startDate)} – ${formatCalendarDate(res.endDate)}`
+          : 'Reserved';
+        if (res) {
+          actions.push({
+            label: 'Cancel Reservation', icon: 'times',
+            confirm: {
+              title: 'Cancel Reservation',
+              message: `Give up your reservation for "${item.title}"?`,
+              confirmLabel: 'Cancel Reservation',
+              destructive: true,
+              onConfirm: () => cancelBorrowRequest(item.id, res.id),
+            },
+          });
+        }
+        break;
+      }
       case 'requested': {
         icon = 'paper-plane';
         const req = item.borrowRequests.find(r => r.requesterId === me && r.status === 'pending');

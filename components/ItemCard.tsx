@@ -5,6 +5,7 @@ import { Item } from '@/store/types';
 import { useApp } from '@/store/AppContext';
 import { formatCalendarDate } from '@/utils/dates';
 import { shortLocation } from '@/utils/location';
+import { upcomingReservations } from '@/utils/itemState';
 import UserName from './UserName';
 import { BORDER, BUTTER, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, ROSE_INK, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT, WHITE } from '@/constants/theme';
 
@@ -36,6 +37,9 @@ export default function ItemCard({ item, onPress, footer }: Props) {
   const hoursLeft = msLeft !== null ? msLeft / 3_600_000 : null;
   const daysLeft = hoursLeft !== null ? Math.ceil(hoursLeft / 24) : null;
   const isUrgent = daysLeft !== null && daysLeft <= 3;
+
+  // Approved for future dates but not out yet.
+  const nextReservation = isBorrow && item.status === 'available' ? upcomingReservations(item)[0] : undefined;
 
   const pickupName = isGive && item.status === 'pending_pickup' && item.donorId === currentUser.id && item.claimedBy
     ? getUserById(item.claimedBy)?.name
@@ -127,6 +131,14 @@ export default function ItemCard({ item, onPress, footer }: Props) {
                 <FontAwesome name="calendar" size={10} color={MUTE} style={{ marginRight: 3 }} />
                 <Text style={styles.timeText}>
                   Until {formatCalendarDate(item.borrowedUntil)}
+                </Text>
+              </View>
+            )}
+            {nextReservation && (
+              <View style={styles.timeChip}>
+                <FontAwesome name="calendar" size={10} color={MUTE} style={{ marginRight: 3 }} />
+                <Text style={styles.timeText}>
+                  Reserved {formatCalendarDate(nextReservation.startDate)} – {formatCalendarDate(nextReservation.endDate)}
                 </Text>
               </View>
             )}

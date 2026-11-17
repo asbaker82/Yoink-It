@@ -23,7 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { playClaimSound, playWaitlistSound } from '@/utils/sounds';
 import { formatCalendarDate } from '@/utils/dates';
 import { shortLocation } from '@/utils/location';
-import { claimNeedsOwner, isListingExpired } from '@/utils/itemState';
+import { activeBorrowRequest, claimNeedsOwner, isListingExpired, upcomingReservations } from '@/utils/itemState';
 import { useApp } from '@/store/AppContext';
 import {
   DISPOSAL_METHOD_LABELS,
@@ -164,7 +164,12 @@ export default function ItemDetailScreen() {
   const myBorrowRequest = item.borrowRequests.find(r => r.requesterId === currentUser.id && (r.status === 'pending' || r.status === 'approved'));
   const pendingRequests  = item.borrowRequests.filter(r => r.status === 'pending');
   const isBorrowedByMe   = item.borrowedBy === currentUser.id;
-  const borrowedByUser   = item.borrowedBy ? getUserById(item.borrowedBy) : null;
+  // Approved requests that haven't started yet are reservations; the item isn't out with them.
+  const reservations     = upcomingReservations(item);
+  const myRequestIsReservation = !!myBorrowRequest && myBorrowRequest.status === 'approved' &&
+    myBorrowRequest.id !== activeBorrowRequest(item)?.id;
+  // Other dates can still be requested while the item is out or reserved.
+  const canRequestBorrow = isBorrow && !isMyItem && !myBorrowRequest;
 
   const borrowRequestValid = borrowStart && borrowEnd && borrowEnd >= borrowStart &&
     !periodsConflict(borrowStart, borrowEnd, item.blockedPeriods, item.borrowRequests);
@@ -260,7 +265,7 @@ export default function ItemDetailScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={{ paddingBottom: (isBorrow && !isMyItem && !myBorrowRequest && item.status === 'available') ? 400 : 110 }}
+        contentContainerStyle={{ paddingBottom: canRequestBorrow ? 400 : 110 }}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Hero ──────────────────────────────────────────── */}
@@ -644,6 +649,39 @@ export default function ItemDetailScreen() {
             </View>
           )}
 
+          {/* Upcoming reservations — owner view */}
+          {isBorrow && isMyItem && reservations.length > 0 && (
+            <View style={styles.borrowRequestsCard}>
+              <Text style={styles.borrowRequestsTitle}>Reserved</Text>
+              {reservations.map(req => (
+                <View key={req.id} style={styles.borrowRequestRow}>
+                  <View style={styles.borrowRequestInfo}>
+                    <Text style={styles.borrowRequestName}><UserName userId={req.requesterId} fallback="Someone" /></Text>
+                    <Text style={styles.borrowRequestDates}>
+                      {formatCalendarDate(req.startDate)} – {formatCalendarDate(req.endDate)}
+                    </Text>
+                  </View>
+                  <Pressable
+                    style={styles.rejectBtn}
+                    onPress={() => {
+                      const doCancel = () => rejectBorrowRequest(item.id, req.id);
+                      if (Platform.OS === 'web') {
+                        if (window.confirm('Cancel this reservation?')) doCancel();
+                      } else {
+                        Alert.alert('Cancel Reservation', 'Cancel this reservation? Those dates will open up again.', [
+                          { text: 'Keep', style: 'cancel' },
+                          { text: 'Cancel It', style: 'destructive', onPress: doCancel },
+                        ]);
+                      }
+                    }}
+                  >
+                    <Text style={styles.rejectBtnText}>Cancel</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* My borrow request status — donee view */}
           {isBorrow && !isMyItem && myBorrowRequest && (
             <View style={styles.myRequestCard}>
@@ -654,7 +692,8 @@ export default function ItemDetailScreen() {
               />
               <View style={{ flex: 1 }}>
                 <Text style={styles.myRequestLabel}>
-                  {myBorrowRequest.status === 'approved' ? 'Request approved!' : 'Request pending'}
+                  {myRequestIsReservation ? 'Reserved for you'
+                    : myBorrowRequest.status === 'approved' ? 'Request approved!' : 'Request pending'}
                 </Text>
                 <Text style={styles.myRequestDates}>
                   {new Date(myBorrowRequest.startDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -662,17 +701,18 @@ export default function ItemDetailScreen() {
                   {new Date(myBorrowRequest.endDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </Text>
               </View>
-              {myBorrowRequest.status === 'pending' && (
+              {(myBorrowRequest.status === 'pending' || myRequestIsReservation) && (
                 <Pressable
                   style={styles.cancelRequestBtn}
                   onPress={() => {
                     const doCancel = () => cancelBorrowRequest(item.id, myBorrowRequest.id);
+                    const what = myRequestIsReservation ? 'reservation' : 'borrow request';
                     if (Platform.OS === 'web') {
-                      if (window.confirm('Cancel your borrow request?')) doCancel();
+                      if (window.confirm(`Cancel your ${what}?`)) doCancel();
                     } else {
-                      Alert.alert('Cancel Request', 'Are you sure you want to cancel your borrow request?', [
+                      Alert.alert(myRequestIsReservation ? 'Cancel Reservation' : 'Cancel Request', `Are you sure you want to cancel your ${what}?`, [
                         { text: 'Keep', style: 'cancel' },
-                        { text: 'Cancel Request', style: 'destructive', onPress: doCancel },
+                        { text: 'Cancel It', style: 'destructive', onPress: doCancel },
                       ]);
                     }
                   }}
@@ -752,7 +792,7 @@ export default function ItemDetailScreen() {
           )}
 
         {/* Borrow request form — lives in the scroll area so the calendar can open downward */}
-        {isBorrow && !isMyItem && !myBorrowRequest && item.status === 'available' && (
+        {canRequestBorrow && (
           <View style={styles.borrowRequestForm}>
             <Text style={styles.borrowFormTitle}>Request to Borrow</Text>
 

@@ -14,3 +14,10 @@ export function formatCalendarDate(
 ): string {
   return parseCalendarDate(value).toLocaleDateString('en-US', options);
 }
+
+/** Today's local calendar date as YYYY-MM-DD. */
+export function todayDateOnly(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}

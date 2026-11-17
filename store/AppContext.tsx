@@ -23,7 +23,8 @@ import {
 import type { Item, User, SearchNotification, BorrowRequest, BlockedPeriod } from './types';
 import { requestNotificationPermission, sendNotification } from '@/utils/notifications';
 import { useAuth } from './AuthContext';
-import { isListingExpired } from '@/utils/itemState';
+import { activeBorrowRequest, isListingExpired, upcomingReservations } from '@/utils/itemState';
+import { todayDateOnly } from '@/utils/dates';
 
 interface AppContextType {
   currentUser: User;
@@ -301,12 +302,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [qc]);
 
+  // ── Reserved-borrow starter ────────────────────────────────────────────────
+  // An approved request for future dates is only a reservation. On its start date the
+  // item becomes "borrowed" by that person (same 30 s tick as expired claims).
+
+  const processBorrowStarts = useCallback(async () => {
+    const snapshot: Item[] = qc.getQueryData(QUERY_KEYS.items) ?? [];
+    const today = todayDateOnly();
+    for (const item of snapshot) {
+      if (item.listingType !== 'borrow' || item.status !== 'available') continue;
+      const due = upcomingReservations(item).find(r => r.startDate <= today);
+      if (!due) continue;
+      await updateItemFields(item.id, {
+        status:         'borrowed',
+        borrowed_by:    due.requesterId,
+        borrowed_until: due.endDate,
+      });
+    }
+  }, [qc]);
+
   useEffect(() => {
     if (!authUser) return;
-    processExpiredClaims();
-    const interval = setInterval(processExpiredClaims, 30000);
+    const tick = () => { processExpiredClaims(); processBorrowStarts(); };
+    tick();
+    const interval = setInterval(tick, 30000);
     return () => clearInterval(interval);
-  }, [authUser, processExpiredClaims]);
+  }, [authUser, processExpiredClaims, processBorrowStarts]);
 
   // ── Notification permission (request once on login) ───────────────────────
 
@@ -760,12 +781,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               ? { ...r, status: 'rejected' as const }
               : r
           );
-          await updateItemFields(itemId, {
+          // Starts today (or earlier) and the item is free → it's out now.
+          // Otherwise it's a reservation; processBorrowStarts flips it on the start date.
+          const startsNow = req.startDate <= todayDateOnly() && item.status === 'available';
+          await updateItemFields(itemId, startsNow ? {
             borrow_requests: updatedRequests,
             status: 'borrowed',
             borrowed_by: req.requesterId,
             borrowed_until: req.endDate,
-          });
+          } : { borrow_requests: updatedRequests });
           qc.invalidateQueries({ queryKey: QUERY_KEYS.items });
         },
         cancelBorrowRequest: async (itemId, requestId) => {
@@ -792,8 +816,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === itemId);
           if (!item) return;
+          // Only the borrow that's out is finished; later reservations stay approved.
+          const active = activeBorrowRequest(item);
           const updatedRequests = item.borrowRequests.map(r =>
-            r.status === 'approved' ? { ...r, status: 'returned' as const } : r
+            r.id === active?.id ? { ...r, status: 'returned' as const } : r
           );
           await updateItemFields(itemId, {
             status: 'available',
