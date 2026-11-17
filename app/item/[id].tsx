@@ -101,7 +101,7 @@ export default function ItemDetailScreen() {
     addBlockedPeriod,
     removeBlockedPeriod,
     updateItem,
-    canSeeRestricted,
+    canSeeItem,
   } = useApp();
 
   const [photoIndex, setPhotoIndex]           = useState(0);
@@ -128,7 +128,8 @@ export default function ItemDetailScreen() {
   }, []);
 
   const found = items.find(i => i.id === id);
-  const item = found && canSeeRestricted(found, currentUser.id) ? found : undefined;
+  // Not a friend's (e.g. they removed me) → behave as if the item doesn't exist.
+  const item = found && canSeeItem(found) ? found : undefined;
 
   if (!item) {
     if (!itemsLoaded) {

@@ -18,6 +18,7 @@ import {
   respondFriendRequest,
   cancelFriendRequest as dbCancelFriendRequest,
   removeFriendBothWays,
+  fetchProfile,
 } from './db';
 import type { Item, User, SearchNotification, BorrowRequest, BlockedPeriod } from './types';
 import { requestNotificationPermission, sendNotification } from '@/utils/notifications';
@@ -32,6 +33,8 @@ interface AppContextType {
   getFriendItems: () => Item[];
   getMyItems: () => Item[];
   canSeeRestricted: (item: Item, userId: string) => boolean;
+  /** Mine, a friend's (within Friend access), or one I'm mid-handoff on. */
+  canSeeItem: (item: Item) => boolean;
   // Friends (requests the other person approves)
   incomingRequests: string[];
   outgoingRequests: string[];
@@ -103,16 +106,19 @@ if (updates.restrictions        !== undefined) f.restrictions        = updates.r
 }
 
 // Existing claimants/waitlisters/borrowers/requesters keep access if later restricted, so they can finish the handoff.
-function canSeeRestricted(item: Item, userId: string): boolean {
-  const onlyList = item.allowedBorrowers?.length ? item.allowedBorrowers : null;
-  const isExcluded = !!item.excludedFriends?.includes(userId);
-  if (!onlyList && !isExcluded) return true;
-  const hasActiveInvolvement = item.donorId === userId ||
+function isInvolved(item: Item, userId: string): boolean {
+  return item.donorId === userId ||
     item.claimedBy === userId ||
     item.waitlist.includes(userId) ||
     item.borrowedBy === userId ||
     item.borrowRequests.some(r => r.requesterId === userId && (r.status === 'pending' || r.status === 'approved'));
-  if (hasActiveInvolvement) return true;
+}
+
+function canSeeRestricted(item: Item, userId: string): boolean {
+  const onlyList = item.allowedBorrowers?.length ? item.allowedBorrowers : null;
+  const isExcluded = !!item.excludedFriends?.includes(userId);
+  if (!onlyList && !isExcluded) return true;
+  if (isInvolved(item, userId)) return true;
   if (isExcluded) return false;
   return onlyList!.includes(userId);
 }
@@ -191,13 +197,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const outgoingRequests = friendRequests?.outgoing ?? [];
 
   // Friend changes happen server-side; refresh my requests, my profile, and everyone's friends lists.
+  // Items are refetched too: the database only returns listings from current friends.
   const afterFriendChange = async () => {
     await Promise.all([
       qc.invalidateQueries({ queryKey: QUERY_KEYS.friendRequests(currentUser.id) }),
       qc.invalidateQueries({ queryKey: QUERY_KEYS.profiles }),
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.items }),
       refreshAuthUser(),
     ]);
   };
+
+  // Someone else can change my friends list (they accept my request or remove me).
+  // Poll it so their listings appear/disappear without a reload.
+  const { data: serverFriends } = useQuery({
+    queryKey: QUERY_KEYS.myFriends(currentUser.id),
+    queryFn:  async () => (await fetchProfile(currentUser.id))?.friends ?? [],
+    enabled:  !!authUser?.id,
+    refetchInterval: 30_000,
+  });
+  const friendsKey = [...currentUser.friends].sort().join(',');
+  useEffect(() => {
+    if (!serverFriends) return;
+    if ([...serverFriends].sort().join(',') !== friendsKey) {
+      refreshAuthUser();
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.items });
+    }
+  }, [serverFriends]);
 
   // A friend request I received may have been accepted by them (or a new one arrived);
   // when the incoming/outgoing lists change, re-read my friends list too.
@@ -208,6 +233,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       prevRequestsSignature.current = requestsSignature;
       refreshAuthUser();
       qc.invalidateQueries({ queryKey: QUERY_KEYS.profiles });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.items });
     }
   }, [requestsSignature]);
 
@@ -572,6 +598,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const getUserById = (id: string) =>
     users.find(u => u.id === id) ?? (currentUser.id === id ? currentUser : undefined);
 
+  const canSeeItem = (item: Item): boolean => {
+    if (item.donorId === currentUser.id) return true;
+    const isFriend = currentUser.friends.includes(item.donorId);
+    if (!isFriend && !isInvolved(item, currentUser.id)) return false;
+    return canSeeRestricted(item, currentUser.id);
+  };
+
   const getFriendItems = (): Item[] => {
     const myFriendIds = new Set(currentUser.friends);
     return items.filter(item => {
@@ -655,6 +688,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getFriendItems,
         getMyItems,
         canSeeRestricted,
+        canSeeItem,
         incomingRequests,
         outgoingRequests,
         sendFriendRequest,
@@ -668,14 +702,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         claimItem: async (id) => {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === id);
-          if (!item || !canSeeRestricted(item, currentUser.id)) return;
+          if (!item || !canSeeItem(item)) return;
           const claimDeadline = new Date(Date.now() + item.claimPickupHours * 3600000).toISOString();
           await claimItemMutation.mutateAsync({ itemId: id, claimDeadline });
         },
         joinWaitlist: async (id) => {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === id);
-          if (!item || item.waitlist.includes(currentUser.id) || !canSeeRestricted(item, currentUser.id)) return;
+          if (!item || item.waitlist.includes(currentUser.id) || !canSeeItem(item)) return;
           await joinWaitlistMutation.mutateAsync({ itemId: id, newWaitlist: [...item.waitlist, currentUser.id] });
         },
         leaveWaitlist: async (id) => {
@@ -701,7 +735,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         createBorrowRequest: async (itemId, startDate, endDate) => {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === itemId);
-          if (!item || !canSeeRestricted(item, currentUser.id)) return;
+          if (!item || !canSeeItem(item)) return;
           const newReq: BorrowRequest = {
             id: `${Date.now()}_${currentUser.id}`,
             requesterId: currentUser.id,

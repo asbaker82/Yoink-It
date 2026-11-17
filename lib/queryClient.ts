@@ -24,4 +24,5 @@ export const QUERY_KEYS = {
   profile:  (id: string) => ['profiles', id] as const,
   myNotifications: (userId: string) => ['notifications', userId] as const,
   friendRequests: (userId: string) => ['friendRequests', userId] as const,
+  myFriends: (userId: string) => ['myFriends', userId] as const,
 };

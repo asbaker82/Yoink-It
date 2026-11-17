@@ -80,9 +80,8 @@ create table if not exists public.items (
 -- RLS
 alter table public.items enable row level security;
 
--- Anyone authenticated can read items (visibility filtering happens in app layer)
-create policy "items: authenticated read"
-  on public.items for select using (auth.role() = 'authenticated');
+-- Who can read items: see "ITEM VISIBILITY" at the end of this file
+-- (the old "items: authenticated read" policy let anyone read everything).
 
 -- Only the donor can insert
 create policy "items: donor insert"
@@ -419,3 +418,34 @@ set friends = coalesce(array(
   select distinct f from unnest(a.friends) as f
   where exists (select 1 from public.profiles b where b.id = f and a.id = any(b.friends))
 ), '{}');
+
+-- ────────────────────────────────────────────────────────────
+-- ITEM VISIBILITY: you can read an item only if it's yours,
+-- you're mid-handoff on it (claimed, waitlisted, borrowing, or
+-- a pending/approved borrow request), or its owner is your
+-- friend and its Friend access setting includes you.
+-- Removing a friend therefore hides listings both ways.
+-- ────────────────────────────────────────────────────────────
+drop policy if exists "items: authenticated read" on public.items;
+drop policy if exists "items: friends read" on public.items;
+create policy "items: friends read"
+  on public.items for select using (
+    donor_id = auth.uid()
+    or claimed_by = auth.uid()
+    or auth.uid() = any(waitlist)
+    or borrowed_by::text = auth.uid()::text
+    or exists (
+      select 1 from jsonb_array_elements(borrow_requests) r
+      where r->>'requesterId' = auth.uid()::text
+        and r->>'status' in ('pending', 'approved')
+    )
+    or (
+      exists (
+        select 1 from public.profiles p
+        where p.id = auth.uid() and items.donor_id = any(p.friends)
+      )
+      and (allowed_borrowers is null or cardinality(allowed_borrowers) = 0
+           or auth.uid() = any(allowed_borrowers))
+      and (excluded_friends is null or not (auth.uid() = any(excluded_friends)))
+    )
+  );

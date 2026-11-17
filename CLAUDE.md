@@ -47,7 +47,8 @@ All non-auth state in a single React Context accessed via `useApp()`. No Redux/Z
 - `AppContext` exposes `incomingRequests` / `outgoingRequests` (user ids, refetched every 30 s) and `sendFriendRequest`, `acceptFriendRequest`, `declineFriendRequest`, `cancelFriendRequest`, `removeFriend`; each re-reads my profile via `refreshAuthUser()`.
 - **One screen**: `components/FriendFinder.tsx` (search; Friend requests → Accept/Decline; On Yoink It → Add/Requested; Invite to Yoink It; "Invite someone by text"), used by `app/add-friends.tsx` and the sign-up step `app/(auth)/contacts.tsx`.
 - Entry points: Profile friends card **Add** (orange badge = incoming requests) and a Browse banner when requests are waiting.
-- `getFriendItems()` shows items from people in `currentUser.friends` (mutual by construction), minus Friend-access restrictions. There is no per-user "item visibility" setting anymore (`profiles.item_visibility` is unused).
+- `getFriendItems()` shows items from people in `currentUser.friends` (mutual by construction), minus Friend-access restrictions. `canSeeItem(item)` (item detail, claim, waitlist, borrow request) = mine, or a friend's within Friend access, or one I'm mid-handoff on.
+- **The database enforces this too**: RLS policy `items: friends read` (end of `schema.sql`) returns only those items, so removing a friend hides listings both ways. Because of that, friend changes must invalidate `QUERY_KEYS.items`. `AppContext` polls my own `friends` (`QUERY_KEYS.myFriends`, 30 s) so a removal/acceptance by the other person shows up without a reload. There is no per-user "item visibility" setting anymore (`profiles.item_visibility` is unused).
 
 ### Routing — Expo Router (file-based)
 ```
