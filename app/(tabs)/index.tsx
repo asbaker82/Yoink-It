@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
+import ListEnd from '@/components/ListEnd';
 import SwipeableCard from '@/components/SwipeableCard';
 import { fuzzyScore } from '@/utils/search';
 import ConfirmSheet from '@/components/ConfirmSheet';
@@ -438,6 +439,7 @@ export default function BrowseScreen() {
               <ItemCard item={item} onPress={() => { addToSearchHistory(search.trim()); router.push(`/item/${item.id}`); }} />
             </SwipeableCard>
           )}
+          ListFooterComponent={<ListEnd label="You're all caught up" />}
           contentContainerStyle={{ paddingBottom: 24, paddingTop: 8 }}
           showsVerticalScrollIndicator={false}
         />

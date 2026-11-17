@@ -13,6 +13,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
 import { Item } from '@/store/types';
 import ItemCard from '@/components/ItemCard';
+import ListEnd from '@/components/ListEnd';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import UserName from '@/components/UserName';
 import { formatCalendarDate } from '@/utils/dates';
@@ -428,6 +429,7 @@ export default function MyItemsScreen() {
             stickySectionHeadersEnabled={false}
             renderSectionHeader={({ section }) => renderSectionHeader(section.title, section.data.length, section.key === 'action')}
             renderItem={renderDonorCard}
+            ListFooterComponent={<ListEnd />}
             contentContainerStyle={{ paddingBottom: 100, paddingTop: 4 }}
             showsVerticalScrollIndicator={false}
           />
@@ -451,6 +453,7 @@ export default function MyItemsScreen() {
             renderSectionHeader={({ section }) =>
               renderSectionHeader(section.title, section.data.length, section.key === 'pickup' || section.key === 'borrowing')}
             renderItem={({ item, section }) => renderFriendCard(item, section.key)}
+            ListFooterComponent={<ListEnd />}
             contentContainerStyle={{ paddingBottom: 40, paddingTop: 4 }}
             showsVerticalScrollIndicator={false}
           />

@@ -163,6 +163,7 @@ Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in 
 | `CustomTabBar` | Custom bottom tab bar (Browse + My Items). Also owns the hidden-items trash icon and restore sheet. Reads dismissed state from `useApp()`. |
 | `ProfileHeaderButton` | Avatar/initials button (40×40) in header right → profile screen |
 | `ItemCard` | Card used in Browse, My Items, items-list, and friend pages. Shows the pickup city/state. Borrow items show a single left badge: "Borrow" (sky-blue) when available, "Borrowed" (yellow/dark text) when out. |
+| `ListEnd` | Quiet "That's everything" marker used as `ListFooterComponent` on every item list (Browse says "You're all caught up"). Only shown when the list has items. |
 | `SwipeableCard` | Wraps `ItemCard` in Browse. `PanResponder`-based swipe-left-to-dismiss. Shows an `eye-slash` hint icon as the card slides. Calls `onDismiss` after animation completes. |
 | `LocationInput` | ZIP · City · State fields for item pickup and profile; ZIP auto-fills city/state via `lookupZip`. |
 | `FriendFinder` | The single friends screen body (search, requests, add, invite). Props `doneLabel`, `onDone`. |

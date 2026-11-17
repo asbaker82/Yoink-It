@@ -4,6 +4,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
+import ListEnd from '@/components/ListEnd';
 import { Item } from '@/store/types';
 import { BORDER, BUTTER, BUTTER_INK, BUTTER_TINT, CREAM, MUTE, MUTE_LIGHT, TANGERINE_DEEP } from '@/constants/theme';
 
@@ -66,6 +67,7 @@ export default function ItemsListScreen() {
         renderItem={({ item }) => (
           <ItemCard item={item} onPress={() => goToItem(item)} />
         )}
+        ListFooterComponent={<ListEnd />}
         contentContainerStyle={styles.list}
       />
     );
@@ -118,6 +120,7 @@ export default function ItemsListScreen() {
           )}
         </View>
       )}
+      ListFooterComponent={<ListEnd />}
       contentContainerStyle={styles.list}
     />
   );

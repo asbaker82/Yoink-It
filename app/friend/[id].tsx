@@ -4,6 +4,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
+import ListEnd from '@/components/ListEnd';
 import UserName from '@/components/UserName';
 import { Item, ListingType } from '@/store/types';
 import { CREAM, CREAM_2, FAINT, INK, INK_2, MUTE, SAGE, SKY, TANGERINE } from '@/constants/theme';
@@ -77,6 +78,7 @@ export default function FriendListingsScreen() {
       renderItem={({ item }) => (
         <ItemCard item={item} onPress={() => router.push(`/item/${item.id}`)} />
       )}
+      ListFooterComponent={listings.length > 0 ? <ListEnd /> : null}
       contentContainerStyle={styles.list}
     />
   );
