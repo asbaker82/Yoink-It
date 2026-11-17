@@ -39,7 +39,7 @@
       [
         "expo-contacts",
         {
-          "contactsPermission": "Yoink It matches your contacts' phone numbers to find friends who are already on the app."
+          "contactsPermission": "Yoink It shows your contacts so you can pick friends to connect with. Only the people you choose are checked."
         }
       ],
       [
