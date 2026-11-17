@@ -226,8 +226,8 @@ export default function MyItemsScreen() {
             </Pressable>
           )}
 
-          {/* ── Skill: remove only ── */}
-          {item.listingType === 'skill' && (
+          {/* ── Skill, or borrow item not currently lent out: remove ── */}
+          {(item.listingType === 'skill' || (isBorrow && item.status === 'available')) && (
             <Pressable style={[styles.actionBtn, styles.actionBtnDanger]} onPress={() => handleDelete(item)}>
               <FontAwesome name="trash" size={14} color={TANG_DEEP} />
               <Text style={[styles.actionBtnText, { color: TANG_DEEP }]}>Remove</Text>
