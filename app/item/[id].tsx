@@ -659,7 +659,7 @@ export default function ItemDetailScreen() {
           {/* Currently borrowed info — both views */}
           {isBorrow && item.status === 'borrowed' && (
             <View style={styles.borrowedCard}>
-              <FontAwesome name="calendar-check-o" size={14} color=SKY style={{ marginTop: 1 }} />
+              <FontAwesome name="calendar-check-o" size={14} color={SKY} style={{ marginTop: 1 }} />
               <Text style={styles.borrowedText}>
                 {isMyItem
                   ? `Borrowed by ${borrowedByUser?.name ?? 'someone'}`
