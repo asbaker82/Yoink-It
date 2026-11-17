@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Animated, PanResponder, View, StyleSheet } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { MUTE } from '@/constants/theme';
 
 const THRESHOLD = 100; // px left to trigger dismiss
 const OUT_DURATION = 220;
@@ -64,7 +65,7 @@ export default function SwipeableCard({ onDismiss, children }: Props) {
       {/* Hint revealed as card slides left */}
       <Animated.View style={[styles.hint, { opacity: hintOpacity }]}>
         <Animated.View style={{ transform: [{ scale: hintScale }] }}>
-          <FontAwesome name="eye-slash" size={22} color="#847A70" />
+          <FontAwesome name="eye-slash" size={22} color={MUTE} />
         </Animated.View>
       </Animated.View>
 

@@ -19,7 +19,7 @@ import { Location, parseLocation, formatLocation, locationError } from '@/utils/
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
 import FriendAccessInput, { FriendAccess, friendAccessError } from '@/components/FriendAccessInput';
-import { BORDER, CREAM, CREAM_2, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
+import { BORDER, CREAM, CREAM_2, INK, MUTE, MUTE_LIGHT, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TANGERINE_TINT } from '@/constants/theme';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -209,13 +209,13 @@ export default function EditItemScreen() {
             <View key={i} style={styles.photoThumb}>
               <Image source={{ uri }} style={styles.photoImg} resizeMode="cover" />
               <Pressable style={styles.removePhoto} onPress={() => removePhoto(i)}>
-                <FontAwesome name="times-circle" size={18} color="#e53e3e" />
+                <FontAwesome name="times-circle" size={18} color={TANG_DEEP} />
               </Pressable>
             </View>
           ))}
           {photos.length < 6 && (
             <Pressable style={styles.addPhotoBtn} onPress={addPhoto}>
-              <FontAwesome name="camera" size={24} color="#F26B3A" />
+              <FontAwesome name="camera" size={24} color={TANGERINE} />
               <Text style={styles.addPhotoText}>
                 {Platform.OS === 'web' ? 'Upload' : 'Add Photo'}
               </Text>
@@ -231,7 +231,7 @@ export default function EditItemScreen() {
         <TextInput
           style={[styles.input, errors.title && styles.inputError]}
           placeholder={isSkill ? 'e.g. Car maintenance, Leathercraft' : 'e.g. IKEA KALLAX Bookshelf'}
-          placeholderTextColor="#a0aec0"
+          placeholderTextColor={MUTE_LIGHT}
           value={title}
           onChangeText={t => { setTitle(t); clearError('title'); }}
         />
@@ -246,7 +246,7 @@ export default function EditItemScreen() {
           placeholder={isSkill
             ? 'What can you help with? Any experience level or limits?'
             : "Describe the item — dimensions, any wear, what's included…"}
-          placeholderTextColor="#a0aec0"
+          placeholderTextColor={MUTE_LIGHT}
           value={description}
           onChangeText={setDescription}
           multiline
@@ -261,7 +261,7 @@ export default function EditItemScreen() {
         <TextInput
           style={styles.input}
           placeholder="e.g. Foster care placements only, pregnant friends only"
-          placeholderTextColor="#a0aec0"
+          placeholderTextColor={MUTE_LIGHT}
           value={restrictions}
           onChangeText={setRestrictions}
         />
@@ -291,7 +291,7 @@ export default function EditItemScreen() {
         <TextInput
           style={[styles.input, errors.pickupWindow && styles.inputError]}
           placeholder="e.g. Weekends 10am–4pm, Evenings after 6pm"
-          placeholderTextColor="#a0aec0"
+          placeholderTextColor={MUTE_LIGHT}
           value={pickupWindow}
           onChangeText={t => { setPickupWindow(t); clearError('pickupWindow'); }}
         />
@@ -351,7 +351,7 @@ export default function EditItemScreen() {
             <TextInput
               style={[styles.input, styles.hoursInput, errors.claimPickupHours && styles.inputError]}
               placeholder="Custom"
-              placeholderTextColor="#a0aec0"
+              placeholderTextColor={MUTE_LIGHT}
               value={['1', '2', '3', '4'].includes(claimPickupDays) ? '' : claimPickupDays}
               onChangeText={t => { setClaimPickupDays(t); clearError('claimPickupHours'); }}
               keyboardType="numeric"
@@ -381,14 +381,14 @@ export default function EditItemScreen() {
           <Text style={styles.hint}>Add periods when this item is unavailable — e.g. vacations, scheduled use.</Text>
           {blockedPeriods.map((p, i) => (
             <View key={i} style={styles.blockedPeriodRow}>
-              <FontAwesome name="ban" size={12} color="#a0aec0" style={{ marginRight: 6 }} />
+              <FontAwesome name="ban" size={12} color={MUTE_LIGHT} style={{ marginRight: 6 }} />
               <Text style={styles.blockedPeriodText}>
                 {new Date(p.start + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 {' – '}
                 {new Date(p.end + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </Text>
               <Pressable onPress={() => setBlockedPeriods(prev => prev.filter((_, j) => j !== i))} style={{ marginLeft: 'auto' }}>
-                <FontAwesome name="times" size={14} color="#a0aec0" />
+                <FontAwesome name="times" size={14} color={MUTE_LIGHT} />
               </Pressable>
             </View>
           ))}
@@ -408,7 +408,7 @@ export default function EditItemScreen() {
         onPress={handleSubmit}
         disabled={submitting}
       >
-        <FontAwesome name="check" size={16} color="#fff" style={{ marginRight: 8 }} />
+        <FontAwesome name="check" size={16} color={CREAM} style={{ marginRight: 8 }} />
         <Text style={styles.submitBtnText}>Save Changes</Text>
       </Pressable>
     </ScrollView>
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: TANG_DEEP,
-    backgroundColor: '#FFF5F0',
+    backgroundColor: TANGERINE_TINT,
   },
   errorRow: {
     flexDirection: 'row',

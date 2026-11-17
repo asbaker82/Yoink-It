@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import { useAuth } from '@/store/AuthContext';
 import ConfirmSheet from '@/components/ConfirmSheet';
-import { BUTTER, CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
+import { BUTTER, CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TANGERINE_TINT } from '@/constants/theme';
 
 const DIVIDER        = 'rgba(31,26,23,0.06)';
 const BORDER         = 'rgba(31,26,23,0.10)';
@@ -117,7 +117,7 @@ export default function ProfileScreen() {
             </View>
           )}
           <View style={styles.editBadge}>
-            <FontAwesome name="pencil" size={11} color="#fff" />
+            <FontAwesome name="pencil" size={11} color={CREAM} />
           </View>
         </Pressable>
         <Text style={styles.name}>{currentUser.name}</Text>
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   friendName: { fontSize: 14, fontWeight: '600', color: INK },
   friendMeta: { fontSize: 12, color: MUTE },
   friendItemCount: {
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     alignItems: 'center',
     justifyContent: 'center',
   },

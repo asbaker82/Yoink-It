@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { CREAM, CREAM_2, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
+import { CREAM, CREAM_2, INK, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TANGERINE_TINT } from '@/constants/theme';
 
 interface Props {
   visible: boolean;
@@ -130,11 +130,11 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconWrapDestructive: { backgroundColor: '#FFF3EC' },
+  iconWrapDestructive: { backgroundColor: TANGERINE_TINT },
   title: { fontSize: 18, fontWeight: '800', color: INK, textAlign: 'center', marginBottom: 8 },
   message: { fontSize: 14, color: MUTE, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
   btnRow: { flexDirection: 'row', gap: 12 },

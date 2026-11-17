@@ -5,12 +5,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
 import { Item, ListingType } from '@/store/types';
-import { CREAM, CREAM_2, INK, INK_2, MUTE } from '@/constants/theme';
+import { CREAM, CREAM_2, FAINT, INK, INK_2, MUTE, SAGE, SKY, TANGERINE } from '@/constants/theme';
 
 const SECTIONS: { type: ListingType; title: string; color: string }[] = [
-  { type: 'give',   title: 'Free',   color: '#F26B3A' },
-  { type: 'borrow', title: 'Borrow', color: '#7BA7BC' },
-  { type: 'skill',  title: 'Skills', color: '#7FA88A' },
+  { type: 'give',   title: 'Free',   color: TANGERINE },
+  { type: 'borrow', title: 'Borrow', color: SKY },
+  { type: 'skill',  title: 'Skills', color: SAGE },
 ];
 
 export default function FriendListingsScreen() {
@@ -60,7 +60,7 @@ export default function FriendListingsScreen() {
       ListHeaderComponent={header}
       ListEmptyComponent={
         <View style={styles.empty}>
-          <FontAwesome name="inbox" size={44} color="#cbd5e0" />
+          <FontAwesome name="inbox" size={44} color={FAINT} />
           <Text style={styles.emptyText}>{firstName} doesn't have anything you can see right now.</Text>
         </View>
       }

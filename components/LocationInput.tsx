@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { Location, isValidZip, lookupZip } from '@/utils/location';
-import { BORDER, CREAM, INK, MUTE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
+import { BORDER, CREAM, INK, MUTE, MUTE_LIGHT, TANGERINE_DEEP as TANG_DEEP, TANGERINE_TINT } from '@/constants/theme';
 
 interface Props {
   value: Location;
@@ -48,7 +48,7 @@ export default function LocationInput({ value, onChange, error }: Props) {
             value={value.zip}
             onChangeText={handleZip}
             placeholder="94117"
-            placeholderTextColor="#a0aec0"
+            placeholderTextColor={MUTE_LIGHT}
             keyboardType="number-pad"
             maxLength={5}
             autoComplete="postal-code"
@@ -62,7 +62,7 @@ export default function LocationInput({ value, onChange, error }: Props) {
             value={value.city}
             onChangeText={city => onChange({ ...value, city: city.replace(/[,0-9]/g, '').slice(0, 40) })}
             placeholder="San Francisco"
-            placeholderTextColor="#a0aec0"
+            placeholderTextColor={MUTE_LIGHT}
             autoCapitalize="words"
             textContentType="addressCity"
           />
@@ -74,7 +74,7 @@ export default function LocationInput({ value, onChange, error }: Props) {
             value={value.state}
             onChangeText={s => onChange({ ...value, state: s.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() })}
             placeholder="CA"
-            placeholderTextColor="#a0aec0"
+            placeholderTextColor={MUTE_LIGHT}
             autoCapitalize="characters"
             maxLength={2}
             textContentType="addressState"
@@ -105,6 +105,6 @@ const styles = StyleSheet.create({
     color: INK,
     backgroundColor: CREAM,
   },
-  inputError: { borderColor: TANG_DEEP, backgroundColor: '#FFF5F0' },
+  inputError: { borderColor: TANG_DEEP, backgroundColor: TANGERINE_TINT },
   status: { fontSize: 12, color: MUTE, marginTop: 6 },
 });

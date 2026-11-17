@@ -100,7 +100,7 @@ export default function VerifyScreen() {
             disabled={loading || code.length !== 4}
           >
             {loading
-              ? <ActivityIndicator color="#fff" />
+              ? <ActivityIndicator color={CREAM} />
               : <Text style={styles.btnText}>Verify</Text>
             }
           </Pressable>
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { backgroundColor: MUTE },
   btnPressed: { opacity: 0.85 },
-  btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  btnText: { fontSize: 16, fontWeight: '700', color: CREAM },
   hint: { marginTop: 24, fontSize: 13, color: MUTE, textAlign: 'center' },
   hintLink: { fontWeight: '700', color: TANGERINE },
   hintLinkDisabled: { color: MUTE },

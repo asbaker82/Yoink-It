@@ -92,7 +92,7 @@ export default function PhoneScreen() {
             disabled={loading}
           >
             {loading
-              ? <ActivityIndicator color="#fff" />
+              ? <ActivityIndicator color={CREAM} />
               : <Text style={styles.btnText}>Send Verification Code</Text>
             }
           </Pressable>
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { backgroundColor: MUTE },
   btnPressed: { opacity: 0.85 },
-  btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  btnText: { fontSize: 16, fontWeight: '700', color: CREAM },
   hint: {
     marginTop: 28,
     fontSize: 12,

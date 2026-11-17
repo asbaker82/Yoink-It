@@ -68,7 +68,7 @@ export default function NameScreen() {
             disabled={loading}
           >
             {loading
-              ? <ActivityIndicator color="#fff" />
+              ? <ActivityIndicator color={CREAM} />
               : <Text style={styles.btnText}>Continue</Text>
             }
           </Pressable>
@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { backgroundColor: MUTE },
   btnPressed: { opacity: 0.85 },
-  btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  btnText: { fontSize: 16, fontWeight: '700', color: CREAM },
 });

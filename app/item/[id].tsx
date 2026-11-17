@@ -34,12 +34,12 @@ import ImageLightbox from '@/components/ImageLightbox';
 import ClaimToast from '@/components/ClaimToast';
 import WaitlistToast from '@/components/WaitlistToast';
 import ConfirmSheet from '@/components/ConfirmSheet';
-import { CREAM, CREAM_2, INK, INK_2, MUTE, SAGE, TANGERINE, TANGERINE_DEEP } from '@/constants/theme';
+import { BUTTER, CREAM, CREAM_2, FAINT, INK, INK_2, MUTE, MUTE_LIGHT, PEACH, ROSE, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT } from '@/constants/theme';
 
 // ── Brand tokens ─────────────────────────────────────────────
 
 // Avatar accent colors cycled by donor initial
-const AVATAR_COLORS = [TANGERINE, SAGE, '#F4C95D', '#9DB7C9', '#E89A8D'];
+const AVATAR_COLORS = [TANGERINE, SAGE, BUTTER, STEEL_BLUE, ROSE];
 function avatarColor(name: string) {
   const i = (name.charCodeAt(0) || 0) % AVATAR_COLORS.length;
   return AVATAR_COLORS[i];
@@ -232,15 +232,15 @@ export default function ItemDetailScreen() {
   const statusConfig = (isSkill ? {
     available:       { label: 'Skill',               bg: SAGE,      text: CREAM  },
   } : isBorrow ? {
-    available:       { label: 'Available to Borrow', bg: '#7BA7BC', text: CREAM  },
-    borrowed:        { label: 'Borrowed',             bg: '#F4C95D', text: INK    },
+    available:       { label: 'Available to Borrow', bg: SKY, text: CREAM  },
+    borrowed:        { label: 'Borrowed',             bg: BUTTER, text: INK    },
     pending_return:  { label: 'Return Pending',       bg: SAGE,      text: CREAM  },
   } : {
     available:       { label: 'Free',         bg: TANGERINE,   text: CREAM  },
-    claimed:         { label: 'Claimed',       bg: '#F4C95D',   text: INK    },
-    pending_pickup:  { label: 'Pending Pickup', bg: '#9DB7C9',  text: CREAM  },
+    claimed:         { label: 'Claimed',       bg: BUTTER,   text: INK    },
+    pending_pickup:  { label: 'Pending Pickup', bg: STEEL_BLUE,  text: CREAM  },
     picked_up:       { label: 'Picked Up',     bg: SAGE,        text: CREAM  },
-    disposed:        { label: 'Gone',          bg: '#B0A89E',   text: CREAM  },
+    disposed:        { label: 'Gone',          bg: MUTE_LIGHT,   text: CREAM  },
   })[item.status] ?? { label: item.status, bg: CREAM_2, text: INK };
 
   const hasPhotos = item.photos.length > 0;
@@ -268,7 +268,7 @@ export default function ItemDetailScreen() {
             </Pressable>
           ) : (
             <View style={styles.heroPlaceholder}>
-              <FontAwesome name="image" size={56} color="#C9BCA8" />
+              <FontAwesome name="image" size={56} color={FAINT} />
               <Text style={styles.heroPlaceholderText}>No photo</Text>
             </View>
           )}
@@ -286,7 +286,7 @@ export default function ItemDetailScreen() {
               )}
               {isMyItem && item.status !== 'pending_pickup' && item.status !== 'picked_up' && (
                 <Pressable style={styles.circBtn} onPress={handleDeleteItem}>
-                  <FontAwesome name="trash" size={14} color="#E53E3E" />
+                  <FontAwesome name="trash" size={14} color={TANGERINE_DEEP} />
                 </Pressable>
               )}
             </View>
@@ -453,7 +453,7 @@ export default function ItemDetailScreen() {
               ].map((d, i) => (
                 <View key={d.k} style={[styles.detailRow, i > 0 && styles.detailRowBorder]}>
                   <Text style={styles.detailKey}>{d.k}</Text>
-                  <Text style={[styles.detailVal, d.k === 'Disposal' && isUrgent && { color: '#C53030' }]}>
+                  <Text style={[styles.detailVal, d.k === 'Disposal' && isUrgent && { color: TANGERINE_DEEP }]}>
                     {d.v}
                   </Text>
                 </View>
@@ -521,7 +521,7 @@ export default function ItemDetailScreen() {
             const extra = names.length > 3 ? ` +${names.length - 3} more` : '';
             return (
               <View style={styles.trustedCard}>
-                <FontAwesome name={isOnly ? 'lock' : 'eye-slash'} size={14} color="#7BA7BC" />
+                <FontAwesome name={isOnly ? 'lock' : 'eye-slash'} size={14} color={SKY} />
                 <Text style={styles.trustedText}>
                   {isOnly ? 'Only visible to ' : 'Hidden from '}
                   <Text style={{ fontWeight: '700', color: INK }}>{shown}</Text>{extra}
@@ -659,7 +659,7 @@ export default function ItemDetailScreen() {
           {/* Currently borrowed info — both views */}
           {isBorrow && item.status === 'borrowed' && (
             <View style={styles.borrowedCard}>
-              <FontAwesome name="calendar-check-o" size={14} color='#7BA7BC' style={{ marginTop: 1 }} />
+              <FontAwesome name="calendar-check-o" size={14} color=SKY style={{ marginTop: 1 }} />
               <Text style={styles.borrowedText}>
                 {isMyItem
                   ? `Borrowed by ${borrowedByUser?.name ?? 'someone'}`
@@ -1006,7 +1006,7 @@ export default function ItemDetailScreen() {
                 numberOfLines={4}
                 textAlignVertical="top"
                 placeholder="Type your message…"
-                placeholderTextColor="#C0B8AE"
+                placeholderTextColor={FAINT}
                 autoFocus
               />
               <Pressable
@@ -1041,7 +1041,7 @@ const styles = StyleSheet.create({
     height: 280, alignItems: 'center', justifyContent: 'center',
     backgroundColor: CREAM_2, gap: 10,
   },
-  heroPlaceholderText: { fontSize: 14, color: '#C0B8AE' },
+  heroPlaceholderText: { fontSize: 14, color: FAINT },
 
   heroNav: {
     position: 'absolute', left: 16, right: 16,
@@ -1101,15 +1101,15 @@ const styles = StyleSheet.create({
 
   claimNotice: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#FFF3EC', borderRadius: 12, padding: 12,
-    marginBottom: 12, borderWidth: 1, borderColor: '#FDDCC7',
+    backgroundColor: TANGERINE_TINT, borderRadius: 12, padding: 12,
+    marginBottom: 12, borderWidth: 1, borderColor: PEACH,
   },
   claimNoticeText: { fontSize: 13, color: TANGERINE_DEEP, fontWeight: '500', flex: 1 },
 
   restrictionBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
-    backgroundColor: '#FFF3EC', borderRadius: 12, padding: 12,
-    marginBottom: 12, borderWidth: 1, borderColor: '#FDDCC7',
+    backgroundColor: TANGERINE_TINT, borderRadius: 12, padding: 12,
+    marginBottom: 12, borderWidth: 1, borderColor: PEACH,
   },
   restrictionText: { fontSize: 13, color: INK_2, flex: 1, lineHeight: 19 },
 
@@ -1247,7 +1247,7 @@ const styles = StyleSheet.create({
   blockedCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   blockedCardTitle: { fontSize: 14, fontWeight: '700', color: INK, flex: 1 },
   blockedAddBtn: {
-    width: 26, height: 26, borderRadius: 13, backgroundColor: '#7BA7BC',
+    width: 26, height: 26, borderRadius: 13, backgroundColor: SKY,
     alignItems: 'center', justifyContent: 'center',
   },
   blockedEmpty: { fontSize: 13, color: MUTE, fontStyle: 'italic' },
@@ -1258,12 +1258,12 @@ const styles = StyleSheet.create({
   blockedRowText: { fontSize: 13, color: INK, flex: 1 },
   blockedFormLabel: { fontSize: 12, fontWeight: '700', color: MUTE, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 },
   blockedSaveBtn: {
-    backgroundColor: '#7BA7BC', borderRadius: 999, paddingVertical: 10,
+    backgroundColor: SKY, borderRadius: 999, paddingVertical: 10,
     alignItems: 'center', marginTop: 12,
   },
   blockedSaveBtnText: { fontSize: 14, fontWeight: '700', color: CREAM },
   borrowRequestsCard: {
-    backgroundColor: '#EEF5FA', borderRadius: 16, padding: 16, marginBottom: 12,
+    backgroundColor: SKY_TINT, borderRadius: 16, padding: 16, marginBottom: 12,
   },
   borrowRequestsTitle: { fontSize: 14, fontWeight: '700', color: INK, marginBottom: 12 },
   borrowRequestRow: {
@@ -1294,21 +1294,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     borderWidth: 1,
     borderColor: TANGERINE_DEEP,
   },
   cancelRequestText: { fontSize: 12, fontWeight: '700', color: TANGERINE_DEEP },
   borrowedCard: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#EEF5FA', borderRadius: 14, padding: 14, marginBottom: 12,
+    backgroundColor: SKY_TINT, borderRadius: 14, padding: 14, marginBottom: 12,
   },
   borrowedText: { fontSize: 14, color: INK, flex: 1 },
   borrowRequestForm: {
     marginHorizontal: 16,
     marginTop: 8,
     marginBottom: 8,
-    backgroundColor: '#EEF5FA',
+    backgroundColor: SKY_TINT,
     borderRadius: 14,
     padding: 16,
     gap: 6,
@@ -1332,8 +1332,8 @@ const styles = StyleSheet.create({
   // Expiry banner
   expiryBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-    backgroundColor: '#FFF3EC', borderRadius: 14, padding: 14,
-    marginBottom: 12, borderWidth: 1.5, borderColor: '#FDDCC7',
+    backgroundColor: TANGERINE_TINT, borderRadius: 14, padding: 14,
+    marginBottom: 12, borderWidth: 1.5, borderColor: PEACH,
   },
   expiryTitle: { fontSize: 14, fontWeight: '800', color: TANGERINE_DEEP, marginBottom: 4 },
   expiryBody:  { fontSize: 13, color: INK_2, lineHeight: 18 },

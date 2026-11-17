@@ -5,7 +5,7 @@ import { Item } from '@/store/types';
 import { useApp } from '@/store/AppContext';
 import { formatCalendarDate } from '@/utils/dates';
 import { shortLocation } from '@/utils/location';
-import { BORDER, CREAM, CREAM_2, INK, MUTE, SAGE, STEEL_BLUE as SKY, TANGERINE, TANGERINE_DEEP } from '@/constants/theme';
+import { BORDER, BUTTER, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, ROSE_INK, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT, WHITE } from '@/constants/theme';
 
 interface Props {
   item: Item;
@@ -55,13 +55,13 @@ export default function ItemCard({ item, onPress, footer }: Props) {
           <Image source={{ uri: item.photos[0] }} style={styles.photo} resizeMode="contain" />
         ) : (
           <View style={styles.photoPlaceholder}>
-            <FontAwesome name="image" size={36} color="#C9BCA8" />
+            <FontAwesome name="image" size={36} color={FAINT} />
           </View>
         )}
         <View style={[styles.statusBadge, {
           backgroundColor: isSkill ? SAGE
             : isBorrow
-            ? (item.status === 'borrowed' || item.status === 'pending_return' ? '#F4C95D' : '#7BA7BC')
+            ? (item.status === 'borrowed' || item.status === 'pending_return' ? BUTTER : SKY)
             : statusStyle.bg,
         }]}>
           {accessIcon && (
@@ -87,7 +87,7 @@ export default function ItemCard({ item, onPress, footer }: Props) {
 
         {item.restrictions ? (
           <View style={styles.restrictionRow}>
-            <FontAwesome name="lock" size={11} color="#c05621" style={{ marginRight: 4 }} />
+            <FontAwesome name="lock" size={11} color={TANGERINE_DEEP} style={{ marginRight: 4 }} />
             <Text style={styles.restrictionText} numberOfLines={1}>{item.restrictions}</Text>
           </View>
         ) : null}
@@ -102,7 +102,7 @@ export default function ItemCard({ item, onPress, footer }: Props) {
             ) : <View style={styles.footerItem} />
           ) : (
             <View style={styles.footerItem}>
-              <FontAwesome name="map-marker" size={12} color={SKY} style={{ marginRight: 4 }} />
+              <FontAwesome name="map-marker" size={12} color={STEEL_BLUE} style={{ marginRight: 4 }} />
               <Text style={styles.footerText} numberOfLines={1}>{shortLocation(item.pickupLocation)}</Text>
             </View>
           )}
@@ -112,7 +112,7 @@ export default function ItemCard({ item, onPress, footer }: Props) {
                 <FontAwesome
                   name="clock-o"
                   size={11}
-                  color={isUrgent ? '#c53030' : '#718096'}
+                  color={isUrgent ? TANGERINE_DEEP : MUTE}
                   style={{ marginRight: 3 }}
                 />
                 <Text style={[styles.timeText, isUrgent && styles.timeTextUrgent]}>
@@ -124,7 +124,7 @@ export default function ItemCard({ item, onPress, footer }: Props) {
             )}
             {isBorrow && item.borrowedUntil && item.status === 'borrowed' && (
               <View style={styles.timeChip}>
-                <FontAwesome name="calendar" size={10} color="#718096" style={{ marginRight: 3 }} />
+                <FontAwesome name="calendar" size={10} color={MUTE} style={{ marginRight: 3 }} />
                 <Text style={styles.timeText}>
                   Until {formatCalendarDate(item.borrowedUntil)}
                 </Text>
@@ -160,15 +160,15 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
   available:       { bg: TANGERINE,  text: CREAM },
-  claimed:         { bg: '#F4C95D',  text: INK   },
-  pending_pickup:  { bg: '#9DB7C9',  text: CREAM },
+  claimed:         { bg: BUTTER,  text: INK   },
+  pending_pickup:  { bg: STEEL_BLUE,  text: CREAM },
   picked_up:       { bg: SAGE,       text: CREAM },
-  disposed:        { bg: '#B0A89E',  text: CREAM },
+  disposed:        { bg: MUTE_LIGHT,  text: CREAM },
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: WHITE,
     borderRadius: 16,
     marginHorizontal: 16,
     marginVertical: 10,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   restrictionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -242,8 +242,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  timeChipUrgent: { backgroundColor: '#FFF3EC' },
+  timeChipUrgent: { backgroundColor: TANGERINE_TINT },
   timeText: { fontSize: 12, color: MUTE, fontWeight: '600' },
-  timeTextUrgent: { color: '#C53030' },
-  waitlistText: { fontSize: 12, color: '#8A3A3A', marginTop: 6, fontWeight: '600' },
+  timeTextUrgent: { color: TANGERINE_DEEP },
+  waitlistText: { fontSize: 12, color: ROSE_INK, marginTop: 6, fontWeight: '600' },
 });

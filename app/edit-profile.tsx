@@ -19,7 +19,7 @@ import LocationInput from '@/components/LocationInput';
 import { Location, parseLocation, formatLocation, locationError } from '@/utils/location';
 import ImageCropModal from '@/components/ImageCropModal';
 import { ItemVisibility } from '@/store/types';
-import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
+import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TANGERINE_TINT, WHITE } from '@/constants/theme';
 
 async function pickImage(): Promise<string | null> {
   // On web, use a file input directly — expo-image-picker permissions are unreliable in browsers.
@@ -136,15 +136,15 @@ export default function EditProfileScreen() {
           ) : (
             <View style={styles.avatarFallback}>
               {pickingPhoto
-                ? <ActivityIndicator color="#fff" />
+                ? <ActivityIndicator color={CREAM} />
                 : <Text style={styles.avatarInitials}>{initials}</Text>
               }
             </View>
           )}
           <View style={styles.cameraOverlay}>
             {pickingPhoto
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <FontAwesome name="camera" size={16} color="#fff" />
+              ? <ActivityIndicator size="small" color={CREAM} />
+              : <FontAwesome name="camera" size={16} color={CREAM} />
             }
           </View>
         </Pressable>
@@ -254,9 +254,9 @@ export default function EditProfileScreen() {
         disabled={saving}
       >
         {saving
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={CREAM} />
           : <>
-              <FontAwesome name="check" size={15} color="#fff" style={{ marginRight: 8 }} />
+              <FontAwesome name="check" size={15} color={CREAM} style={{ marginRight: 8 }} />
               <Text style={styles.saveBtnText}>Save Changes</Text>
             </>
         }
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   photoSection: {
     alignItems: 'center',
     paddingVertical: 28,
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     marginBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: DIVIDER,
@@ -320,14 +320,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: WHITE,
   },
   photoHint: { fontSize: 13, color: MUTE },
   removePhotoBtn: { marginTop: 8 },
   removePhotoText: { fontSize: 13, color: TANG_DEEP },
 
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 14,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   },
   visibilityOptionSelected: {
     borderColor: TANGERINE,
-    backgroundColor: '#FFF3EE',
+    backgroundColor: TANGERINE_TINT,
   },
   radio: {
     width: 20,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   visibilityLabel: { fontSize: 14, fontWeight: '600', color: INK_2 },
   visibilityLabelSelected: { color: TANGERINE },
   visibilityDesc: { fontSize: 12, color: MUTE, marginTop: 3, lineHeight: 17 },
-  zipError: { fontSize: 13, color: '#D8531F', marginTop: 6 },
+  zipError: { fontSize: 13, color: TANG_DEEP, marginTop: 6 },
 
   saveBtn: {
     flexDirection: 'row',

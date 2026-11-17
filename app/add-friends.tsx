@@ -9,7 +9,7 @@ import { useAuth } from '@/store/AuthContext';
 import { useApp } from '@/store/AppContext';
 import { User } from '@/store/types';
 import { addFriendMutual } from '@/store/db';
-import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE } from '@/constants/theme';
+import { CREAM, CREAM_2, INK, INK_2, MUTE, TANGERINE, WHITE } from '@/constants/theme';
 
 const DIVIDER   = 'rgba(31,26,23,0.06)';
 
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 7,
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     flexShrink: 0,
   },
   addBtnAdded: { backgroundColor: TANGERINE, borderColor: TANGERINE },
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyTitle: { fontSize: 16, fontWeight: '600', color: INK_2, textAlign: 'center', marginTop: 16 },
   emptySubtitle: { fontSize: 14, color: MUTE, textAlign: 'center', marginTop: 8, lineHeight: 20 },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: DIVIDER, backgroundColor: '#fff' },
+  footer: { padding: 16, borderTopWidth: 1, borderTopColor: DIVIDER, backgroundColor: WHITE },
   saveBtn: {
     backgroundColor: TANGERINE,
     borderRadius: 999,

@@ -13,6 +13,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useApp } from '@/store/AppContext';
 import { Item } from '@/store/types';
+import { CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, TANGERINE, TANGERINE_TINT, TRACK } from '@/constants/theme';
 
 const TABS: { name: string; label: string; icon: React.ComponentProps<typeof FontAwesome>['name'] }[] = [
   { name: 'index',    label: 'Browse',   icon: 'search' },
@@ -36,7 +37,7 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         const route = state.routes.find(r => r.name === tab.name);
         if (!route) return null;
         const focused = state.index === state.routes.indexOf(route);
-        const color = focused ? '#F26B3A' : '#B0A89E';
+        const color = focused ? TANGERINE : MUTE_LIGHT;
 
         return (
           <Pressable
@@ -58,7 +59,7 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         onPress={() => hiddenCount > 0 && setSheetOpen(true)}
         accessibilityLabel="Hidden items"
       >
-        <FontAwesome name="trash-o" size={13} color="#B0A89E" />
+        <FontAwesome name="trash-o" size={13} color={MUTE_LIGHT} />
         {hiddenCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{hiddenCount}</Text>
@@ -90,7 +91,7 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                       <Image source={{ uri: item.photos[0] }} style={styles.thumb} />
                     ) : (
                       <View style={[styles.thumb, styles.thumbEmpty]}>
-                        <FontAwesome name="image" size={16} color="#C9BCA8" />
+                        <FontAwesome name="image" size={16} color={FAINT} />
                       </View>
                     )}
                     <Text style={styles.rowTitle} numberOfLines={2}>{item.title}</Text>
@@ -114,7 +115,7 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: '#FBF6EE',
+    backgroundColor: CREAM,
     borderTopWidth: 1,
     borderTopColor: 'rgba(31,26,23,0.08)',
     paddingTop: 8,
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -3,
     right: -4,
-    backgroundColor: '#847A70',
+    backgroundColor: MUTE,
     borderRadius: 7,
     minWidth: 14,
     height: 14,
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 2,
   },
-  badgeText: { fontSize: 8, color: '#FBF6EE', fontWeight: '700' },
+  badgeText: { fontSize: 8, color: CREAM, fontWeight: '700' },
 
   overlay: {
     flex: 1,
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#FBF6EE',
+    backgroundColor: CREAM,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#C9BCA8',
+    backgroundColor: FAINT,
     alignSelf: 'center',
     marginBottom: 16,
   },
@@ -183,8 +184,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-  sheetTitle: { fontSize: 16, fontWeight: '700', color: '#1F1A17' },
-  restoreAllText: { fontSize: 13, fontWeight: '700', color: '#F26B3A' },
+  sheetTitle: { fontSize: 16, fontWeight: '700', color: INK },
+  restoreAllText: { fontSize: 13, fontWeight: '700', color: TANGERINE },
 
   row: {
     flexDirection: 'row',
@@ -192,23 +193,23 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#EDE6D8',
+    borderBottomColor: TRACK,
   },
   thumb: {
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: '#F4ECDD',
+    backgroundColor: CREAM_2,
   },
   thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
-  rowTitle: { flex: 1, fontSize: 14, fontWeight: '600', color: '#1F1A17' },
+  rowTitle: { flex: 1, fontSize: 14, fontWeight: '600', color: INK },
   restoreBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     borderWidth: 1,
-    borderColor: '#F26B3A',
+    borderColor: TANGERINE,
   },
-  restoreBtnText: { fontSize: 12, fontWeight: '700', color: '#F26B3A' },
+  restoreBtnText: { fontSize: 12, fontWeight: '700', color: TANGERINE },
 });

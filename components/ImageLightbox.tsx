@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { CREAM, WHITE } from '@/constants/theme';
 
 interface Props {
   images: string[];
@@ -54,7 +55,7 @@ export default function ImageLightbox({ images, initialIndex = 0, visible, onClo
         <View style={styles.header}>
           <Text style={styles.counter}>{index + 1} / {images.length}</Text>
           <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={12}>
-            <FontAwesome name="times" size={22} color="#fff" />
+            <FontAwesome name="times" size={22} color={WHITE} />
           </Pressable>
         </View>
 
@@ -73,7 +74,7 @@ export default function ImageLightbox({ images, initialIndex = 0, visible, onClo
         {multi && hasPrev && (
           <Pressable style={[styles.arrow, styles.arrowLeft]} onPress={prev} hitSlop={12}>
             <View style={styles.arrowBubble}>
-              <FontAwesome name="chevron-left" size={18} color="#fff" />
+              <FontAwesome name="chevron-left" size={18} color={WHITE} />
             </View>
           </Pressable>
         )}
@@ -82,7 +83,7 @@ export default function ImageLightbox({ images, initialIndex = 0, visible, onClo
         {multi && hasNext && (
           <Pressable style={[styles.arrow, styles.arrowRight]} onPress={next} hitSlop={12}>
             <View style={styles.arrowBubble}>
-              <FontAwesome name="chevron-right" size={18} color="#fff" />
+              <FontAwesome name="chevron-right" size={18} color={WHITE} />
             </View>
           </Pressable>
         )}
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   counter: {
-    color: '#e2e8f0',
+    color: CREAM,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.3)',
   },
   dotActive: {
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     width: 20,
   },
   thumbRow: {
@@ -206,6 +207,6 @@ const styles = StyleSheet.create({
   thumbActive: {
     opacity: 1,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: WHITE,
   },
 });

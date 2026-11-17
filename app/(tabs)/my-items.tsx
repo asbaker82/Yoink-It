@@ -15,7 +15,7 @@ import { Item } from '@/store/types';
 import ItemCard from '@/components/ItemCard';
 import ConfirmSheet from '@/components/ConfirmSheet';
 import { formatCalendarDate } from '@/utils/dates';
-import { CREAM, CREAM_2, INK, MUTE, PLUM, SAGE, SKY, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP } from '@/constants/theme';
+import { BORDER, BUTTER_INK, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, PLUM, ROSE_INK, SAGE, SKY, SKY_TINT, STEEL_BLUE, TANGERINE, TANGERINE_DEEP as TANG_DEEP, TRACK, WHITE } from '@/constants/theme';
 
 type ViewKey = 'listings' | 'friends';
 type ListingFilter = 'all' | 'free' | 'lending' | 'skills';
@@ -133,7 +133,7 @@ export default function MyItemsScreen() {
           {/* ── Give item: claimed/waitlist chips ── */}
           {isGive && item.claimedBy && item.status === 'claimed' && (
             <View style={styles.claimedByChip}>
-              <FontAwesome name="user" size={11} color="#7A5C00" style={{ marginRight: 4 }} />
+              <FontAwesome name="user" size={11} color={BUTTER_INK} style={{ marginRight: 4 }} />
               <Text style={styles.claimedByText}>
                 Claimed by {getUserById(item.claimedBy)?.name ?? 'someone'}
               </Text>
@@ -141,7 +141,7 @@ export default function MyItemsScreen() {
           )}
           {isGive && item.waitlist.length > 0 && item.status !== 'pending_pickup' && (
             <View style={styles.waitlistChip}>
-              <FontAwesome name="list" size={11} color="#8A3A3A" style={{ marginRight: 4 }} />
+              <FontAwesome name="list" size={11} color={ROSE_INK} style={{ marginRight: 4 }} />
               <Text style={styles.waitlistChipText}>{item.waitlist.length} waiting</Text>
             </View>
           )}
@@ -159,12 +159,12 @@ export default function MyItemsScreen() {
                     {new Date(req.endDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </Text>
                 </View>
-                <Pressable style={[styles.actionBtn, { backgroundColor: '#EEF5FA' }]} onPress={() => approveBorrowRequest(item.id, req.id)}>
+                <Pressable style={[styles.actionBtn, { backgroundColor: SKY_TINT }]} onPress={() => approveBorrowRequest(item.id, req.id)}>
                   <FontAwesome name="check" size={13} color={STEEL_BLUE} />
                   <Text style={[styles.actionBtnText, { color: STEEL_BLUE }]}>Approve</Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn} onPress={() => rejectBorrowRequest(item.id, req.id)}>
-                  <FontAwesome name="times" size={13} color="#718096" />
+                  <FontAwesome name="times" size={13} color={MUTE} />
                   <Text style={styles.actionBtnText}>Decline</Text>
                 </Pressable>
               </View>
@@ -174,7 +174,7 @@ export default function MyItemsScreen() {
           {/* ── Borrow item: currently borrowed ── */}
           {isBorrow && item.status === 'borrowed' && (
             <View style={styles.claimedByChip}>
-              <FontAwesome name="refresh" size={11} color="#7A5C00" style={{ marginRight: 4 }} />
+              <FontAwesome name="refresh" size={11} color={BUTTER_INK} style={{ marginRight: 4 }} />
               <Text style={styles.claimedByText}>
                 Borrowed by {getUserById(item.borrowedBy ?? '')?.name ?? 'someone'}
                 {item.borrowedUntil ? ` until ${formatCalendarDate(item.borrowedUntil)}` : ''}
@@ -186,7 +186,7 @@ export default function MyItemsScreen() {
           {isBorrow && item.status === 'pending_return' && (
             <>
               <View style={styles.waitlistChip}>
-                <FontAwesome name="clock-o" size={11} color="#8A3A3A" style={{ marginRight: 4 }} />
+                <FontAwesome name="clock-o" size={11} color={ROSE_INK} style={{ marginRight: 4 }} />
                 <Text style={styles.waitlistChipText}>Return pending</Text>
               </View>
               <View style={{ flex: 1 }} />
@@ -207,14 +207,14 @@ export default function MyItemsScreen() {
                 <Text style={[styles.actionBtnText, { color: TANGERINE }]}>Confirm Pickup</Text>
               </Pressable>
               <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
-                <FontAwesome name="undo" size={13} color="#718096" />
+                <FontAwesome name="undo" size={13} color={MUTE} />
                 <Text style={styles.actionBtnText}>Not Picked Up</Text>
               </Pressable>
             </>
           )}
           {isGive && item.status === 'picked_up' && (
             <Pressable style={styles.actionBtn} onPress={() => releaseClaim(item.id)}>
-              <FontAwesome name="undo" size={13} color="#718096" />
+              <FontAwesome name="undo" size={13} color={MUTE} />
               <Text style={styles.actionBtnText}>Release Claim</Text>
             </Pressable>
           )}
@@ -459,7 +459,7 @@ export default function MyItemsScreen() {
 
       {view === 'listings' && (
         <Pressable style={styles.fab} onPress={() => router.push('/item/new')}>
-          <FontAwesome name="plus" size={22} color="#fff" />
+          <FontAwesome name="plus" size={22} color={CREAM} />
         </Pressable>
       )}
 
@@ -486,7 +486,7 @@ function EmptyState({ icon, title, subtitle, ctaLabel, onCta }: {
 }) {
   return (
     <View style={styles.empty}>
-      <FontAwesome name={icon} size={52} color="#cbd5e0" />
+      <FontAwesome name={icon} size={52} color={FAINT} />
       <Text style={styles.emptyTitle}>{title}</Text>
       {subtitle && <Text style={styles.emptySubtitle}>{subtitle}</Text>}
       {ctaLabel && onCta && (
@@ -499,7 +499,7 @@ function EmptyState({ icon, title, subtitle, ctaLabel, onCta }: {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF6EE' },
+  container: { flex: 1, backgroundColor: CREAM },
   header: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
   segment: {
     flexDirection: 'row',
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     borderRadius: 9,
   },
   segmentBtnActive: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: WHITE,
     shadowColor: INK,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.12,
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   // Matches the Browse listing-type bar (app/(tabs)/index.tsx segmentedBar).
   filterRow: {
     flexDirection: 'row',
-    backgroundColor: '#EDE6D8',
+    backgroundColor: TRACK,
     borderRadius: 10,
     padding: 3,
   },
@@ -571,17 +571,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#a0aec0',
+    color: MUTE_LIGHT,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionCount: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: BORDER,
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 1,
   },
-  sectionCountText: { fontSize: 12, fontWeight: '700', color: '#718096' },
+  sectionCountText: { fontSize: 12, fontWeight: '700', color: MUTE },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  claimedByText: { fontSize: 12, color: '#7A5C00', fontWeight: '600' },
+  claimedByText: { fontSize: 12, color: BUTTER_INK, fontWeight: '600' },
   waitlistChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  waitlistChipText: { fontSize: 12, color: '#8A3A3A', fontWeight: '600' },
+  waitlistChipText: { fontSize: 12, color: ROSE_INK, fontWeight: '600' },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -625,10 +625,10 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
     gap: 8,
   },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#a0aec0', marginTop: 8 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: MUTE_LIGHT, marginTop: 8 },
   emptySubtitle: {
     fontSize: 14,
-    color: '#cbd5e0',
+    color: FAINT,
     marginTop: 4,
     textAlign: 'center',
     paddingHorizontal: 40,
@@ -638,14 +638,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#F26B3A',
+    backgroundColor: TANGERINE,
   },
-  emptyCtaText: { fontSize: 14, fontWeight: '700', color: '#FBF6EE' },
+  emptyCtaText: { fontSize: 14, fontWeight: '700', color: CREAM },
   borrowReqRow: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF5FA',
+    backgroundColor: SKY_TINT,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -661,7 +661,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#F26B3A',
+    backgroundColor: TANGERINE,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

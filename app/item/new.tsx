@@ -19,7 +19,7 @@ import { Location, parseLocation, formatLocation, locationError } from '@/utils/
 import DatePickerInput from '@/components/DatePickerInput';
 import DateRangePicker from '@/components/DateRangePicker';
 import FriendAccessInput, { FriendAccess, friendAccessError } from '@/components/FriendAccessInput';
-import { CREAM, CREAM_2, INK, MUTE, SAGE, TANGERINE } from '@/constants/theme';
+import { CREAM, CREAM_2, INK, MUTE, MUTE_LIGHT, SAGE, SKY, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT, WHITE } from '@/constants/theme';
 
 async function pickImageWeb(): Promise<string | null> {
   return new Promise(resolve => {
@@ -46,7 +46,7 @@ function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
     <View style={styles.errorRow}>
-      <FontAwesome name="exclamation-circle" size={13} color="#e53e3e" style={{ marginRight: 5 }} />
+      <FontAwesome name="exclamation-circle" size={13} color={TANGERINE_DEEP} style={{ marginRight: 5 }} />
       <Text style={styles.errorText}>{message}</Text>
     </View>
   );
@@ -222,13 +222,13 @@ export default function NewItemScreen() {
             <View key={i} style={styles.photoThumb}>
               <Image source={{ uri }} style={styles.photoImg} />
               <Pressable style={styles.removePhoto} onPress={() => removePhoto(i)}>
-                <FontAwesome name="times-circle" size={18} color="#e53e3e" />
+                <FontAwesome name="times-circle" size={18} color={TANGERINE_DEEP} />
               </Pressable>
             </View>
           ))}
           {photos.length < 6 && (
             <Pressable style={styles.addPhotoBtn} onPress={addPhoto}>
-              <FontAwesome name="camera" size={24} color="#F26B3A" />
+              <FontAwesome name="camera" size={24} color={TANGERINE} />
               <Text style={styles.addPhotoText}>
                 {Platform.OS === 'web' ? 'Upload' : 'Add Photo'}
               </Text>
@@ -244,7 +244,7 @@ export default function NewItemScreen() {
         <TextInput
           style={[styles.input, errors.title && styles.inputError]}
           placeholder={isSkill ? 'e.g. Car maintenance, Leathercraft' : 'e.g. IKEA KALLAX Bookshelf'}
-          placeholderTextColor="#a0aec0"
+          placeholderTextColor={MUTE_LIGHT}
           value={title}
           onChangeText={t => { setTitle(t); clearError('title'); }}
         />
@@ -259,7 +259,7 @@ export default function NewItemScreen() {
           placeholder={isSkill
             ? 'What can you help with? Any experience level or limits?'
             : "Describe the item — dimensions, any wear, what's included…"}
-          placeholderTextColor="#a0aec0"
+          placeholderTextColor={MUTE_LIGHT}
           value={description}
           onChangeText={setDescription}
           multiline
@@ -274,7 +274,7 @@ export default function NewItemScreen() {
         <TextInput
           style={styles.input}
           placeholder="e.g. Foster care placements only, pregnant friends only"
-          placeholderTextColor="#a0aec0"
+          placeholderTextColor={MUTE_LIGHT}
           value={restrictions}
           onChangeText={setRestrictions}
         />
@@ -304,7 +304,7 @@ export default function NewItemScreen() {
         <TextInput
           style={[styles.input, errors.pickupWindow && styles.inputError]}
           placeholder="e.g. Weekends 10am–4pm, Evenings after 6pm"
-          placeholderTextColor="#a0aec0"
+          placeholderTextColor={MUTE_LIGHT}
           value={pickupWindow}
           onChangeText={t => { setPickupWindow(t); clearError('pickupWindow'); }}
         />
@@ -364,7 +364,7 @@ export default function NewItemScreen() {
             <TextInput
               style={[styles.input, styles.hoursInput, errors.claimPickupHours && styles.inputError]}
               placeholder="Custom"
-              placeholderTextColor="#a0aec0"
+              placeholderTextColor={MUTE_LIGHT}
               value={['1', '2', '3', '4'].includes(claimPickupDays) ? '' : claimPickupDays}
               onChangeText={t => { setClaimPickupDays(t); clearError('claimPickupHours'); }}
               keyboardType="numeric"
@@ -421,7 +421,7 @@ export default function NewItemScreen() {
         onPress={handleSubmit}
         disabled={submitting}
       >
-        <FontAwesome name="check" size={16} color="#FBF6EE" style={{ marginRight: 8 }} />
+        <FontAwesome name="check" size={16} color={CREAM} style={{ marginRight: 8 }} />
         <Text style={styles.submitBtnText}>Create Listing</Text>
       </Pressable>
     </ScrollView>
@@ -434,13 +434,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: CREAM },
   content: { paddingBottom: 40 },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     marginTop: 10,
     padding: 16,
   },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: INK, marginBottom: 12 },
   label: { fontSize: 14, fontWeight: '700', color: INK, marginBottom: 6 },
-  required: { color: '#e53e3e' },
+  required: { color: TANGERINE_DEEP },
   optional: { color: MUTE, fontWeight: '400', fontSize: 13 },
   hint: { fontSize: 12, color: MUTE, marginBottom: 8 },
   input: {
@@ -454,8 +454,8 @@ const styles = StyleSheet.create({
     backgroundColor: CREAM,
   },
   inputError: {
-    borderColor: '#fc8181',
-    backgroundColor: '#fff5f5',
+    borderColor: TANGERINE,
+    backgroundColor: TANGERINE_TINT,
   },
   errorRow: {
     flexDirection: 'row',
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: '#e53e3e',
+    color: TANGERINE_DEEP,
     flex: 1,
   },
   textArea: { minHeight: 100, paddingTop: 10 },
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     borderRadius: 10,
   },
   addPhotoBtn: {
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, color: MUTE, fontWeight: '600' },
   chipTextActive: { color: CREAM },
   typeToggleSection: {
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     marginTop: 10,
     padding: 16,
   },
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   typeBtnActive: { backgroundColor: TANGERINE, borderColor: TANGERINE },
-  typeBtnActiveBorrow: { backgroundColor: '#7BA7BC', borderColor: '#7BA7BC' },
+  typeBtnActiveBorrow: { backgroundColor: SKY, borderColor: SKY },
   typeBtnActiveSkill: { backgroundColor: SAGE, borderColor: SAGE },
   typeBtnText: { fontSize: 14, fontWeight: '700', color: MUTE },
   typeBtnTextActive: { color: CREAM },
@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#7BA7BC',
+    backgroundColor: SKY,
     borderRadius: 999,
     paddingVertical: 10,
     marginTop: 12,

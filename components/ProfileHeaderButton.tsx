@@ -3,6 +3,7 @@ import { Pressable, Image, View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/store/AuthContext';
 import { useApp } from '@/store/AppContext';
+import { TANGERINE, TANGERINE_TINT } from '@/constants/theme';
 
 export default function ProfileHeaderButton() {
   const router = useRouter();
@@ -39,17 +40,17 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#F26B3A',
+    borderColor: TANGERINE,
   },
   fallback: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     borderWidth: 2,
-    borderColor: '#F26B3A',
+    borderColor: TANGERINE,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  initials: { fontSize: 15, fontWeight: '800', color: '#F26B3A' },
+  initials: { fontSize: 15, fontWeight: '800', color: TANGERINE },
 });

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { CREAM, INK, MUTE, TANGERINE } from '@/constants/theme';
 
 interface Props {
   visible: boolean;
@@ -51,7 +52,7 @@ export default function ClaimToast({ visible, deadlineDate, onComplete }: Props)
   return (
     <Animated.View style={[styles.toast, { opacity, transform: [{ translateY }] }]} pointerEvents="none">
       <Animated.View style={[styles.iconWrap, { transform: [{ scale: iconScale }] }]}>
-        <FontAwesome name="check" size={18} color="#fff" />
+        <FontAwesome name="check" size={18} color={CREAM} />
       </Animated.View>
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>Item Claimed!</Text>
@@ -69,14 +70,14 @@ const styles = StyleSheet.create({
     bottom: 24,
     left: 16,
     right: 16,
-    backgroundColor: '#1F1A17',
+    backgroundColor: INK,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
     gap: 14,
-    shadowColor: '#1F1A17',
+    shadowColor: INK,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -87,11 +88,11 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#F26B3A',
+    backgroundColor: TANGERINE,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  title: { fontSize: 15, fontWeight: '700', color: '#FBF6EE' },
-  sub:   { fontSize: 12, color: '#847A70', marginTop: 2 },
+  title: { fontSize: 15, fontWeight: '700', color: CREAM },
+  sub:   { fontSize: 12, color: MUTE, marginTop: 2 },
 });

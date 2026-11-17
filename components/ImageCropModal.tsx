@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Modal, View, Text, Pressable, StyleSheet } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { CREAM, CREAM_2, INK, MUTE, MUTE_LIGHT, TANGERINE, WHITE } from '@/constants/theme';
 
 // Web-only. For native, expo-image-picker's allowsEditing handles cropping.
 
@@ -170,11 +171,11 @@ export default function ImageCropModal({ imageUri, visible, onConfirm, onCancel 
 
           <View style={styles.zoomRow}>
             <Pressable style={styles.zoomBtn} onPress={() => handleZoomBtn(-0.1)}>
-              <FontAwesome name="search-minus" size={17} color="#4a5568" />
+              <FontAwesome name="search-minus" size={17} color={MUTE} />
             </Pressable>
             <Text style={styles.zoomLabel}>{zoomPct}%</Text>
             <Pressable style={styles.zoomBtn} onPress={() => handleZoomBtn(0.1)}>
-              <FontAwesome name="search-plus" size={17} color="#4a5568" />
+              <FontAwesome name="search-plus" size={17} color={MUTE} />
             </Pressable>
           </View>
 
@@ -200,21 +201,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sheet: {
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     borderRadius: 20,
     padding: 24,
     alignItems: 'center',
     width: 360,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#1a202c', marginBottom: 4 },
-  hint: { fontSize: 13, color: '#a0aec0', marginBottom: 20 },
+  title: { fontSize: 18, fontWeight: '700', color: INK, marginBottom: 4 },
+  hint: { fontSize: 13, color: MUTE_LIGHT, marginBottom: 20 },
   canvasWrap: {
     width: CROP_D,
     height: CROP_D,
     borderRadius: CROP_D / 2,
     overflow: 'hidden',
     marginBottom: 18,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: CREAM_2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
@@ -231,13 +232,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: CREAM_2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   zoomLabel: {
     fontSize: 13,
-    color: '#718096',
+    color: MUTE,
     fontWeight: '600',
     width: 52,
     textAlign: 'center',
@@ -247,16 +248,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 13,
     borderRadius: 12,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: CREAM_2,
     alignItems: 'center',
   },
-  cancelText: { fontSize: 15, fontWeight: '600', color: '#4a5568' },
+  cancelText: { fontSize: 15, fontWeight: '600', color: MUTE },
   confirmBtn: {
     flex: 1,
     paddingVertical: 13,
     borderRadius: 12,
-    backgroundColor: '#10B981',
+    backgroundColor: TANGERINE,
     alignItems: 'center',
   },
-  confirmText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  confirmText: { fontSize: 15, fontWeight: '700', color: CREAM },
 });

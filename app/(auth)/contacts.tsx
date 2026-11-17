@@ -139,7 +139,7 @@ export default function ContactsScreen() {
                   <FontAwesome
                     name={isAdded ? 'check' : 'plus'}
                     size={14}
-                    color={isAdded ? '#fff' : TANGERINE}
+                    color={isAdded ? CREAM : TANGERINE}
                   />
                   <Text style={[styles.addBtnText, isAdded && styles.addBtnTextAdded]}>
                     {isAdded ? 'Added' : 'Add'}
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   addBtnAdded: { backgroundColor: TANGERINE, borderColor: TANGERINE },
   addBtnPressed: { opacity: 0.75 },
   addBtnText: { fontSize: 14, fontWeight: '600', color: TANGERINE },
-  addBtnTextAdded: { color: '#fff' },
+  addBtnTextAdded: { color: CREAM },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyTitle: { fontSize: 16, fontWeight: '600', color: INK, textAlign: 'center', marginTop: 16 },
   emptySubtitle: { fontSize: 14, color: MUTE, textAlign: 'center', marginTop: 8 },
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  doneBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  doneBtnText: { fontSize: 16, fontWeight: '700', color: CREAM },
   skipBtn: {
     borderWidth: 1.5,
     borderColor: BORDER,

@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import CustomTabBar from '@/components/CustomTabBar';
 import ProfileHeaderButton from '@/components/ProfileHeaderButton';
 import HeaderLogo from '@/components/HeaderLogo';
+import { CREAM, INK } from '@/constants/theme';
 
 const profileBtn = () => <ProfileHeaderButton />;
 const headerLogo = () => <HeaderLogo size={20} />;
@@ -13,9 +14,9 @@ export default function TabLayout() {
       tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: true,
-        headerStyle: { backgroundColor: '#FBF6EE' },
-        headerTintColor: '#1F1A17',
-        headerTitleStyle: { fontWeight: '700', color: '#1F1A17' },
+        headerStyle: { backgroundColor: CREAM },
+        headerTintColor: INK,
+        headerTitleStyle: { fontWeight: '700', color: INK },
         headerTitleAlign: 'center',
         headerShadowVisible: false,
       }}
@@ -23,7 +24,6 @@ export default function TabLayout() {
       <Tabs.Screen name="index"    options={{ headerTitle: headerLogo, headerRight: profileBtn }} />
       <Tabs.Screen name="my-items" options={{ headerTitle: headerLogo, headerRight: profileBtn }} />
       <Tabs.Screen name="profile"  options={{ headerTitle: headerLogo, href: null }} />
-      <Tabs.Screen name="two"      options={{ href: null }} />
     </Tabs>
   );
 }

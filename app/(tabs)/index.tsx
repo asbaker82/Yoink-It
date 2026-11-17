@@ -18,7 +18,7 @@ import ItemCard from '@/components/ItemCard';
 import SwipeableCard from '@/components/SwipeableCard';
 import { fuzzyScore } from '@/utils/search';
 import ConfirmSheet from '@/components/ConfirmSheet';
-import { PLUM } from '@/constants/theme';
+import { CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, PLUM, SAGE, SKY, SKY_TINT, TANGERINE, TANGERINE_DEEP, TANGERINE_TINT, TRACK, WHITE } from '@/constants/theme';
 
 type ListingFilter = 'all' | 'free' | 'borrow' | 'skill';
 type FreeStatusFilter = 'all' | 'available' | 'claimed';
@@ -117,32 +117,32 @@ export default function BrowseScreen() {
     currentUser.friends.length === 0 && {
       key: 'add-friends',
       icon: 'user-plus' as const,
-      color: '#F26B3A',
+      color: TANGERINE,
       label: 'Add friends to see their listings',
       dest: '/add-friends',
     },
     myTurn.length > 0 && {
       key: 'pickup',
       icon: 'clock-o' as const,
-      color: '#F26B3A',
+      color: TANGERINE,
       label: `${myTurn.length} item${myTurn.length > 1 ? 's' : ''} waiting for you to pick up`,
     },
     pendingBorrowApprovals.length > 0 && {
       key: 'borrow-requests',
       icon: 'calendar-check-o' as const,
-      color: '#7BA7BC',
+      color: SKY,
       label: `${pendingBorrowApprovals.length} borrow request${pendingBorrowApprovals.length > 1 ? 's' : ''} waiting for your approval`,
     },
     needPickupConfirm.length > 0 && {
       key: 'confirm-pickup',
       icon: 'check-circle' as const,
-      color: '#7FA88A',
+      color: SAGE,
       label: `${needPickupConfirm.length} pickup${needPickupConfirm.length > 1 ? 's' : ''} waiting for your confirmation`,
     },
     needReturnConfirm.length > 0 && {
       key: 'confirm-return',
       icon: 'undo' as const,
-      color: '#7BA7BC',
+      color: SKY,
       label: `${needReturnConfirm.length} return${needReturnConfirm.length > 1 ? 's' : ''} waiting for your confirmation`,
     },
   ].filter(Boolean) as { key: string; icon: React.ComponentProps<typeof FontAwesome>['name']; color: string; label: string; dest?: string }[];
@@ -238,21 +238,21 @@ export default function BrowseScreen() {
     <View style={styles.container}>
       {actionBanners.map(b => (
         <Pressable key={b.key} style={[styles.banner, { backgroundColor: b.color }]} onPress={() => b.dest ? router.push(b.dest as any) : setActiveSheet(b.key)}>
-          <FontAwesome name={b.icon} size={14} color="#fff" style={{ marginRight: 8 }} />
+          <FontAwesome name={b.icon} size={14} color={CREAM} style={{ marginRight: 8 }} />
           <Text style={styles.bannerText}>{b.label}</Text>
-          <FontAwesome name="chevron-right" size={12} color="#fff" />
+          <FontAwesome name="chevron-right" size={12} color={CREAM} />
         </Pressable>
       ))}
 
       {/* Search bar */}
       <View style={styles.searchRow}>
         <View style={[styles.searchBox, historyOpen && styles.searchBoxOpen]}>
-          <FontAwesome name="search" size={14} color="#a0aec0" style={{ marginRight: 8 }} />
+          <FontAwesome name="search" size={14} color={MUTE_LIGHT} style={{ marginRight: 8 }} />
           <TextInput
             ref={inputRef}
             style={styles.searchInput}
             placeholder="Search items..."
-            placeholderTextColor="#a0aec0"
+            placeholderTextColor={MUTE_LIGHT}
             value={search}
             onChangeText={t => { setSearch(t); setHistoryOpen(!t && searchHistory.length > 0); }}
             onFocus={() => { if (!search && searchHistory.length > 0) setHistoryOpen(true); }}
@@ -262,7 +262,7 @@ export default function BrowseScreen() {
           />
           {search.length > 0 ? (
             <Pressable onPress={handleClearSearch} style={styles.searchAction}>
-              <FontAwesome name="times-circle" size={16} color="#a0aec0" />
+              <FontAwesome name="times-circle" size={16} color={MUTE_LIGHT} />
             </Pressable>
           ) : searchHistory.length > 0 ? (
             <Pressable
@@ -270,7 +270,7 @@ export default function BrowseScreen() {
               style={styles.searchAction}
               hitSlop={8}
             >
-              <FontAwesome name="history" size={15} color="#a0aec0" />
+              <FontAwesome name="history" size={15} color={MUTE_LIGHT} />
             </Pressable>
           ) : null}
         </View>
@@ -287,7 +287,7 @@ export default function BrowseScreen() {
           <FontAwesome
             name="bell"
             size={15}
-            color={searchNotifications.some(n => n.keyword.toLowerCase() === search.trim().toLowerCase()) && search.trim().length > 0 ? '#FBF6EE' : '#F26B3A'}
+            color={searchNotifications.some(n => n.keyword.toLowerCase() === search.trim().toLowerCase()) && search.trim().length > 0 ? CREAM : TANGERINE}
           />
         </Pressable>
       </View>
@@ -307,9 +307,9 @@ export default function BrowseScreen() {
               style={styles.historyRow}
               onPress={() => handleSelectHistory(term)}
             >
-              <FontAwesome name="history" size={12} color="#a0aec0" style={styles.historyIcon} />
+              <FontAwesome name="history" size={12} color={MUTE_LIGHT} style={styles.historyIcon} />
               <Text style={styles.historyTerm}>{term}</Text>
-              <FontAwesome name="arrow-left" size={11} color="#cbd5e0" style={{ transform: [{ rotate: '45deg' }] }} />
+              <FontAwesome name="arrow-left" size={11} color={FAINT} style={{ transform: [{ rotate: '45deg' }] }} />
             </Pressable>
           ))}
         </View>
@@ -392,7 +392,7 @@ export default function BrowseScreen() {
           <FontAwesome
             name={!search.trim() && currentUser.friends.length === 0 ? 'users' : 'inbox'}
             size={52}
-            color="#cbd5e0"
+            color={FAINT}
           />
           <Text style={styles.emptyTitle}>
             {search.trim()
@@ -410,13 +410,13 @@ export default function BrowseScreen() {
           </Text>
           {!search.trim() && currentUser.friends.length === 0 && (
             <Pressable style={styles.emptyAddFriendsBtn} onPress={() => router.push('/add-friends')}>
-              <FontAwesome name="user-plus" size={14} color="#fff" style={{ marginRight: 6 }} />
+              <FontAwesome name="user-plus" size={14} color={CREAM} style={{ marginRight: 6 }} />
               <Text style={styles.emptyAddFriendsBtnText}>Add Friends from Contacts</Text>
             </Pressable>
           )}
           {search.trim().length > 0 && (
             <Pressable style={styles.emptyAlertBtn} onPress={handleSetAlert}>
-              <FontAwesome name="bell" size={14} color="#D8531F" style={{ marginRight: 6 }} />
+              <FontAwesome name="bell" size={14} color={TANGERINE_DEEP} style={{ marginRight: 6 }} />
               <Text style={styles.emptyAlertBtnText}>Set Alert for "{search.trim()}"</Text>
             </Pressable>
           )}
@@ -451,7 +451,7 @@ export default function BrowseScreen() {
                  :                                     'Confirm Returns'}
               </Text>
               <Pressable onPress={() => setActiveSheet(null)} style={styles.sheetClose}>
-                <FontAwesome name="times" size={18} color="#847A70" />
+                <FontAwesome name="times" size={18} color={MUTE} />
               </Pressable>
             </View>
 
@@ -475,8 +475,8 @@ export default function BrowseScreen() {
                           style={[styles.sheetBtn, styles.sheetBtnConfirm]}
                           onPress={() => setPendingMarkPickupId(item.id)}
                         >
-                          <FontAwesome name="check" size={13} color="#F26B3A" />
-                          <Text style={[styles.sheetBtnText, { color: '#F26B3A' }]}>I've Picked It Up</Text>
+                          <FontAwesome name="check" size={13} color={TANGERINE} />
+                          <Text style={[styles.sheetBtnText, { color: TANGERINE }]}>I've Picked It Up</Text>
                         </Pressable>
                         <Pressable
                           style={styles.sheetBtn}
@@ -500,12 +500,12 @@ export default function BrowseScreen() {
                               {new Date(req.endDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </Text>
                           </View>
-                          <Pressable style={[styles.sheetBtn, { backgroundColor: '#EEF5FA' }]} onPress={() => approveBorrowRequest(item.id, req.id)}>
-                            <FontAwesome name="check" size={13} color="#7BA7BC" />
-                            <Text style={[styles.sheetBtnText, { color: '#7BA7BC' }]}>Approve</Text>
+                          <Pressable style={[styles.sheetBtn, { backgroundColor: SKY_TINT }]} onPress={() => approveBorrowRequest(item.id, req.id)}>
+                            <FontAwesome name="check" size={13} color={SKY} />
+                            <Text style={[styles.sheetBtnText, { color: SKY }]}>Approve</Text>
                           </Pressable>
                           <Pressable style={styles.sheetBtn} onPress={() => rejectBorrowRequest(item.id, req.id)}>
-                            <FontAwesome name="times" size={13} color="#847A70" />
+                            <FontAwesome name="times" size={13} color={MUTE} />
                             <Text style={styles.sheetBtnText}>Decline</Text>
                           </Pressable>
                         </View>
@@ -516,11 +516,11 @@ export default function BrowseScreen() {
                     {activeSheet === 'confirm-pickup' && (
                       <>
                         <Pressable style={[styles.sheetBtn, styles.sheetBtnConfirm]} onPress={() => confirmPickup(item.id)}>
-                          <FontAwesome name="check" size={13} color="#F26B3A" />
-                          <Text style={[styles.sheetBtnText, { color: '#F26B3A' }]}>Confirm Pickup</Text>
+                          <FontAwesome name="check" size={13} color={TANGERINE} />
+                          <Text style={[styles.sheetBtnText, { color: TANGERINE }]}>Confirm Pickup</Text>
                         </Pressable>
                         <Pressable style={styles.sheetBtn} onPress={() => releaseClaim(item.id)}>
-                          <FontAwesome name="undo" size={13} color="#847A70" />
+                          <FontAwesome name="undo" size={13} color={MUTE} />
                           <Text style={styles.sheetBtnText}>Not Picked Up</Text>
                         </Pressable>
                       </>
@@ -530,11 +530,11 @@ export default function BrowseScreen() {
                     {activeSheet === 'confirm-return' && (
                       <>
                         <Pressable style={[styles.sheetBtn, styles.sheetBtnConfirm]} onPress={() => confirmBorrowReturn(item.id)}>
-                          <FontAwesome name="check" size={13} color="#F26B3A" />
-                          <Text style={[styles.sheetBtnText, { color: '#F26B3A' }]}>Confirm Return</Text>
+                          <FontAwesome name="check" size={13} color={TANGERINE} />
+                          <Text style={[styles.sheetBtnText, { color: TANGERINE }]}>Confirm Return</Text>
                         </Pressable>
                         <Pressable style={styles.sheetBtn} onPress={() => setActiveSheet(null)}>
-                          <FontAwesome name="clock-o" size={13} color="#847A70" />
+                          <FontAwesome name="clock-o" size={13} color={MUTE} />
                           <Text style={styles.sheetBtnText}>Not Yet</Text>
                         </Pressable>
                       </>
@@ -580,16 +580,16 @@ export default function BrowseScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF6EE' },
+  container: { flex: 1, backgroundColor: CREAM },
   banner: {
-    backgroundColor: '#F26B3A',
+    backgroundColor: TANGERINE,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 2,
   },
-  bannerText: { flex: 1, color: '#FBF6EE', fontWeight: '600', fontSize: 14 },
+  bannerText: { flex: 1, color: CREAM, fontWeight: '600', fontSize: 14 },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -602,11 +602,11 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 9,
-    shadowColor: '#1F1A17',
+    shadowColor: INK,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.07,
     shadowRadius: 4,
@@ -614,31 +614,31 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
-  searchBoxOpen: { borderColor: '#F26B3A', borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
-  searchInput: { flex: 1, fontSize: 15, color: '#1F1A17' },
+  searchBoxOpen: { borderColor: TANGERINE, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+  searchInput: { flex: 1, fontSize: 15, color: INK },
   searchAction: { padding: 2 },
   alertBtn: {
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     borderWidth: 1.5,
-    borderColor: '#F26B3A',
+    borderColor: TANGERINE,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  alertBtnActive: { backgroundColor: '#F26B3A' },
+  alertBtnActive: { backgroundColor: TANGERINE },
 
   // History dropdown
   historyDropdown: {
     marginHorizontal: 16,
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     borderWidth: 1.5,
     borderTopWidth: 0,
-    borderColor: '#F26B3A',
+    borderColor: TANGERINE,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
-    shadowColor: '#1F1A17',
+    shadowColor: INK,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -653,8 +653,8 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 6,
   },
-  historyTitle: { fontSize: 11, fontWeight: '700', color: '#847A70', textTransform: 'uppercase', letterSpacing: 0.4 },
-  historyClear: { fontSize: 12, color: '#e53e3e', fontWeight: '600' },
+  historyTitle: { fontSize: 11, fontWeight: '700', color: MUTE, textTransform: 'uppercase', letterSpacing: 0.4 },
+  historyClear: { fontSize: 12, color: TANGERINE_DEEP, fontWeight: '600' },
   historyRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   historyIcon: { width: 16 },
-  historyTerm: { flex: 1, fontSize: 14, color: '#1F1A17' },
+  historyTerm: { flex: 1, fontSize: 14, color: INK },
 
   filterRow: {
     flexDirection: 'row',
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#F4ECDD',
+    backgroundColor: CREAM_2,
   },
   segmentedRow: {
     flexDirection: 'row',
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
   segmentedBar: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#EDE6D8',
+    backgroundColor: TRACK,
     borderRadius: 10,
     padding: 3,
   },
@@ -710,37 +710,37 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   segmentActiveFree: {
-    backgroundColor: '#F26B3A',
-    shadowColor: '#F26B3A',
+    backgroundColor: TANGERINE,
+    shadowColor: TANGERINE,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 2,
   },
   segmentActiveBorrow: {
-    backgroundColor: '#7BA7BC',
-    shadowColor: '#7BA7BC',
+    backgroundColor: SKY,
+    shadowColor: SKY,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 2,
   },
   segmentActiveSkill: {
-    backgroundColor: '#7FA88A',
-    shadowColor: '#7FA88A',
+    backgroundColor: SAGE,
+    shadowColor: SAGE,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 2,
   },
-  segmentText: { fontSize: 14, fontWeight: '700', color: '#847A70' },
-  segmentTextActive: { color: '#FBF6EE' },
-  filterBtnActive: { backgroundColor: '#F26B3A' },
-  filterBtnBorrowActive: { backgroundColor: '#7BA7BC' },
-  filterBtnText: { fontSize: 13, color: '#847A70', fontWeight: '600' },
-  filterBtnTextActive: { color: '#FBF6EE' },
+  segmentText: { fontSize: 14, fontWeight: '700', color: MUTE },
+  segmentTextActive: { color: CREAM },
+  filterBtnActive: { backgroundColor: TANGERINE },
+  filterBtnBorrowActive: { backgroundColor: SKY },
+  filterBtnText: { fontSize: 13, color: MUTE, fontWeight: '600' },
+  filterBtnTextActive: { color: CREAM },
   statusBtn: { paddingHorizontal: 12, paddingVertical: 5 },
-  matchCount: { fontSize: 12, color: '#847A70', marginLeft: 'auto' },
+  matchCount: { fontSize: 12, color: MUTE, marginLeft: 'auto' },
   empty: {
     flex: 1,
     alignItems: 'center',
@@ -749,30 +749,30 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
     gap: 8,
   },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#B0A89E', marginTop: 16 },
-  emptySubtitle: { fontSize: 14, color: '#C9BCA8', textAlign: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: MUTE_LIGHT, marginTop: 16 },
+  emptySubtitle: { fontSize: 14, color: FAINT, textAlign: 'center' },
   emptyAddFriendsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 12,
-    backgroundColor: '#F26B3A',
+    backgroundColor: TANGERINE,
     borderRadius: 999,
     paddingHorizontal: 20,
     paddingVertical: 11,
   },
-  emptyAddFriendsBtnText: { fontSize: 14, color: '#FBF6EE', fontWeight: '700' },
+  emptyAddFriendsBtnText: { fontSize: 14, color: CREAM, fontWeight: '700' },
   emptyAlertBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
-    backgroundColor: '#FFF3EC',
+    backgroundColor: TANGERINE_TINT,
     borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: '#F26B3A',
+    borderColor: TANGERINE,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  emptyAlertBtnText: { fontSize: 13, color: '#D8531F', fontWeight: '600' },
+  emptyAlertBtnText: { fontSize: 13, color: TANGERINE_DEEP, fontWeight: '600' },
 
   // Action sheet
   sheetOverlay: {
@@ -785,12 +785,12 @@ const styles = StyleSheet.create({
     zIndex: 200,
   },
   sheetContainer: {
-    backgroundColor: '#FBF6EE',
+    backgroundColor: CREAM,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%' as any,
     paddingTop: 8,
-    shadowColor: '#1F1A17',
+    shadowColor: INK,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(31,26,23,0.08)',
   },
-  sheetTitle: { flex: 1, fontSize: 17, fontWeight: '800', color: '#1F1A17' },
+  sheetTitle: { flex: 1, fontSize: 17, fontWeight: '800', color: INK },
   sheetClose: { padding: 4 },
   sheetItem: { marginBottom: 4 },
   sheetActionRow: {
@@ -826,32 +826,32 @@ const styles = StyleSheet.create({
   sheetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F4ECDD',
+    backgroundColor: CREAM_2,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
     gap: 5,
   },
-  sheetBtnConfirm: { backgroundColor: '#FFF3EC' },
-  sheetBtnText: { fontSize: 13, color: '#847A70', fontWeight: '600' },
+  sheetBtnConfirm: { backgroundColor: TANGERINE_TINT },
+  sheetBtnText: { fontSize: 13, color: MUTE, fontWeight: '600' },
   sheetBorrowReqRow: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF5FA',
+    backgroundColor: SKY_TINT,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
     gap: 8,
   },
-  sheetBorrowName:  { fontSize: 13, fontWeight: '700', color: '#1F1A17' },
-  sheetBorrowDates: { fontSize: 12, color: '#847A70' },
+  sheetBorrowName:  { fontSize: 13, fontWeight: '700', color: INK },
+  sheetBorrowDates: { fontSize: 12, color: MUTE },
   undoToast: {
     position: 'absolute',
     bottom: 16,
     left: 16,
     right: 16,
-    backgroundColor: '#1F1A17',
+    backgroundColor: INK,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -864,12 +864,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
   },
-  undoText: { flex: 1, fontSize: 13, color: '#FBF6EE' },
+  undoText: { flex: 1, fontSize: 13, color: CREAM },
   undoBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#F26B3A',
+    backgroundColor: TANGERINE,
   },
-  undoBtnText: { fontSize: 13, fontWeight: '700', color: '#FBF6EE' },
+  undoBtnText: { fontSize: 13, fontWeight: '700', color: CREAM },
 });

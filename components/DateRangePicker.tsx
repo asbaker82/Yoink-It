@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Modal } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { BORDER, CREAM, CREAM_2, FAINT, INK, MUTE, MUTE_LIGHT, PEACH, TANGERINE, TANGERINE_TINT, WHITE } from '@/constants/theme';
 
 const MONTHS = [
   'January','February','March','April','May','June',
@@ -97,11 +98,11 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
   return (
     <View>
       <Pressable style={[styles.trigger, open && styles.triggerOpen]} onPress={handleOpen}>
-        <FontAwesome name="calendar" size={15} color="#10B981" style={{ width: 18 }} />
+        <FontAwesome name="calendar" size={15} color={TANGERINE} style={{ width: 18 }} />
         <Text style={[styles.triggerText, !(startDate && endDate) && styles.triggerPlaceholder]}>
           {displayText}
         </Text>
-        <FontAwesome name="chevron-down" size={13} color="#718096" />
+        <FontAwesome name="chevron-down" size={13} color={MUTE} />
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -112,11 +113,11 @@ export default function DateRangePicker({ startDate, endDate, onChange }: Props)
               {/* Navigation */}
               <View style={styles.navRow}>
                 <Pressable style={styles.navBtn} onPress={prevMonth}>
-                  <FontAwesome name="chevron-left" size={13} color="#2d3748" />
+                  <FontAwesome name="chevron-left" size={13} color={INK} />
                 </Pressable>
                 <Text style={styles.navTitle}>{MONTHS[viewM]} {viewY}</Text>
                 <Pressable style={styles.navBtn} onPress={nextMonth}>
-                  <FontAwesome name="chevron-right" size={13} color="#2d3748" />
+                  <FontAwesome name="chevron-right" size={13} color={INK} />
                 </Pressable>
               </View>
 
@@ -198,16 +199,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: BORDER,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#fafafa',
+    backgroundColor: CREAM_2,
     gap: 8,
   },
-  triggerOpen: { borderColor: '#10B981' },
-  triggerText: { flex: 1, fontSize: 15, color: '#2d3748' },
-  triggerPlaceholder: { color: '#a0aec0' },
+  triggerOpen: { borderColor: TANGERINE },
+  triggerText: { flex: 1, fontSize: 15, color: INK },
+  triggerPlaceholder: { color: MUTE_LIGHT },
 
   overlay: {
     flex: 1,
@@ -218,10 +219,10 @@ const styles = StyleSheet.create({
   },
   calendar: {
     width: CALENDAR_WIDTH,
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: BORDER,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
@@ -238,12 +239,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   navBtn: { padding: 8 },
-  navTitle: { fontSize: 15, fontWeight: '700', color: '#1a202c' },
+  navTitle: { fontSize: 15, fontWeight: '700', color: INK },
 
   hint: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#a0aec0',
+    color: MUTE_LIGHT,
     marginBottom: 8,
   },
 
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 11,
     fontWeight: '700',
-    color: '#a0aec0',
+    color: MUTE_LIGHT,
     textTransform: 'uppercase',
   },
 
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     bottom: 4,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: PEACH,
   },
   cell: {
     width: CELL_SIZE,
@@ -278,14 +279,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: CELL_SIZE / 2,
   },
-  cellSelected: { backgroundColor: '#10B981' },
-  cellToday: { backgroundColor: '#ECFDF5', borderWidth: 1.5, borderColor: '#10B981' },
+  cellSelected: { backgroundColor: TANGERINE },
+  cellToday: { backgroundColor: TANGERINE_TINT, borderWidth: 1.5, borderColor: TANGERINE },
   cellPast: { opacity: 0.3 },
-  cellText: { fontSize: 13, color: '#2d3748', fontWeight: '500' },
-  cellFaded: { color: '#cbd5e0' },
-  cellTextSelected: { color: '#fff', fontWeight: '700' },
-  cellTextToday: { color: '#10B981', fontWeight: '700' },
-  cellTextPast: { color: '#a0aec0' },
+  cellText: { fontSize: 13, color: INK, fontWeight: '500' },
+  cellFaded: { color: FAINT },
+  cellTextSelected: { color: CREAM, fontWeight: '700' },
+  cellTextToday: { color: TANGERINE, fontWeight: '700' },
+  cellTextPast: { color: MUTE_LIGHT },
 
   clearBtn: {
     marginTop: 10,
@@ -293,9 +294,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: TANGERINE_TINT,
     borderWidth: 1,
-    borderColor: '#10B981',
+    borderColor: TANGERINE,
   },
-  clearBtnText: { fontSize: 13, color: '#10B981', fontWeight: '700' },
+  clearBtnText: { fontSize: 13, color: TANGERINE, fontWeight: '700' },
 });

@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useApp } from '@/store/AppContext';
 import ItemCard from '@/components/ItemCard';
 import { Item } from '@/store/types';
+import { BORDER, BUTTER, BUTTER_INK, BUTTER_TINT, CREAM, MUTE, MUTE_LIGHT, TANGERINE_DEEP } from '@/constants/theme';
 
 type Filter = 'listed' | 'active' | 'claimed';
 
@@ -102,7 +103,7 @@ export default function ItemsListScreen() {
             const label    = formatTimeLeft(deadline, now);
             return (
               <View style={styles.deadlineRow}>
-                <FontAwesome name="clock-o" size={12} color={expired ? '#D8531F' : '#7A5C00'} style={{ marginRight: 6 }} />
+                <FontAwesome name="clock-o" size={12} color={expired ? TANGERINE_DEEP : BUTTER_INK} style={{ marginRight: 6 }} />
                 <Text style={[styles.deadlineText, expired && styles.deadlineExpired]}>
                   {expired ? 'Pickup window expired' : `${label} to pick up`}
                 </Text>
@@ -111,8 +112,8 @@ export default function ItemsListScreen() {
           })()}
           {filter === 'claimed' && item.status === 'pending_pickup' && (
             <View style={styles.deadlineRow}>
-              <FontAwesome name="clock-o" size={12} color="#847A70" style={{ marginRight: 6 }} />
-              <Text style={[styles.deadlineText, { color: '#847A70' }]}>Waiting for donor to confirm pickup</Text>
+              <FontAwesome name="clock-o" size={12} color={MUTE} style={{ marginRight: 6 }} />
+              <Text style={[styles.deadlineText, { color: MUTE }]}>Waiting for donor to confirm pickup</Text>
             </View>
           )}
         </View>
@@ -131,10 +132,10 @@ function EmptyState({ message }: { message: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fa' },
+  container: { flex: 1, backgroundColor: CREAM },
   list: { paddingVertical: 8, paddingBottom: 24 },
   empty: { alignItems: 'center', justifyContent: 'center' },
-  emptyText: { fontSize: 15, color: '#a0aec0' },
+  emptyText: { fontSize: 15, color: MUTE_LIGHT },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -146,17 +147,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#a0aec0',
+    color: MUTE_LIGHT,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionCount: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: BORDER,
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 1,
   },
-  sectionCountText: { fontSize: 12, fontWeight: '700', color: '#718096' },
+  sectionCountText: { fontSize: 12, fontWeight: '700', color: MUTE },
   deadlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -165,11 +166,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#FFF8E7',
+    backgroundColor: BUTTER_TINT,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#F4C95D',
+    borderColor: BUTTER,
   },
-  deadlineText: { fontSize: 12, fontWeight: '600', color: '#7A5C00' },
-  deadlineExpired: { color: '#D8531F' },
+  deadlineText: { fontSize: 12, fontWeight: '600', color: BUTTER_INK },
+  deadlineExpired: { color: TANGERINE_DEEP },
 });

@@ -36,7 +36,6 @@ interface AppContextType {
   releaseClaim: (itemId: string) => Promise<void>;
   markPickedUp: (itemId: string) => Promise<void>;
   confirmPickup: (itemId: string) => Promise<void>;
-  markDisposed: (itemId: string) => Promise<void>;
   // Borrow flow
   createBorrowRequest: (itemId: string, startDate: string, endDate: string) => Promise<void>;
   cancelBorrowRequest: (itemId: string, requestId: string) => Promise<void>;
@@ -476,20 +475,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onSettled: () => qc.invalidateQueries({ queryKey: QUERY_KEYS.items }),
   });
 
-  const markDisposedMutation = useMutation({
-    mutationFn: (itemId: string) => updateItemFields(itemId, { status: 'disposed' }),
-    onMutate: async (itemId) => {
-      await qc.cancelQueries({ queryKey: QUERY_KEYS.items });
-      const snapshot = qc.getQueryData<Item[]>(QUERY_KEYS.items);
-      optimisticItemUpdate(itemId, { status: 'disposed' });
-      return { snapshot };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.snapshot) qc.setQueryData(QUERY_KEYS.items, ctx.snapshot);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: QUERY_KEYS.items }),
-  });
-
   // ── Borrow mutations ───────────────────────────────────────────────────────
 
   const borrowRequestMutation = useMutation({
@@ -646,7 +631,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         },
         markPickedUp:   async (id) => { await markPickedUpMutation.mutateAsync(id); },
         confirmPickup:  async (id) => { await confirmPickupMutation.mutateAsync(id); },
-        markDisposed:   async (id) => { await markDisposedMutation.mutateAsync(id); },
         createBorrowRequest: async (itemId, startDate, endDate) => {
           const snap = qc.getQueryData<Item[]>(QUERY_KEYS.items) ?? [];
           const item = snap.find(i => i.id === itemId);

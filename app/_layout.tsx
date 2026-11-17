@@ -1,6 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,13 +8,20 @@ import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import 'react-native-reanimated';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/store/AuthContext';
 import { AppProvider } from '@/store/AppContext';
 import { queryClient, asyncStoragePersister } from '@/lib/queryClient';
 import HeaderLogo from '@/components/HeaderLogo';
+import { CREAM, INK, TANGERINE, WHITE } from '@/constants/theme';
 
 export { ErrorBoundary } from 'expo-router';
+
+// The app has no dark mode: always use the light navigation theme on Cream,
+// so a phone in dark mode doesn't get dark headers over cream screens.
+const navTheme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: CREAM, primary: TANGERINE, text: INK },
+};
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -24,7 +31,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     BricolageGrotesque_800ExtraBold,
     ...FontAwesome.font,
   });
@@ -54,7 +60,6 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
   const { authUser, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -72,8 +77,8 @@ function RootLayoutNav() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color="#F26B3A" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: CREAM }}>
+        <ActivityIndicator size="large" color={TANGERINE} />
       </View>
     );
   }
@@ -81,12 +86,12 @@ function RootLayoutNav() {
   const headerLogo = () => <HeaderLogo size={20} />;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navTheme}>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: '#fff' },
-          headerTintColor: '#111827',
-          headerTitleStyle: { fontWeight: '700', color: '#111827' },
+          headerStyle: { backgroundColor: WHITE },
+          headerTintColor: INK,
+          headerTitleStyle: { fontWeight: '700', color: INK },
           headerTitleAlign: 'center',
           headerShadowVisible: true,
         }}

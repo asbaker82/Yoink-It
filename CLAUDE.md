@@ -36,7 +36,7 @@ All non-auth state in a single React Context accessed via `useApp()`. No Redux/Z
 
 - `store/types.ts` — canonical types. Read `Item`, `User`, `ItemVisibility`, `SearchNotification` before touching any feature.
 - `store/mockData.ts` — 4 seed users, 5 give items, 10 borrow items. Mock users all have `itemVisibility: 'both'` so any user who adds them as a friend can see their listings.
-- Key mutations — give flow: `claimItem`, `joinWaitlist`, `leaveWaitlist`, `releaseClaim`, `markPickedUp`, `confirmPickup`, `markDisposed`, `createItem`, `updateItem`, `deleteItem`; borrow flow: `createBorrowRequest`, `cancelBorrowRequest`, `approveBorrowRequest`, `rejectBorrowRequest`, `markBorrowReturned`, `confirmBorrowReturn`, `addBlockedPeriod`, `removeBlockedPeriod`
+- Key mutations — give flow: `claimItem`, `joinWaitlist`, `leaveWaitlist`, `releaseClaim`, `markPickedUp`, `confirmPickup`, `createItem`, `updateItem`, `deleteItem`; borrow flow: `createBorrowRequest`, `cancelBorrowRequest`, `approveBorrowRequest`, `rejectBorrowRequest`, `markBorrowReturned`, `confirmBorrowReturn`, `addBlockedPeriod`, `removeBlockedPeriod`
 - `processExpiredClaims` runs on a 30-second `setInterval` — promotes `waitlist[0]` to claimant when `claimDeadline` passes, or resets to `available`.
 - **Dismissed items**: `dismissed` (Set<string>), `dismissItem`, `restoreItem`, `restoreAll` — per-user, persisted to AsyncStorage at `@yoink_it/dismissed/<userId>`. These must be declared **after** `currentUser` in the provider body since `dismissedKey` depends on `currentUser.id`.
 
@@ -63,7 +63,7 @@ app/
     my-items.tsx           My Items — My Listings / From Friends views (see "My Items" below) + FAB
     profile.tsx            Profile — reached via header icon, not tab bar
   item/
-    [id].tsx               Item detail — claim, waitlist, pickup, dispose, edit, SMS, lightbox, borrow request
+    [id].tsx               Item detail — claim, waitlist, pickup, edit, SMS, lightbox, borrow request
     new.tsx                New listing form (modal)
     edit/[id].tsx          Edit listing form (modal)
   items-list.tsx           Sectioned listing view — ?filter=listed|active|claimed
@@ -164,7 +164,6 @@ Photo grids in `item/new.tsx`, `item/edit/[id].tsx`, and the thumbnail strip in 
 | `ClaimToast` | Slide-up toast after claiming — shows pickup deadline. |
 | `WaitlistToast` | Slide-up toast after joining waitlist. |
 | `ConfirmSheet` | Slide-up confirmation sheet (replaces `Alert` for release-claim flow). |
-| `ClaimCelebration` | Full-screen confetti (legacy, still present but replaced by ClaimToast in main flow). |
 | `ImageCropModal` | **Web-only** circular crop modal. Injects a `<canvas>` imperatively into a `View` DOM node. Drag to pan, scroll/buttons to zoom. Used in `edit-profile.tsx` after image pick. |
 
 Both toast components use core RN `Animated` (not Reanimated) with `useNativeDriver: true`.
@@ -182,7 +181,7 @@ Stacked banners appear above the feed, one per pending action. Tapping one opens
 
 ### My Items — `app/(tabs)/my-items.tsx`
 Two views via a segmented control, each with an orange count of items needing action. Deep link with `?view=listings|friends` (honored even when the tab is already mounted).
-- **My Listings** — chips All / Free / Lending / Skills; sections **Needs your action** (`needsMyAction`: give `pending_pickup`, borrow with a pending request or `pending_return`), **Active**, **Completed**. Cards use `renderDonorCard` (confirm pickup, approve/decline, confirm return, dispose, remove).
+- **My Listings** — chips All / Free / Lending / Skills; sections **Needs your action** (`needsMyAction`: give `pending_pickup`, borrow with a pending request or `pending_return`), **Active**, **Completed**. Cards use `renderDonorCard` (confirm pickup, approve/decline, confirm return, remove) rendered inside the card via `ItemCard`'s `footer`. There is no "dispose" action in the UI; `disposed` remains a valid status only for older rows.
 - **From Friends** — sections **Ready to pick up**, **Waiting on donor**, **Borrowing**, **Returning**, **Requested**, **Waitlisted**, each with a status line and inline actions (Mark Picked Up, Release, Mark Returned, Cancel Request, Leave Waitlist) confirmed through one shared `ConfirmSheet`.
 
 ### Browse screen filters — `app/(tabs)/index.tsx`
@@ -208,14 +207,14 @@ Do not loosen thresholds or add synonyms without testing "can opener" does not r
 - Friends sorted alphabetically by **last name**.
 - Removing a friend is blocked if the current user has an active borrow (`status === 'borrowed' || 'pending_return'`) from that friend.
 
-### Leftover Expo boilerplate
-These files are unused template artifacts — do not reference or import from them:
-`app/(tabs)/two.tsx`, `app/modal.tsx`, `components/EditScreenInfo.tsx`, `components/ExternalLink.tsx`, `components/StyledText.tsx`, `components/Themed.tsx`
-
 ### Styling
-Colours come from `constants/theme.ts` (not the unused boilerplate `constants/Colors.ts`). All styles use `StyleSheet.create` inline per file. The RN-web `boxShadow` deprecation warning is harmless.
+**Every colour comes from `constants/theme.ts`** — never write a hex literal in a screen or component (the only exception is `'#000'` as a `shadowColor`). If a new shade is needed, add a named token there first. All styles use `StyleSheet.create` inline per file. The RN-web `boxShadow` deprecation warning is harmless.
 
-Brand tokens (exported from `constants/theme.ts`; some files still have inline hex values left to migrate):
+**No dark mode.** `app.json` sets `userInterfaceStyle: "light"` and `app/_layout.tsx` always uses a light navigation theme (`navTheme`, Cream background). Don't reintroduce `useColorScheme`.
+
+**Editing safely with live reload:** when adding a token to a file, add it to the `@/constants/theme` import *before* (or in the same write as) the code that uses it, and remove a token from the import only *after* its last use is gone — otherwise Metro hot-reloads a broken intermediate file and shows "X is not defined".
+
+Core brand tokens:
 | Token | Hex | Role |
 |---|---|---|
 | Tangerine | `#F26B3A` | Primary CTAs, active chips, badges |
@@ -229,6 +228,8 @@ Brand tokens (exported from `constants/theme.ts`; some files still have inline h
 | Butter | `#F4C95D` | "Claimed" / "Borrowed" badge background |
 | Sky | `#7BA7BC` | Borrow accent color, "Borrow" badge |
 | Plum | `#7A5C8C` | Selected "All" filter (Browse and My Items) |
+
+Supporting tokens: `WHITE` (item cards, sheets, modals), `BORDER` `#E8DDD0`, `TRACK` (segmented-control track), `MUTE_LIGHT` (disabled / past dates / empty states / "Gone"), `FAINT` (very faint text/icons), `STEEL_BLUE` (pending-pickup badge), `ROSE`, and tints with matching text colours: `TANGERINE_TINT` + `PEACH` (alerts, errors, calendar "today"/range), `SKY_TINT` (borrow panels), `BUTTER_TINT` + `BUTTER_INK`, `ROSE_INK` (waitlist text). Calendars (`DatePickerInput`, `DateRangePicker`) and `ImageCropModal` use Tangerine for selection — not green.
 
 **All screen backgrounds** use Cream (`#FBF6EE`) — auth screens, tab screens, and stack screens alike. Do not use `#fff` as a screen background.
 
