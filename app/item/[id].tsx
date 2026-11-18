@@ -370,8 +370,8 @@ export default function ItemDetailScreen() {
                   ? isMyItem
                     ? <>Pickup submitted by <UserName userId={item.claimedBy} fallback="the claimant" /> — tap below to confirm</>
                     : isClaimedByMe
-                      ? 'Pickup submitted — waiting for donor to confirm'
-                      : <>Pickup pending confirmation by <UserName userId={item.donorId} fallback="donor" /></>
+                      ? `Pickup submitted — waiting for ${donor?.name.split(' ')[0] ?? 'the owner'} to confirm`
+                      : <>Pickup pending confirmation by <UserName userId={item.donorId} fallback="the owner" /></>
                   : isClaimedByMe
                     ? `You claimed this · ${timeLeftLabel ? timeLeftLabel + ' remaining' : 'window expired'}`
                     : <>Claimed by <UserName userId={item.claimedBy} /> · {timeLeftLabel || 'window expired'}</>}
@@ -480,13 +480,13 @@ export default function ItemDetailScreen() {
             <View style={styles.detailsGrid}>
               {[
                 { k: 'Area',        v: item.pickupLocation },
-                { k: 'Window',      v: item.pickupWindow },
-                { k: 'Pick Up Within', v: pickUpWithinValue },
-                { k: 'Disposal',    v: disposalDate ? `${disposalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${daysLeft! <= 0 ? 'expired' : daysLeft === 1 ? 'last day' : `${daysLeft}d left`}${isUrgent ? ' ⚠️' : ''}` : '' },
+                { k: 'Pickup times', v: item.pickupWindow },
+                { k: 'Pick up within', v: pickUpWithinValue },
+                { k: 'Available until', v: disposalDate ? `${disposalDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${daysLeft! <= 0 ? 'expired' : daysLeft === 1 ? 'last day' : `${daysLeft}d left`}${isUrgent ? ' ⚠️' : ''}` : '' },
               ].map((d, i) => (
                 <View key={d.k} style={[styles.detailRow, i > 0 && styles.detailRowBorder]}>
                   <Text style={styles.detailKey}>{d.k}</Text>
-                  <Text style={[styles.detailVal, d.k === 'Disposal' && isUrgent && { color: TANGERINE_DEEP }]}>
+                  <Text style={[styles.detailVal, d.k === 'Available until' && isUrgent && { color: TANGERINE_DEEP }]}>
                     {d.v}
                   </Text>
                 </View>
@@ -1011,7 +1011,7 @@ export default function ItemDetailScreen() {
       <ConfirmSheet
         visible={showPickedUpSheet}
         title="Confirm Pickup"
-        message="Confirm that you've picked up this item? The donor will be notified to complete the handoff."
+        message="Confirm that you've picked up this item? The owner will be asked to confirm the handoff."
         confirmLabel="Yes, Picked Up"
         cancelLabel="Not Yet"
         onConfirm={() => { setShowPickedUpSheet(false); markPickedUp(item.id); }}

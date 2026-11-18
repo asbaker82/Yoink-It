@@ -104,7 +104,7 @@ export default function MyItemsScreen() {
   const fromOthers = items.filter(i => i.donorId !== me);
   const friendSections: { key: FriendSectionKey; title: string; data: Item[] }[] = [
     { key: 'pickup',     title: 'Ready to pick up', data: fromOthers.filter(i => i.listingType === 'give' && i.claimedBy === me && i.status === 'claimed') },
-    { key: 'waiting',    title: 'Waiting on donor', data: fromOthers.filter(i => i.listingType === 'give' && i.claimedBy === me && i.status === 'pending_pickup') },
+    { key: 'waiting',    title: 'Waiting on owner', data: fromOthers.filter(i => i.listingType === 'give' && i.claimedBy === me && i.status === 'pending_pickup') },
     { key: 'borrowing',  title: 'Borrowing',        data: fromOthers.filter(i => i.listingType === 'borrow' && i.borrowedBy === me && i.status === 'borrowed') },
     { key: 'returning',  title: 'Returning',        data: fromOthers.filter(i => i.listingType === 'borrow' && i.borrowedBy === me && i.status === 'pending_return') },
     { key: 'reserved',   title: 'Reserved',         data: fromOthers.filter(i => upcomingReservations(i).some(r => r.requesterId === me)) },

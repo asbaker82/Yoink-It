@@ -75,7 +75,7 @@ export default function WelcomeScreen() {
 
       {/* Kicker */}
       <Animated.Text style={[styles.kicker, { opacity: kickerOpacity }]}>
-        yoink-it · welcome
+        give · lend · lend a hand
       </Animated.Text>
 
       {/* Sticker hero */}
@@ -105,12 +105,12 @@ export default function WelcomeScreen() {
 
       {/* Headline */}
       <Animated.Text style={[styles.headline, { opacity: headlineOpacity }]}>
-        Free stuff from{'\n'}your block.
+        Share stuff{'\n'}with friends.
       </Animated.Text>
 
       {/* Subtitle */}
       <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity }]}>
-        Give away things you no longer need.{'\n'}Grab things your neighbors are letting go.
+        Give things away, lend things out,{'\n'}and offer a hand to people you know.
       </Animated.Text>
 
       {/* CTAs */}
@@ -124,12 +124,9 @@ export default function WelcomeScreen() {
       </Animated.View>
 
       <Animated.View style={{ opacity: ghostOpacity }}>
-        <Pressable
-          style={({ pressed }) => [styles.ghostBtn, pressed && { opacity: 0.7 }]}
-          onPress={() => router.replace('/(auth)/phone')}
-        >
-          <Text style={styles.ghostBtnText}>I already have an account</Text>
-        </Pressable>
+        <View style={styles.ghostBtn}>
+          <Text style={styles.ghostBtnText}>New or returning — just enter your phone number.</Text>
+        </View>
       </Animated.View>
     </View>
   );

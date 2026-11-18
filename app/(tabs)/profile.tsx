@@ -203,7 +203,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/add-friends')}
               >
                 <FontAwesome name="user-plus" size={14} color={CREAM} style={{ marginRight: 8 }} />
-                <Text style={styles.addFriendsCTAText}>Add Friends from Contacts</Text>
+                <Text style={styles.addFriendsCTAText}>{Platform.OS === 'web' ? 'Add Friends' : 'Add Friends from Contacts'}</Text>
               </Pressable>
             </View>
           ) : (
@@ -323,10 +323,10 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>How It Works</Text>
         {[
-          { icon: 'camera'    as const, title: 'List Items', desc: 'Take photos and create listings for items you no longer need.' },
-          { icon: 'search'    as const, title: 'Browse',     desc: 'See what your friends are giving away and claim what you want.' },
-          { icon: 'clock-o'   as const, title: 'Pick Up',    desc: "Coordinate pickup before the donor's disposal deadline." },
-          { icon: 'heart'     as const, title: 'Give Back',  desc: 'Unclaimed items go to the charity the donor chooses.' },
+          { icon: 'camera'    as const, title: 'List',       desc: 'Give things away, lend things out, or offer a skill you can help with.' },
+          { icon: 'search'    as const, title: 'Browse',     desc: 'See what your friends are sharing. Claim free items or ask to borrow.' },
+          { icon: 'clock-o'   as const, title: 'Pick Up',    desc: 'Text your friend to arrange pickup before your claim runs out.' },
+          { icon: 'undo'      as const, title: 'Return',     desc: 'Bring borrowed things back on time and mark them returned.' },
         ].map(tip => (
           <View key={tip.title} style={styles.tipRow}>
             <View style={styles.tipIcon}>

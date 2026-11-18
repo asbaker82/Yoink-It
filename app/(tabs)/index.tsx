@@ -251,6 +251,7 @@ export default function BrowseScreen() {
     }
   };
 
+  const noFilters = listingFilter === 'all' && statusFilter === 'all';
   const showHistory = historyOpen && searchHistory.length > 0 && !search;
 
   return (
@@ -418,19 +419,21 @@ export default function BrowseScreen() {
               ? 'No matches found'
               : currentUser.friends.length === 0
                 ? 'No friends added yet'
-                : 'No items found'}
+                : noFilters ? 'Nothing listed yet' : 'No items found'}
           </Text>
           <Text style={styles.emptySubtitle}>
             {search.trim()
               ? 'Try different words, or set an alert to see a banner here when a friend lists one.'
               : currentUser.friends.length === 0
-                ? 'Add friends to see what they\'re giving away.'
-                : 'Try adjusting your filter'}
+                ? 'Add friends to see what they\'re sharing.'
+                : noFilters
+                  ? 'Your friends haven\'t listed anything yet. Be the first to share something.'
+                  : 'Try a different filter.'}
           </Text>
           {!search.trim() && currentUser.friends.length === 0 && (
             <Pressable style={styles.emptyAddFriendsBtn} onPress={() => router.push('/add-friends')}>
               <FontAwesome name="user-plus" size={14} color={CREAM} style={{ marginRight: 6 }} />
-              <Text style={styles.emptyAddFriendsBtnText}>Add Friends from Contacts</Text>
+              <Text style={styles.emptyAddFriendsBtnText}>{Platform.OS === 'web' ? 'Add Friends' : 'Add Friends from Contacts'}</Text>
             </Pressable>
           )}
           {search.trim().length > 0 && (
@@ -570,7 +573,7 @@ export default function BrowseScreen() {
       <ConfirmSheet
         visible={!!pendingMarkPickupId}
         title="Confirm Pickup"
-        message="Confirm that you've picked up this item? The donor will be notified to complete the handoff."
+        message="Confirm that you've picked up this item? The owner will be asked to confirm the handoff."
         confirmLabel="Yes, Picked Up"
         cancelLabel="Not Yet"
         onConfirm={() => { if (pendingMarkPickupId) markPickedUp(pendingMarkPickupId); setPendingMarkPickupId(null); }}

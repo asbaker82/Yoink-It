@@ -143,7 +143,7 @@ export default function EditItemScreen() {
     const days = parseInt(claimPickupDays, 10);
     if (item.listingType === 'give') {
       if (!disposalDate.trim())
-        next.disposalDate = 'Please choose a disposal date.';
+        next.disposalDate = 'Please choose a date.';
       else if (isNaN(new Date(disposalDate).getTime()))
         next.disposalDate = 'That date doesn\'t look right — pick one from the calendar or type MM-DD-YYYY.';
       if (isNaN(days) || days < 1)
@@ -151,7 +151,7 @@ export default function EditItemScreen() {
       if (!next.disposalDate && !next.claimPickupHours && disposalDate && !isNaN(days)) {
         const daysUntilDisposal = (new Date(disposalDate).getTime() - Date.now()) / 86_400_000;
         if (days >= daysUntilDisposal) {
-          next.claimPickupHours = `The pickup window (${days}d) must be shorter than the time until disposal (~${Math.floor(daysUntilDisposal)}d away). Shorten the pickup window or choose a later disposal date.`;
+          next.claimPickupHours = `The pickup window (${days}d) must be shorter than the time the listing is up (~${Math.floor(daysUntilDisposal)}d). Shorten the pickup window or choose a later "Available Until" date.`;
         }
       }
     }
@@ -311,8 +311,8 @@ export default function EditItemScreen() {
       {/* Give: Disposal Date */}
       {item.listingType === 'give' && (
         <View style={[styles.section, { zIndex: 20 }]} {...trackOffset('disposalDate')}>
-          <Text style={styles.label}>Disposal Date <Text style={styles.required}>*</Text></Text>
-          <Text style={styles.hint}>If no one picks up the item by this date, it will be disposed of.</Text>
+          <Text style={styles.label}>Available Until <Text style={styles.required}>*</Text></Text>
+          <Text style={styles.hint}>After this date the listing is hidden from your friends. You can extend it then.</Text>
           <DatePickerInput
             value={disposalDate}
             onChange={d => { setDisposalDate(d); clearError('disposalDate'); }}
