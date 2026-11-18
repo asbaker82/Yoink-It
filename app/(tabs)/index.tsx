@@ -78,6 +78,25 @@ export default function BrowseScreen() {
     }, 4000);
   };
 
+  // Short confirmation toast for search alerts.
+  const [alertToast, setAlertToast] = useState<string | null>(null);
+  const alertToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alertToastAnim = useRef(new Animated.Value(0)).current;
+
+  const showAlertToast = (message: string) => {
+    if (alertToastTimer.current) clearTimeout(alertToastTimer.current);
+    setAlertToast(message);
+    alertToastAnim.setValue(0);
+    Animated.spring(alertToastAnim, { toValue: 1, useNativeDriver: true, bounciness: 4 }).start();
+    alertToastTimer.current = setTimeout(() => {
+      Animated.timing(alertToastAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => setAlertToast(null));
+    }, 2500);
+  };
+
+  useEffect(() => () => {
+    if (alertToastTimer.current) clearTimeout(alertToastTimer.current);
+  }, []);
+
   const handleUndo = () => {
     if (!undoItemId) return;
     if (undoTimer.current) clearTimeout(undoTimer.current);
@@ -231,23 +250,13 @@ export default function BrowseScreen() {
       return;
     }
     addToSearchHistory(keyword);
-    const alreadyExists = await addSearchNotification(keyword);
-    if (alreadyExists) {
-      if (Platform.OS === 'web') {
-        window.alert(`You already have an alert set for "${keyword}".`);
-      } else {
-        Alert.alert('Already Set', `You already have an alert for "${keyword}".`);
-      }
-      return;
-    }
-    const matches = friendItems.filter(i => fuzzyScore(keyword, i) > 0);
-    const matchMsg = matches.length > 0
-      ? `\n\n${matches.length} matching item${matches.length > 1 ? 's' : ''} already listed — check the results below.`
-      : '';
-    if (Platform.OS === 'web') {
-      window.alert(`Alert saved for "${keyword}".\n\nWhen a friend lists a match, you'll see a banner at the top of Browse.${matchMsg}`);
-    } else {
-      Alert.alert('Alert Saved', `When a friend lists a match for "${keyword}", you'll see a banner at the top of Browse.${matchMsg}`);
+    try {
+      const alreadyExists = await addSearchNotification(keyword);
+      showAlertToast(alreadyExists
+        ? `You already have a search alert for "${keyword}"`
+        : `Search alert for "${keyword}" created`);
+    } catch {
+      showAlertToast(`Couldn't create the search alert. Please try again.`);
     }
   };
 
@@ -579,6 +588,20 @@ export default function BrowseScreen() {
         onConfirm={() => { if (pendingMarkPickupId) markPickedUp(pendingMarkPickupId); setPendingMarkPickupId(null); }}
         onCancel={() => setPendingMarkPickupId(null)}
       />
+
+      {/* Search alert confirmation toast */}
+      {alertToast && (
+        <Animated.View
+          style={[styles.undoToast, {
+            opacity: alertToastAnim,
+            transform: [{ translateY: alertToastAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+          }]}
+          pointerEvents="none"
+        >
+          <FontAwesome name="bell" size={14} color={TANGERINE} />
+          <Text style={styles.undoText} numberOfLines={2}>{alertToast}</Text>
+        </Animated.View>
+      )}
 
       {/* Undo toast */}
       {undoItemId && (
